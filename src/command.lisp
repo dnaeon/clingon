@@ -15,7 +15,10 @@
    :command-handler
    :command-sub-commands
    :command-parent
-   :make-command))
+   :command-parents-list
+   :make-command
+   :command-full-path
+   :find-sub-command))
 (in-package :clingon.command)
 
 (defun argv ()
@@ -55,10 +58,22 @@
   (dolist (sub (command-sub-commands command))
     (setf (command-parent sub) command)))
 
-(defun make-command (&rest rest)
-  "Creates a new COMMAND instance"
-  (apply #'make-instance 'command rest))
+(defmethod command-parents-list ((command command) &key)
+  "Returns the list of parent commands for the given command"
+  (loop :for parent = (command-parent command) :then (command-parent parent)
+	:while parent
+	:collect parent))
 
 (defmethod find-sub-command ((command command) name &key)
   "Returns the sub-command with the given name"
   (find name (command-sub-commands command) :key #'command-name :test #'string=))
+
+(defmethod command-full-path ((command command) &key)
+  "Returns the full path to the command"
+  (let ((result (command-parents-list command)))
+    (push command result)
+    (nreverse (mapcar #'command-name result))))
+
+(defun make-command (&rest rest)
+  "Creates a new COMMAND instance"
+  (apply #'make-instance 'command rest))
