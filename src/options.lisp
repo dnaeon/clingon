@@ -75,3 +75,8 @@
     :accessor option-value
     :documentation "Computed value after finalizing the option"))
   (:documentation "A class representing a command-line option"))
+
+(defmethod initialize-instance :after ((option option) &key)
+  (with-slots (short-name long-name key) option
+    (unless (or short-name long-name)
+      (error "Option ~A must specify a short and/or long name" key))))
