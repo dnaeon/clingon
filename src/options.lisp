@@ -80,7 +80,7 @@
     :initarg :is-finalized-p
     :initform nil
     :accessor option-is-finalized-p
-    :documentation "Predicate return T if the option is finalized"))
+    :documentation "Predicate which returns T if the option has been finalized"))
   (:documentation "A class representing a command-line option"))
 
 (defun make-option (&rest rest)
