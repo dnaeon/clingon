@@ -49,3 +49,8 @@
     :accessor command-parent
     :documentation "Parent command. This one will be automatically set on creation."))
   (:documentation "A class to represent a command to be handled"))
+
+(defmethod initialize-instance :after ((command command) &key)
+  ;; Configure the parent for any of the sub-commands.
+  (dolist (sub (command-sub-commands command))
+    (setf (command-parent sub) command)))
