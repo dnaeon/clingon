@@ -12,8 +12,16 @@
    :option-finalize-fn
    :option-key
    :option-category
-   :option-value))
+   :option-value
+   :initialize-option
+   :finalize-option))
 (in-package :clingon.options)
+
+(defgeneric initialize-option (option &key)
+  (:documentation "Initializes an option, e.g. sets initial option value"))
+
+(defgeneric finalize-option (option &key)
+  (:documentation "Finalizes an option"))
 
 (defclass option ()
   ((short-name
