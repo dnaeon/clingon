@@ -80,3 +80,24 @@
   (with-slots (short-name long-name key) option
     (unless (or short-name long-name)
       (error "Option ~A must specify a short and/or long name" key))))
+
+(defmethod initialize-option ((option option) &key)
+  "Initialize the value of the option.
+
+  Environment variables take precedence over any
+  initial-value configured for the option.
+
+  The first environment variable that resolves to a
+  non-NIL result will be used to set the option."
+  (let* ((env-vars (option-env-vars option))
+	 (value-from-env (some #'uiop:getenvp env-vars))
+	 (value (or value-from-env (option-initial-value option))))
+    (setf (option-value option) value)))
+
+(defmethod finalize-option ((option option) &key)
+  "Finalizes the option and sets it's value to the
+  result of invoking of :finalize-fn function"
+  (let* ((finalize-fn (option-finalize-fn option))
+	 (value (option-value option))
+	 (final-value (funcall finalize-fn value)))
+    (setf (option-value option) final-value)))
