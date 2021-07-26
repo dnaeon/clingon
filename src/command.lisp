@@ -54,3 +54,7 @@
   ;; Configure the parent for any of the sub-commands.
   (dolist (sub (command-sub-commands command))
     (setf (command-parent sub) command)))
+
+(defun make-command (&rest rest)
+  "Creates a new COMMAND instance"
+  (apply #'make-instance 'command rest))
