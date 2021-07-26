@@ -58,3 +58,7 @@
 (defun make-command (&rest rest)
   "Creates a new COMMAND instance"
   (apply #'make-instance 'command rest))
+
+(defmethod find-sub-command ((command command) name &key)
+  "Returns the sub-command with the given name"
+  (find name (command-sub-commands command) :key #'command-name :test #'string=))
