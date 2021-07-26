@@ -13,6 +13,7 @@
    :option-key
    :option-category
    :option-value
+   :make-option
    :initialize-option
    :finalize-option))
 (in-package :clingon.options)
@@ -75,6 +76,10 @@
     :accessor option-value
     :documentation "Computed value after finalizing the option"))
   (:documentation "A class representing a command-line option"))
+
+(defun make-option (&rest rest)
+  "Create a new instance of OPTION"
+  (apply #'make-instance 'option rest))
 
 (defmethod initialize-instance :after ((option option) &key)
   (with-slots (short-name long-name key) option
