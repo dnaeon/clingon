@@ -14,7 +14,6 @@
    :option-key
    :option-category
    :option-value
-   :option-is-finalized-p
    :make-option
    :initialize-option
    :finalize-option
