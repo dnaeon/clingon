@@ -66,6 +66,7 @@
 (defmethod finalize-context ((context context) &key)
   "Finalizes the context and derives the reduced set of options"
   (let ((result (context-reduced-opts context)))
+    (nreverse (context-arguments context))
     (dolist (option (context-options context))
       (finalize-option option)
       (setf (gethash (option-key option) result) (option-value option)))))
