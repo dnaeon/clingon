@@ -75,12 +75,7 @@
     :initarg :value
     :initform nil
     :accessor option-value
-    :documentation "Computed value after finalizing the option")
-   (is-finalized-p
-    :initarg :is-finalized-p
-    :initform nil
-    :accessor option-is-finalized-p
-    :documentation "Predicate which returns T if the option has been finalized"))
+    :documentation "Computed value after finalizing the option"))
   (:documentation "A class representing a command-line option"))
 
 (defun make-option (&rest rest)
@@ -108,11 +103,7 @@
 (defmethod finalize-option ((option option) &key)
   "Finalizes the option and sets it's value to the
   result of invoking of :finalize-fn function"
-  (when (option-is-finalized-p option)
-    (error "Option ~A has been finalized" (option-key option)))
-
   (let* ((finalize-fn (option-finalize-fn option))
 	 (value (option-value option))
 	 (final-value (funcall finalize-fn value)))
-    (setf (option-is-finalized-p option) t)
     (setf (option-value option) final-value)))
