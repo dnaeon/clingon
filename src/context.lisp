@@ -19,7 +19,7 @@
    :context-initial-argv
    :context-arguments
    :context-options
-   :context-reduced-opts
+   :context-reduced-options
    :make-context
    :initialize-context
    :finalize-context))
@@ -52,10 +52,10 @@
     :initform nil
     :accessor context-options
     :documentation "Command-line options for the context")
-   (reduced-opts
-    :initarg :reduced-opts
+   (reduced-options
+    :initarg :reduced-options
     :initform (make-hash-table :test #'equal)
-    :accessor context-reduced-opts
+    :accessor context-reduced-options
     :documentation "Reduced options, which are set when finalizing a context"))
   (:documentation "A context class represents the environment in which a command runs"))
 
@@ -70,7 +70,7 @@
 
 (defmethod finalize-context ((context context) &key)
   "Finalizes the context and derives the reduced set of options"
-  (let ((result (context-reduced-opts context)))
+  (let ((result (context-reduced-options context)))
     (nreverse (context-arguments context))
     (dolist (option (context-options context))
       (finalize-option option)
