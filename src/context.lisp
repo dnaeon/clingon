@@ -97,3 +97,8 @@
   (pop (context-initial-argv context)) ;; Drop the end-of-options (`--') argument
     (loop :for arg = (pop (context-initial-argv context)) :while arg :do
       (push arg (context-arguments context))))
+
+(defmethod parse-option ((kind (eql :free-argument)) (context context) &key)
+  "Consume the option and treat it as a free argument"
+  (let ((arg (pop (context-initial-argv context))))
+    (push arg (context-arguments context))))
