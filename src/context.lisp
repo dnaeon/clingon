@@ -5,8 +5,14 @@
    :clingon.options
    :option-key
    :option-value
+   :option-short-name
+   :option-long-name
    :initialize-option
    :finalize-option)
+  (:import-from
+   :clingon.generics
+   :find-short-option
+   :find-long-option)
   (:export
    :context
    :context-parent
@@ -14,7 +20,6 @@
    :context-arguments
    :context-options
    :context-reduced-opts
-   :context-is-finalized-p
    :make-context
    :initialize-context
    :finalize-context))
@@ -70,3 +75,9 @@
     (dolist (option (context-options context))
       (finalize-option option)
       (setf (gethash (option-key option) result) (option-value option)))))
+
+(defmethod find-short-option ((context context) name &key)
+  (find name (context-options context) :key #'option-short-name :test #'char=))
+
+(defmethod find-long-option ((context context) name &key)
+  (find name (context-options context) :key #'option-long-name :test #'string=))
