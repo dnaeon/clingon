@@ -35,8 +35,8 @@
    (initial-argv
     :initarg :initial-argv
     :initform (error "Must specify initial argv")
-    :reader context-initial-argv
-    :documentation "Initial context arguments")
+    :accessor context-initial-argv
+    :documentation "Initial arguments for the context. These will be consumed during parsing")
    (arguments
     :initarg :arguments
     :initform nil
@@ -46,17 +46,12 @@
     :initarg :options
     :initform nil
     :accessor context-options
-    :documentation "Command options for the context")
+    :documentation "Command-line options for the context")
    (reduced-opts
     :initarg :reduced-opts
-    :initform nil
+    :initform (make-hash-table :test #'equal)
     :accessor context-reduced-opts
-    :documentation "Reduced options, which are set when finalizing a context")
-   (is-finalized-p
-    :initarg :is-finalized-p
-    :initform nil
-    :accessor context-is-finalized-p
-    :documentation "Predicate which returns T if the context has been finalized"))
+    :documentation "Reduced options, which are set when finalizing a context"))
   (:documentation "A context class represents the environment in which a command runs"))
 
 (defun make-context (&rest rest)
@@ -64,16 +59,13 @@
   (apply #'make-instance 'context rest))
 
 (defmethod initialize-context ((context context) &key)
-  "Initializes the context. Also performs initialization of the context options"
+  "Initializes the context."
   (dolist (option (context-options context))
     (initialize-option option)))
 
 (defmethod finalize-context ((context context) &key)
   "Finalizes the context and derives the reduced set of options"
-  (when (context-is-finalized-p context)
-    (error "Context is already finalized"))
   (let ((result (context-reduced-opts context)))
     (dolist (option (context-options context))
       (finalize-option option)
-      (setf (gethash (option-key option) result) (option-value option)))
-    (setf (context-is-finalized-p context) t)))
+      (setf (gethash (option-key option) result) (option-value option)))))
