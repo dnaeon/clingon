@@ -74,6 +74,7 @@
 
 (defmethod finalize-context ((context context) &key)
   "Finalizes the context and derives the reduced set of options"
+  (setf (context-initial-argv context) nil)
   (let ((result (context-reduced-options context)))
     (setf (context-arguments context)
 	  (nreverse (context-arguments context)))
