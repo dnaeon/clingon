@@ -5,6 +5,7 @@
    :option
    :option-short-name
    :option-long-name
+   :option-parameter
    :option-help
    :option-env-vars
    :option-initial-value
@@ -54,6 +55,11 @@
     :initform nil
     :reader option-short-name
     :documentation "Short option name")
+   (parameter
+    :initarg :parameter
+    :initform nil
+    :reader option-parameter
+    :documentation "Option takes a parameter identified by the given name")
    (long-name
     :initarg :long-name
     :initform nil
