@@ -16,7 +16,10 @@
    :option-is-finalized-p
    :make-option
    :initialize-option
-   :finalize-option))
+   :finalize-option
+   :end-of-options-p
+   :short-option-p
+   :long-option-p))
 (in-package :clingon.options)
 
 (defgeneric initialize-option (option &key)
@@ -24,6 +27,26 @@
 
 (defgeneric finalize-option (option &key)
   (:documentation "Finalizes an option"))
+
+(defparameter *end-of-options-marker*
+  "--"
+  "A marker specifying the end of options")
+
+(defun end-of-options-p (arg)
+  "A predicate which returns T if the given argument specifies end of options"
+  (string= arg *end-of-options-marker*))
+
+(defun short-option-p (arg)
+  "A predicate which returns T if the given argument is a short option"
+  (and (> (length arg) 1)
+       (char= #\- (aref arg 0))
+       (char/= #\- (aref arg 1))))
+
+(defun long-option-p (arg)
+  "A predicate which returns T if the given argument is a long option"
+  (and (> (length arg) 2)
+       (char= #\- (aref arg 0))
+       (char= #\- (aref arg 1))))
 
 (defclass option ()
   ((short-name
