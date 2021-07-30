@@ -3,8 +3,9 @@
   (:use :cl)
   (:import-from
    :clingon.context
+   :context
    :make-context
-   :context-arguments
+   :context-initial-argv
    :initialize-context
    :finalize-context)
   (:export
