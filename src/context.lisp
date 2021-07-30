@@ -90,7 +90,7 @@
 
 (defmethod make-child-context ((context context))
   "Makes a child context from the given context"
-  (make-context :initial-argv (context-initial-argv context)
+  (make-context :initial-argv (copy-list (context-initial-argv context))
 		:parent context))
 
 (defmethod parse-option ((kind (eql :consume-all-arguments)) (context context) &key)
@@ -103,3 +103,62 @@
   "Consume the option and treat it as a free argument"
   (let ((arg (pop (context-initial-argv context))))
     (push arg (context-arguments context))))
+
+(define-condition unknown-option (error)
+  ((name
+    :accessor unknown-option-name
+    :initarg :name))
+  (:report (lambda (condition stream)
+	     (format stream "Unknown option ~A" (unknown-option-name condition)))))
+
+(defmethod parse-option ((kind (eql :short)) (context context) &key)
+  "Parses a short option from the arguments of the context"
+  (let* ((arg (pop (context-initial-argv context)))
+         (short-name (aref arg 1))
+         (option (find-short-option context short-name)))
+    (unless option
+      (error 'unknown-option :name (format nil "-~A" short-name)))
+    (let ((current-value (option-value option))
+          (reduce-fn (option-reduce-fn option)))
+      (cond
+	;; Option takes a parameter
+	((option-parameter option)
+	 (let ((optarg (if (> (length arg) 2)
+			   (subseq arg 2) ;; -xfoo
+			   (pop (context-initial-argv context))))) ;; -x foo
+	   (setf (option-value option)
+		 (funcall reduce-fn current-value optarg))))
+	;; Option does not take a parameter
+	(t
+	 (setf (option-value option)
+	       (funcall reduce-fn current-value))
+	 ;; Options may be collapsed into a single argument, e.g. `-abc'
+	 ;; For non-parameter option which length is greater than 2,
+	 ;; we should push the rest of the options for processing.
+	 (when (> (length arg) 2)
+	   (let ((next-option (format nil "-~A" (subseq arg 2))))
+	     (push next-option (context-initial-argv context)))))))))
+
+(defmethod parse-option ((kind (eql :long)) (context context) &key)
+  "Parses a long option from the arguments of the context"
+  (let* ((arg (pop (context-initial-argv context)))
+	 (equals-position (position #\= arg))
+         (long-name (subseq arg 2 equals-position))
+         (option (find-long-option context long-name)))
+    (unless option
+      (error 'unknown-option :name (format nil "--~A" long-name)))
+    (let* ((current-value (option-value option))
+           (reduce-fn (option-reduce-fn option)))
+      (cond
+	;; Option takes a parameter
+	((option-parameter option)
+	 (let ((optarg (if equals-position
+			   (subseq arg (1+ equals-position))       ;; --arg=foo
+			   (pop (context-initial-argv context))))) ;; --arg foo
+	   (setf (option-value option)
+		 (funcall reduce-fn current-value optarg))))
+	;; Option does not take a parameter
+	(t
+	 (setf (option-value option)
+	       (funcall reduce-fn current-value)))))))
+
