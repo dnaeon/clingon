@@ -86,3 +86,8 @@
 
 (defmethod find-long-option ((context context) name &key)
   (find name (context-options context) :key #'option-long-name :test #'string=))
+
+(defmethod make-child-context ((context context))
+  "Makes a child context from the given context"
+  (make-context :initial-argv (context-initial-argv context)
+		:parent context))
