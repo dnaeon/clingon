@@ -93,9 +93,12 @@
   (apply #'make-instance 'command rest))
 
 (defmethod run ((command command) &key arguments)
-  "Runs the specified command"
+  "Runs the specified top-level command"
   (let ((arguments (or arguments (argv))))
-    (parse-command-line command arguments)))
+    (multiple-value-bind (cmd ctx) (parse-command-line command arguments)
+      (unless (command-handler cmd)
+	(error "No handler registered for command ~A" (command-name cmd)))
+      (funcall (command-handler cmd) ctx))))
 
 (defmethod parse-command-line ((command command) arguments)
   "Parses the command-line arguments for the command"
