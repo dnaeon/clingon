@@ -72,11 +72,22 @@
   (dolist (sub (command-sub-commands command))
     (setf (command-parent sub) command)))
 
+(define-condition circular-dependency (error)
+  ((nodes
+    :accessor circular-dependency-nodes
+    :initarg :nodes))
+  (:report (lambda (condition stream)
+	     (declare (ignore condition))
+	     (format stream "Circular dependency found"))))
+
 (defmethod command-parents-list ((command command) &key)
   "Returns the list of parent commands for the given command"
   (loop :for parent = (command-parent command) :then (command-parent parent)
 	:while parent
-	:collect parent))
+	:when (member parent visited :test #'equal) :do
+	  (error 'circular-dependency :nodes visited)
+	:collect parent :into visited
+	:finally (return visited)))
 
 (defmethod find-sub-command ((command command) name &key)
   "Returns the sub-command with the given name"
