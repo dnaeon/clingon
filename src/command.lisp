@@ -18,7 +18,9 @@
    :end-of-options-p
    :short-option-p
    :long-option-p
-   :make-option)
+   :make-option
+   :option-short-name
+   :option-long-name)
   (:export
    :argv
    :command
@@ -67,25 +69,37 @@
     :documentation "Parent command. This one will be automatically set on creation."))
   (:documentation "A class to represent a command to be handled"))
 
+
+(define-condition circular-dependency (error)
+  ((items
+    :accessor circular-dependency-items
+    :initarg :items))
+  (:report (lambda (condition stream)
+	     (declare (ignore condition))
+	     (format stream "Circular dependency found"))))
+
+(define-condition duplicate-options (error)
+  ((kind
+    :accessor duplicate-options-kind
+    :initarg :kind)
+   (items
+    :accessor duplication-options-items
+    :initarg :items))
+  (:report (lambda (condition stream)
+	     (format stream "Duplicate options of kind ~A found"
+		     (duplicate-options-kind condition)))))
+
 (defmethod initialize-instance :after ((command command) &key)
   ;; Configure the parent for any of the sub-commands.
   (dolist (sub (command-sub-commands command))
     (setf (command-parent sub) command)))
-
-(define-condition circular-dependency (error)
-  ((nodes
-    :accessor circular-dependency-nodes
-    :initarg :nodes))
-  (:report (lambda (condition stream)
-	     (declare (ignore condition))
-	     (format stream "Circular dependency found"))))
 
 (defmethod command-parents-list ((command command) &key)
   "Returns the list of parent commands for the given command"
   (loop :for parent = (command-parent command) :then (command-parent parent)
 	:while parent
 	:when (member parent visited :test #'equal) :do
-	  (error 'circular-dependency :nodes visited)
+	  (error 'circular-dependency :items visited)
 	:collect parent :into visited
 	:finally (return visited)))
 
