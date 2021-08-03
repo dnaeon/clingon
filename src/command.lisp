@@ -42,6 +42,25 @@
    :circular-dependency-items))
 (in-package :clingon.command)
 
+(define-condition circular-dependency (error)
+  ((items
+    :accessor circular-dependency-items
+    :initarg :items))
+  (:report (lambda (condition stream)
+	     (declare (ignore condition))
+	     (format stream "Circular dependency found"))))
+
+(define-condition duplicate-options (error)
+  ((kind
+    :accessor duplicate-options-kind
+    :initarg :kind)
+   (items
+    :accessor duplication-options-items
+    :initarg :items))
+  (:report (lambda (condition stream)
+	     (format stream "Duplicate options of kind ~A found"
+		     (duplicate-options-kind condition)))))
+
 (defun argv ()
   "Returns the list of command-line arguments"
   (uiop:command-line-arguments))
@@ -74,30 +93,23 @@
     :documentation "Parent command. This one will be automatically set on creation."))
   (:documentation "A class to represent a command to be handled"))
 
-
-(define-condition circular-dependency (error)
-  ((items
-    :accessor circular-dependency-items
-    :initarg :items))
-  (:report (lambda (condition stream)
-	     (declare (ignore condition))
-	     (format stream "Circular dependency found"))))
-
-(define-condition duplicate-options (error)
-  ((kind
-    :accessor duplicate-options-kind
-    :initarg :kind)
-   (items
-    :accessor duplication-options-items
-    :initarg :items))
-  (:report (lambda (condition stream)
-	     (format stream "Duplicate options of kind ~A found"
-		     (duplicate-options-kind condition)))))
-
 (defmethod initialize-instance :after ((command command) &key)
   ;; Configure the parent for any of the sub-commands.
   (dolist (sub (command-sub-commands command))
     (setf (command-parent sub) command)))
+
+(defmethod ensure-unique-options ((command command))
+  "Ensures that the given COMMAND does not contain duplicate options"
+  (loop :for (option . remaining) :on (command-options command) :while option :do
+    (let* ((short-name (option-short-name option))
+	   (long-name (option-long-name option))
+	   (short-items (remove-if-not (lambda (x) (char= short-name (option-short-name x))) remaining))
+	   (long-items (remove-if-not (lambda (x) (string= long-name (option-long-name x))) remaining)))
+      (when (> (length short-items) 0)
+	(error 'duplicate-options :kind :short :items (cons option short-items)))
+      (when (> (length long-items) 0)
+	(error 'duplicate-options :kind :long :items (cons option long-items)))))
+  t)
 
 (defmethod command-parents-list ((command command) &key)
   "Returns the list of parent commands for the given command"
