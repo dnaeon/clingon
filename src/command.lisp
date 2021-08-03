@@ -140,14 +140,20 @@
 	(error 'duplicate-commands :items (cons sub-command sub-command-items)))))
   t)
 
-(defmethod command-parents-list ((command command) &key)
-  "Returns the list of parent commands for the given command"
+(defmethod collect-parent-commands-or-lose ((command command))
   (loop :for parent = (command-parent command) :then (command-parent parent)
 	:while parent
 	:when (member parent visited :test #'equal) :do
 	  (error 'circular-dependency :items visited)
 	:collect parent :into visited
 	:finally (return visited)))
+
+(defmethod ensure-no-circular-dependencies ((command command))
+  (and (collect-parent-commands-or-lose command) t))
+
+(defmethod command-parents-list ((command command) &key)
+  "Returns the list of parent commands for the given command"
+  (collect-parent-commands-or-lose command))
 
 (defmethod find-sub-command ((command command) name &key)
   "Returns the sub-command with the given name"
