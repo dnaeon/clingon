@@ -36,8 +36,12 @@
    :run
    :parse-command-line
    :duplicate-options
-   :duplicate-options-kind
-   :duplicate-options-items
+   :duplicate-option-kind
+   :duplicate-option-items
+   :duplicate-option-name
+   :duplicate-commands
+   :duplicate-command-name
+   :duplicate-command-items
    :circular-dependency
    :circular-dependency-items))
 (in-package :clingon.command)
@@ -171,7 +175,7 @@
     (push command result)
     (nreverse (mapcar #'command-name result))))
 
-(defmethod validate-command ((command command))
+(defmethod validate-top-level-command ((command command))
   "Validates the top-level command and it's sub-commands"
   (ensure-no-circular-dependencies command)
   (ensure-unique-sub-commands command)
@@ -191,7 +195,7 @@
 
 (defmethod parse-command-line ((command command) arguments)
   "Parses the command-line arguments for the command"
-  (validate-command command)
+  (validate-top-level-command command)
   (let* ((options (command-options command))
 	 (context (make-context :initial-argv arguments :options options)))
     (parse-command-line% command context)))
