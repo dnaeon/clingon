@@ -65,7 +65,7 @@
 
 (define-condition duplicate-commands (error)
   ((items
-    :initarg
+    :initarg :items
     :accessor duplicate-command-items))
   (:report (lambda (condition stream)
 	     (declare (ignore condition))
