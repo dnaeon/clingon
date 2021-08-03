@@ -171,6 +171,12 @@
     (push command result)
     (nreverse (mapcar #'command-name result))))
 
+(defmethod validate-command ((command command))
+  "Validates the top-level command and it's sub-commands"
+  (ensure-no-circular-dependencies command)
+  (ensure-unique-sub-commands command)
+  (ensure-unique-options command))
+
 (defun make-command (&rest rest)
   "Creates a new COMMAND instance"
   (apply #'make-instance 'command rest))
@@ -185,6 +191,7 @@
 
 (defmethod parse-command-line ((command command) arguments)
   "Parses the command-line arguments for the command"
+  (validate-command command)
   (let* ((options (command-options command))
 	 (context (make-context :initial-argv arguments :options options)))
     (parse-command-line% command context)))
