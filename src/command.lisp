@@ -34,7 +34,12 @@
    :command-full-path
    :find-sub-command
    :run
-   :parse-command-line))
+   :parse-command-line
+   :duplicate-options
+   :duplicate-options-kind
+   :duplicate-options-items
+   :circular-dependency
+   :circular-dependency-items))
 (in-package :clingon.command)
 
 (defun argv ()
