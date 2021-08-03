@@ -48,18 +48,29 @@
     :initarg :items))
   (:report (lambda (condition stream)
 	     (declare (ignore condition))
-	     (format stream "Circular dependency found"))))
+	     (format stream "Circular dependency found")))
+  (:documentation "A condition which is signalled when a circular dependency exists between commands"))
 
 (define-condition duplicate-options (error)
   ((kind
-    :accessor duplicate-options-kind
-    :initarg :kind)
+    :initarg :kind
+    :accessor duplicate-options-kind)
    (items
-    :accessor duplication-options-items
-    :initarg :items))
+    :initarg :items
+    :accessor duplication-option-items))
   (:report (lambda (condition stream)
 	     (format stream "Duplicate options of kind ~A found"
-		     (duplicate-options-kind condition)))))
+		     (duplicate-options-kind condition))))
+  (:documentation "A condition which is signalled when a command provides duplicate options"))
+
+(define-condition duplicate-commands (error)
+  ((items
+    :initarg
+    :accessor duplicate-command-items))
+  (:report (lambda (condition stream)
+	     (declare (ignore condition))
+	     (format stream "Duplicate commands found")))
+  (:documentation "A condition which is signalled when a command provides duplicate sub-commands"))
 
 (defun argv ()
   "Returns the list of command-line arguments"
@@ -103,12 +114,30 @@
   (loop :for (option . remaining) :on (command-options command) :while option :do
     (let* ((short-name (option-short-name option))
 	   (long-name (option-long-name option))
-	   (short-items (remove-if-not (lambda (x) (char= short-name (option-short-name x))) remaining))
-	   (long-items (remove-if-not (lambda (x) (string= long-name (option-long-name x))) remaining)))
+	   (short-items (remove-if-not
+			 (lambda (x)
+			   (char= short-name (option-short-name x)))
+			 remaining))
+	   (long-items (remove-if-not
+			(lambda (x)
+			  (string= long-name (option-long-name x)))
+			remaining)))
       (when (> (length short-items) 0)
 	(error 'duplicate-options :kind :short :items (cons option short-items)))
       (when (> (length long-items) 0)
 	(error 'duplicate-options :kind :long :items (cons option long-items)))))
+  t)
+
+(defmethod ensure-unique-sub-commands ((command command))
+  "Ensure that the given COMMAND does not contain duplicate sub-commands"
+  (loop :for (sub-command . remaining) :on (command-sub-commands command) :while sub-command :do
+    (let* ((sub-command-name (command-name sub-command))
+	   (sub-command-items (remove-if-not
+			       (lambda (item)
+				 (string= sub-command-name (command-name item)))
+			       remaining)))
+      (when (> (length sub-command-items) 0)
+	(error 'duplicate-commands :items (cons sub-command sub-command-items)))))
   t)
 
 (defmethod command-parents-list ((command command) &key)
