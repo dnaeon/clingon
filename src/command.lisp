@@ -54,22 +54,28 @@
 (define-condition duplicate-options (error)
   ((kind
     :initarg :kind
-    :accessor duplicate-options-kind)
+    :accessor duplicate-option-kind)
    (items
     :initarg :items
-    :accessor duplication-option-items))
+    :accessor duplicate-option-items)
+   (name
+    :initarg :name
+    :accessor duplicate-option-name))
   (:report (lambda (condition stream)
-	     (format stream "Duplicate options of kind ~A found"
-		     (duplicate-options-kind condition))))
+	     (format stream "Duplicate option ~A of kind ~A found"
+		     (duplicate-option-name condition)
+		     (duplicate-option-kind condition))))
   (:documentation "A condition which is signalled when a command provides duplicate options"))
 
 (define-condition duplicate-commands (error)
   ((items
     :initarg :items
-    :accessor duplicate-command-items))
+    :accessor duplicate-command-items)
+   (name
+    :initarg :name
+    :accessor duplicate-command-name))
   (:report (lambda (condition stream)
-	     (declare (ignore condition))
-	     (format stream "Duplicate commands found")))
+	     (format stream "Duplicate commands ~A found" (duplicate-command-name condition))))
   (:documentation "A condition which is signalled when a command provides duplicate sub-commands"))
 
 (defun argv ()
@@ -123,9 +129,9 @@
 			  (string= long-name (option-long-name x)))
 			remaining)))
       (when (> (length short-items) 0)
-	(error 'duplicate-options :kind :short :items (cons option short-items)))
+	(error 'duplicate-options :kind :short :name short-name :items (cons option short-items)))
       (when (> (length long-items) 0)
-	(error 'duplicate-options :kind :long :items (cons option long-items)))))
+	(error 'duplicate-options :kind :long :name long-name :items (cons option long-items)))))
   t)
 
 (defmethod ensure-unique-sub-commands ((command command))
