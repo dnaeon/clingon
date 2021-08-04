@@ -185,11 +185,13 @@
      (dolist (,command nodes)
        ,@body)))
 
-(defmethod validate-top-level-command ((command command))
+(defmethod validate-top-level-command ((top-level command))
   "Validates the top-level command and it's sub-commands"
-  (ensure-no-circular-dependencies command)
-  (ensure-unique-sub-commands command)
-  (ensure-unique-options command))
+  (with-commands-walk (cmd top-level)
+    (ensure-no-circular-dependencies cmd)
+    (ensure-unique-sub-commands cmd)
+    (ensure-unique-options cmd))
+  t)
 
 (defun make-command (&rest rest)
   "Creates a new COMMAND instance"
