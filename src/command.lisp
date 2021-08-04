@@ -32,7 +32,7 @@
    :command-handler
    :command-sub-commands
    :command-parent
-   :command-parents-list
+   :command-lineage
    :make-command
    :command-full-path
    :find-sub-command
@@ -154,20 +154,14 @@
 	(error 'duplicate-commands :items (cons sub-command sub-command-items)))))
   t)
 
-(defmethod collect-parent-commands-or-lose ((command command))
-  (loop :for parent = (command-parent command) :then (command-parent parent)
-	:while parent
-	:when (member parent visited :test #'equal) :do
+(defmethod command-lineage ((command command))
+  "Returns the lineage of the command up to the root"
+  (loop :for c = command :then (command-parent c)
+	:while c
+	:when (member c visited :test #'equal) :do
 	  (error 'circular-dependency :items visited)
-	:collect parent :into visited
+	:collect c :into visited
 	:finally (return visited)))
-
-(defmethod ensure-no-circular-dependencies ((command command))
-  (and (collect-parent-commands-or-lose command) t))
-
-(defmethod command-parents-list ((command command) &key)
-  "Returns the list of parent commands for the given command"
-  (collect-parent-commands-or-lose command))
 
 (defmethod find-sub-command ((command command) name &key)
   "Returns the sub-command with the given name"
@@ -175,9 +169,8 @@
 
 (defmethod command-full-path ((command command) &key)
   "Returns the full path to the command"
-  (let ((result (command-parents-list command)))
-    (push command result)
-    (nreverse (mapcar #'command-name result))))
+  (let ((lineage (command-lineage command)))
+    (nreverse (mapcar #'command-name lineage))))
 
 (defmacro with-commands-walk ((command top-level) &body body)
   "Walks over each command starting from TOP-LEVEL and evaluates BODY"
