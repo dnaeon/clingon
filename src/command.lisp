@@ -214,36 +214,33 @@
 
 (defmethod parse-command-line% ((command command) (context context))
   (initialize-context context)
-  (loop :for arg = (first (context-initial-argv context)) :while arg :do
-    (cond
-      ;; End of options.
-      ((end-of-options-p arg)
-       (parse-option :consume-all-arguments context))
-      ;; Short options.
-      ((short-option-p arg)
-       (parse-option :short context))
-      ;; Long options.
-      ((long-option-p arg)
-       (parse-option :long context))
-      ;; Free arguments and sub-commands.
-      (t
-       ;; If this this the first free argument and that argument
-       ;; happens to be the name of a sub-command stop processing here
-       ;; and then dispatch processing of the remaining arguments to the
-       ;; respective sub-command.
-       (let* ((empty-ctx-arguments-p (null (context-arguments context)))
-	      (sub-command (and empty-ctx-arguments-p (find-sub-command command arg)))
-	      (new-context (and sub-command (make-child-context context))))
-	 (cond
-	   ;; We've got a sub-command, dispatch further processing to it.
-	   (sub-command
-	    ;; Remove the sub-command name from the arguments
-	    (pop (context-initial-argv new-context))
-	    (finalize-context context)
-	    (return-from parse-command-line%
-	      (parse-command-line% sub-command new-context)))
-	   ;; We've got a free argument
-	   (t
-	    (parse-option :free-argument context))))))
-    :finally (finalize-context context))
+  (loop :for arg = (first (context-initial-argv context)) :while arg
+	:for empty-ctx-arguments-p = (null (context-arguments context))
+	:for sub-command = (and empty-ctx-arguments-p (find-sub-command command arg))
+	:for new-context = (and sub-command (make-child-context context))
+	:do
+	   (cond
+	     ;; End of options.
+	     ((end-of-options-p arg) (parse-option :consume-all-arguments context))
+	     ;; Short options.
+	     ((short-option-p arg) (parse-option :short context))
+	     ;; Long options.
+	     ((long-option-p arg) (parse-option :long context))
+	     ;; Sub-commands.
+	     ;; The sub-command will be non-nil if it is the first
+	     ;; free argument we are processing and that argument
+	     ;; happens to be the name of a sub-command.
+	     ;; At this point we stop processing in the current
+	     ;; context and pass to the sub-command for further
+	     ;; processing.
+	     (sub-command
+	      ;; Remove the sub-command name from the arguments
+	      (pop (context-initial-argv new-context))
+	      (finalize-context context)
+	      (return-from parse-command-line%
+		(parse-command-line% sub-command new-context)))
+	     ;; Free arguments
+	     (t
+	      (parse-option :free-argument context)))
+	:finally (finalize-context context))
   (values command context))
