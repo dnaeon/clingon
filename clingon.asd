@@ -16,12 +16,16 @@
   :bug-tracker "https://github.com/dnaeon/clingon"
   :source-control "https://github.com/dnaeon/clingon"
   :depends-on ()
-  :components ((:module "core"
+  :components ((:module "utils"
+		:pathname #P"src/"
+		:components ((:file "utils")))
+	       (:module "core"
 		:pathname #P"src/"
 		:components ((:file "generics")
 			     (:file "options")
 			     (:file "context" :depends-on ("generics" "options"))
-			     (:file "command" :depends-on ("generics" "context"))))
+			     (:file "command" :depends-on ("generics" "context")))
+		:depends-on ("utils"))
 	       (:module "client-package"
 		:pathname #P"src/"
 		:components ((:file "package"))
