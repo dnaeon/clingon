@@ -38,10 +38,10 @@
 (define-condition unknown-option (error)
   ((name
     :initarg :name
-    :accessor unknown-option-name)
+    :reader unknown-option-name)
    (kind
     :initarg :kind
-    :accessor unknown-option-kind))
+    :reader unknown-option-kind))
   (:report (lambda (condition stream)
 	     (format stream "Unknown option ~A of kind ~A"
 		     (unknown-option-name condition)

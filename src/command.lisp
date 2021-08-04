@@ -52,8 +52,8 @@
 
 (define-condition circular-dependency (error)
   ((items
-    :accessor circular-dependency-items
-    :initarg :items))
+    :initarg :items
+    :reader circular-dependency-items))
   (:report (lambda (condition stream)
 	     (declare (ignore condition))
 	     (format stream "Circular dependency found")))
@@ -62,13 +62,13 @@
 (define-condition duplicate-options (error)
   ((kind
     :initarg :kind
-    :accessor duplicate-option-kind)
+    :reader duplicate-option-kind)
    (items
     :initarg :items
-    :accessor duplicate-option-items)
+    :reader duplicate-option-items)
    (name
     :initarg :name
-    :accessor duplicate-option-name))
+    :reader duplicate-option-name))
   (:report (lambda (condition stream)
 	     (format stream "Duplicate option ~A of kind ~A found"
 		     (duplicate-option-name condition)
@@ -78,10 +78,10 @@
 (define-condition duplicate-commands (error)
   ((items
     :initarg :items
-    :accessor duplicate-command-items)
+    :reader duplicate-command-items)
    (name
     :initarg :name
-    :accessor duplicate-command-name))
+    :reader duplicate-command-name))
   (:report (lambda (condition stream)
 	     (format stream "Duplicate commands ~A found" (duplicate-command-name condition))))
   (:documentation "A condition which is signalled when a command provides duplicate sub-commands"))
