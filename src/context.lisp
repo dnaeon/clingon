@@ -26,7 +26,11 @@
    :make-context
    :initialize-context
    :finalize-context
-   :make-child-context))
+   :make-child-context
+   :unknown-option
+   :unknown-option-p
+   :unknown-option-name
+   :unknown-option-kind))
 (in-package :clingon.context)
 
 (defgeneric initialize-context (context &key)
@@ -47,6 +51,9 @@
 		     (unknown-option-name condition)
 		     (unknown-option-kind condition))))
   (:documentation "A condition which is signalled when an unknown option is seen"))
+
+(defun unknown-option-p (value)
+  (typep value 'unknown-option))
 
 (defclass context ()
   ((parent
