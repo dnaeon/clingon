@@ -106,10 +106,16 @@
 
 (define-condition unknown-option (error)
   ((name
-    :accessor unknown-option-name
-    :initarg :name))
+    :initarg :name
+    :accessor unknown-option-name)
+   (kind
+    :initarg :kind
+    :accessor unknown-option-kind))
   (:report (lambda (condition stream)
-	     (format stream "Unknown option ~A" (unknown-option-name condition)))))
+	     (format stream "Unknown option ~A of kind ~A"
+		     (unknown-option-name condition)
+		     (unknown-option-kind condition))))
+  (:documentation "A condition which is signalled when an unknown option is seen"))
 
 (defmethod parse-option ((kind (eql :short)) (context context) &key)
   "Parses a short option from the arguments of the context"
@@ -117,7 +123,7 @@
          (short-name (aref arg 1))
          (option (find-short-option context short-name)))
     (unless option
-      (error 'unknown-option :name (format nil "-~A" short-name)))
+      (error 'unknown-option :kind :short :name (format nil "-~A" short-name)))
     (let ((current-value (option-value option))
           (reduce-fn (option-reduce-fn option)))
       (cond
@@ -146,7 +152,7 @@
          (long-name (subseq arg 2 equals-position))
          (option (find-long-option context long-name)))
     (unless option
-      (error 'unknown-option :name (format nil "--~A" long-name)))
+      (error 'unknown-option :kind :long :name (format nil "--~A" long-name)))
     (let* ((current-value (option-value option))
            (reduce-fn (option-reduce-fn option)))
       (cond
