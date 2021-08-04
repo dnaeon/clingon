@@ -35,6 +35,19 @@
 (defgeneric finalize-context (context &key)
   (:documentation "Finalizes a context"))
 
+(define-condition unknown-option (error)
+  ((name
+    :initarg :name
+    :accessor unknown-option-name)
+   (kind
+    :initarg :kind
+    :accessor unknown-option-kind))
+  (:report (lambda (condition stream)
+	     (format stream "Unknown option ~A of kind ~A"
+		     (unknown-option-name condition)
+		     (unknown-option-kind condition))))
+  (:documentation "A condition which is signalled when an unknown option is seen"))
+
 (defclass context ()
   ((parent
     :initarg :parent
@@ -103,19 +116,6 @@
   "Consume the option and treat it as a free argument"
   (let ((arg (pop (context-initial-argv context))))
     (push arg (context-arguments context))))
-
-(define-condition unknown-option (error)
-  ((name
-    :initarg :name
-    :accessor unknown-option-name)
-   (kind
-    :initarg :kind
-    :accessor unknown-option-kind))
-  (:report (lambda (condition stream)
-	     (format stream "Unknown option ~A of kind ~A"
-		     (unknown-option-name condition)
-		     (unknown-option-kind condition))))
-  (:documentation "A condition which is signalled when an unknown option is seen"))
 
 (defmethod parse-option ((kind (eql :short)) (context context) &key)
   "Parses a short option from the arguments of the context"
