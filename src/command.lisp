@@ -21,6 +21,9 @@
    :make-option
    :option-short-name
    :option-long-name)
+  (:import-from
+   :clingon.utils
+   :walk)
   (:export
    :argv
    :command
@@ -34,6 +37,7 @@
    :command-full-path
    :find-sub-command
    :run
+   :with-commands-walk
    :parse-command-line
    :duplicate-options
    :duplicate-option-kind
@@ -174,6 +178,12 @@
   (let ((result (command-parents-list command)))
     (push command result)
     (nreverse (mapcar #'command-name result))))
+
+(defmacro with-commands-walk ((command top-level) &body body)
+  "Walks over each command starting from TOP-LEVEL and evaluates BODY"
+  `(let ((nodes (walk ,top-level #'command-sub-commands :order :dfs)))
+     (dolist (,command nodes)
+       ,@body)))
 
 (defmethod validate-top-level-command ((command command))
   "Validates the top-level command and it's sub-commands"
