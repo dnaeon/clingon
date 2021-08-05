@@ -21,10 +21,11 @@
 		:components ((:file "utils")))
 	       (:module "core"
 		:pathname #P"src/"
-		:components ((:file "generics")
+		:components ((:file "conditions")
+			     (:file "generics")
 			     (:file "options")
-			     (:file "context" :depends-on ("generics" "options"))
-			     (:file "command" :depends-on ("generics" "context")))
+			     (:file "context" :depends-on ("conditions" "generics" "options"))
+			     (:file "command" :depends-on ("context"))
 		:depends-on ("utils"))
 	       (:module "client-package"
 		:pathname #P"src/"
