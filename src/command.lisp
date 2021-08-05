@@ -2,6 +2,11 @@
 (defpackage :clingon.command
   (:use :cl)
   (:import-from
+   :clingon.conditions
+   :circular-dependency
+   :duplicate-options
+   :duplicate-commands)
+  (:import-from
    :clingon.context
    :context
    :make-context
@@ -24,9 +29,9 @@
    :option-long-name)
   (:import-from
    :clingon.utils
+   :argv
    :walk)
   (:export
-   :argv
    :command
    :command-name
    :command-options
@@ -41,11 +46,6 @@
    :with-commands-walk
    :parse-command-line))
 (in-package :clingon.command)
-
-;; TODO: Move to core or utils
-(defun argv ()
-  "Returns the list of command-line arguments"
-  (uiop:command-line-arguments))
 
 (defclass command ()
   ((name

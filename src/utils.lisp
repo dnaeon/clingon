@@ -28,3 +28,7 @@
              (unless (member node visited :test #'equal)
                (push node visited)))
     (nreverse visited)))
+
+(defun argv ()
+  "Returns the list of command-line arguments"
+  (uiop:command-line-arguments))
