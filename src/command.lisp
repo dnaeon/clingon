@@ -39,54 +39,10 @@
    :find-sub-command
    :run
    :with-commands-walk
-   :parse-command-line
-   :duplicate-options
-   :duplicate-option-kind
-   :duplicate-option-items
-   :duplicate-option-name
-   :duplicate-commands
-   :duplicate-command-name
-   :duplicate-command-items
-   :circular-dependency
-   :circular-dependency-items))
+   :parse-command-line))
 (in-package :clingon.command)
 
-(define-condition circular-dependency (error)
-  ((items
-    :initarg :items
-    :reader circular-dependency-items))
-  (:report (lambda (condition stream)
-	     (declare (ignore condition))
-	     (format stream "Circular dependency found")))
-  (:documentation "A condition which is signalled when a circular dependency exists between commands"))
-
-(define-condition duplicate-options (error)
-  ((kind
-    :initarg :kind
-    :reader duplicate-option-kind)
-   (items
-    :initarg :items
-    :reader duplicate-option-items)
-   (name
-    :initarg :name
-    :reader duplicate-option-name))
-  (:report (lambda (condition stream)
-	     (format stream "Duplicate option ~A of kind ~A found"
-		     (duplicate-option-name condition)
-		     (duplicate-option-kind condition))))
-  (:documentation "A condition which is signalled when a command provides duplicate options"))
-
-(define-condition duplicate-commands (error)
-  ((items
-    :initarg :items
-    :reader duplicate-command-items)
-   (name
-    :initarg :name
-    :reader duplicate-command-name))
-  (:report (lambda (condition stream)
-	     (format stream "Duplicate commands ~A found" (duplicate-command-name condition))))
-  (:documentation "A condition which is signalled when a command provides duplicate sub-commands"))
-
+;; TODO: Move to core or utils
 (defun argv ()
   "Returns the list of command-line arguments"
   (uiop:command-line-arguments))
