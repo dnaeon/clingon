@@ -14,7 +14,10 @@
    :unknown-option
    :unknown-option-name
    :unknown-option-kind
-   :unknown-option-p))
+   :unknown-option-p
+   :missing-option-argument
+   :missing-option-argument-name
+   :missing-option-argument-kind))
 (in-package :clingon.conditions)
 
 (define-condition circular-dependency (simple-error)
@@ -30,12 +33,15 @@
 (define-condition duplicate-options (simple-error)
   ((kind
     :initarg :kind
+    :initform (error "Must specify option kind")
     :reader duplicate-option-kind)
    (items
     :initarg :items
+    :initform (error "Must specify option items")
     :reader duplicate-option-items)
    (name
     :initarg :name
+    :initform (error "Must specify option name")
     :reader duplicate-option-name))
   (:report (lambda (condition stream)
 	     (format stream "Duplicate option ~A of kind ~A found"
@@ -46,9 +52,11 @@
 (define-condition duplicate-commands (simple-error)
   ((items
     :initarg :items
+    :initform (error "Must specify duplicate items")
     :reader duplicate-command-items)
    (name
     :initarg :name
+    :initform (error "Must specify command name")
     :reader duplicate-command-name))
   (:report (lambda (condition stream)
 	     (format stream "Duplicate commands ~A found" (duplicate-command-name condition))))
@@ -57,9 +65,11 @@
 (define-condition unknown-option (error)
   ((name
     :initarg :name
+    :initform (error "Must specify option name")
     :reader unknown-option-name)
    (kind
     :initarg :kind
+    :initform (error "Must specify option kind")
     :reader unknown-option-kind))
   (:report (lambda (condition stream)
 	     (format stream "Unknown option ~A of kind ~A"
@@ -69,3 +79,18 @@
 
 (defun unknown-option-p (value)
   (typep value 'unknown-option))
+
+(define-condition missing-option-argument (simple-error)
+  ((name
+    :initarg :name
+    :initform (error "Must specify option name")
+    :reader missing-option-argument-name)
+   (kind
+    :initarg :kind
+    :initform (error "Must specify option kind")
+    :reader missing-option-argument-kind))
+  (:report (lambda (condition stream)
+	     (format stream "Missing argument for option ~A of kind ~A"
+		     (missing-option-argument-name condition)
+		     (missing-option-argument-kind condition))))
+  (:documentation "A condition which is signalled when an option expects an argument, but none was provided"))

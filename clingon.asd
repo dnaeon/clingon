@@ -25,7 +25,7 @@
 			     (:file "generics")
 			     (:file "options")
 			     (:file "context" :depends-on ("conditions" "generics" "options"))
-			     (:file "command" :depends-on ("context"))
+			     (:file "command" :depends-on ("context")))
 		:depends-on ("utils"))
 	       (:module "client-package"
 		:pathname #P"src/"
