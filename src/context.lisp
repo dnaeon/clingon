@@ -98,6 +98,15 @@
   (make-context :initial-argv (copy-list (context-initial-argv context))
 		:parent context))
 
+(defmethod context-lineage ((context context))
+  "Returns the context lineage"
+  (loop :for c = context :then (context-parent c)
+	:while c
+	:when (member c visited :test #'equal) :do
+	  (error 'circular-dependency :items visited)
+	:collect c :into visited
+	:finally (return visited)))
+
 (defmethod parse-option ((kind (eql :consume-all-arguments)) (context context) &key)
   "Consumes all arguments after the end-of-options flag"
   (pop (context-initial-argv context)) ;; Drop the end-of-options (`--') argument
