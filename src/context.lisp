@@ -2,6 +2,10 @@
 (defpackage :clingon.context
   (:use :cl)
   (:import-from
+   :clingon.conditions
+   :circular-dependency
+   :unknown-option)
+  (:import-from
    :clingon.options
    :option-key
    :option-value
@@ -23,14 +27,11 @@
    :context-arguments
    :context-options
    :context-reduced-options
+   :context-lineage
    :make-context
    :initialize-context
    :finalize-context
-   :make-child-context
-   :unknown-option
-   :unknown-option-p
-   :unknown-option-name
-   :unknown-option-kind))
+   :make-child-context))
 (in-package :clingon.context)
 
 (defgeneric initialize-context (context &key)
@@ -38,22 +39,6 @@
 
 (defgeneric finalize-context (context &key)
   (:documentation "Finalizes a context"))
-
-(define-condition unknown-option (error)
-  ((name
-    :initarg :name
-    :reader unknown-option-name)
-   (kind
-    :initarg :kind
-    :reader unknown-option-kind))
-  (:report (lambda (condition stream)
-	     (format stream "Unknown option ~A of kind ~A"
-		     (unknown-option-name condition)
-		     (unknown-option-kind condition))))
-  (:documentation "A condition which is signalled when an unknown option is seen"))
-
-(defun unknown-option-p (value)
-  (typep value 'unknown-option))
 
 (defclass context ()
   ((parent

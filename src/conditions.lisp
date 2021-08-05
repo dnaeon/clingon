@@ -10,7 +10,11 @@
    :duplicate-option-name
    :duplicate-commands
    :duplicate-command-items
-   :duplicate-command-name))
+   :duplicate-command-name
+   :unknown-option
+   :unknown-option-name
+   :unknown-option-kind
+   :unknown-option-p))
 (in-package :clingon.conditions)
 
 (define-condition circular-dependency (simple-error)
@@ -49,3 +53,19 @@
   (:report (lambda (condition stream)
 	     (format stream "Duplicate commands ~A found" (duplicate-command-name condition))))
   (:documentation "A condition which is signalled when a command provides duplicate sub-commands"))
+
+(define-condition unknown-option (error)
+  ((name
+    :initarg :name
+    :reader unknown-option-name)
+   (kind
+    :initarg :kind
+    :reader unknown-option-kind))
+  (:report (lambda (condition stream)
+	     (format stream "Unknown option ~A of kind ~A"
+		     (unknown-option-name condition)
+		     (unknown-option-kind condition))))
+  (:documentation "A condition which is signalled when an unknown option is seen"))
+
+(defun unknown-option-p (value)
+  (typep value 'unknown-option))

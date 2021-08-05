@@ -5,7 +5,8 @@
    :clingon.conditions
    :circular-dependency
    :duplicate-options
-   :duplicate-commands)
+   :duplicate-commands
+   :unknown-option-p)
   (:import-from
    :clingon.context
    :context
@@ -14,8 +15,7 @@
    :context-arguments
    :context-initial-argv
    :initialize-context
-   :finalize-context
-   :unknown-option-p)
+   :finalize-context)
   (:import-from
    :clingon.generics
    :parse-option)
