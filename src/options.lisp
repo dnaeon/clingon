@@ -2,6 +2,11 @@
 (defpackage :clingon.options
   (:use :cl)
   (:import-from
+   :clingon.generics
+   :initialize-option
+   :finalize-option
+   :make-option)
+  (:import-from
    :clingon.conditions
    :invalid-option
    :missing-required-option-value)
@@ -19,19 +24,12 @@
    :option-key
    :option-category
    :option-value
-   :make-option
    :initialize-option
    :finalize-option
    :end-of-options-p
    :short-option-p
    :long-option-p))
 (in-package :clingon.options)
-
-(defgeneric initialize-option (option &key)
-  (:documentation "Initializes an option, e.g. sets initial option value"))
-
-(defgeneric finalize-option (option &key)
-  (:documentation "Finalizes an option"))
 
 (defparameter *end-of-options-marker*
   "--"
