@@ -24,12 +24,16 @@
    :option-key
    :option-category
    :option-value
+   :option-is-set-p
    :initialize-option
    :finalize-option
    :end-of-options-p
    :short-option-p
    :long-option-p
-   :boolean-option))
+   :boolean-option
+   :list-option
+   :always-true
+   :always-false))
 (in-package :clingon.options)
 
 (defparameter *end-of-options-marker*
@@ -116,6 +120,11 @@ single argument -- the current value of the option.")
     :initform nil
     :reader option-category
     :documentation "Option category name")
+   (is-set-p
+    :initarg :is-set-p
+    :initform nil
+    :accessor option-is-set-p
+    :documentation "Predicate which returns T if the option was set")
    (value
     :initarg :value
     :initform nil

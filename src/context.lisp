@@ -14,6 +14,7 @@
    :option-short-name
    :option-long-name
    :option-reduce-fn
+   :option-is-set-p
    :initialize-option
    :finalize-option)
   (:import-from
@@ -89,8 +90,9 @@
     (setf (context-arguments context)
           (nreverse (context-arguments context)))
     (dolist (option (context-options context))
-      (finalize-option option)
-      (setf (gethash (option-key option) result) (option-value option)))))
+      (when (option-is-set-p option)
+	(finalize-option option)
+	(setf (gethash (option-key option) result) (option-value option))))))
 
 (defmethod find-short-option ((context context) name &key)
   (find name (context-options context) :key #'option-short-name :test #'char=))
@@ -153,6 +155,7 @@
           (push value (context-initial-argv context))
           (return-from parse-option))))
     ;; Valid option
+    (setf (option-is-set-p option) t)
     (let ((current-value (option-value option))
           (reduce-fn (option-reduce-fn option)))
       (cond
@@ -213,6 +216,8 @@
                          (list (read-line *query-io*)))
           (push value (context-initial-argv context))
           (return-from parse-option))))
+    ;; Valid option
+    (setf (option-is-set-p option) t)
     (let* ((current-value (option-value option))
            (reduce-fn (option-reduce-fn option)))
       (cond
