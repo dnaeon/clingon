@@ -74,6 +74,13 @@
     :documentation "Parent command. This one will be automatically set on creation."))
   (:documentation "A class to represent a command to be handled"))
 
+(defmethod print-object ((command command) stream)
+  (print-unreadable-object (command stream :type t)
+    (format stream "name=~A options=~A sub-commands=~A"
+	    (command-name command)
+	    (length (command-options command))
+	    (length (command-sub-commands command)))))
+
 (defmethod initialize-instance :after ((command command) &key)
   ;; Configure the parent for any of the sub-commands.
   (dolist (sub (command-sub-commands command))
