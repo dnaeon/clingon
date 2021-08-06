@@ -56,13 +56,16 @@
        (char= #\- (aref arg 0))
        (char= #\- (aref arg 1))))
 
+(defun always-true ()
+  "An option reducer function which always returns T"
+  (constantly t))
+
+(defun always-false ()
+  "An option reducer function which always returns NIL"
+  (constantly nil))
+
 (defclass option ()
-  ((kind
-    :initarg :kind
-    :initform :generic
-    :reader option-kind
-    :documentation "The option kind")
-   (parameter
+  ((parameter
     :initarg :parameter
     :initform nil
     :reader option-parameter
@@ -134,8 +137,7 @@ single argument -- the current value of the option.")
 
 (defmethod print-object ((option option) stream)
   (print-unreadable-object (option stream :type t)
-    (format stream "kind=~A short=~A long=~A"
-	    (option-kind option)
+    (format stream "short=~A long=~A"
 	    (option-short-name option)
 	    (option-long-name option))))
 
@@ -173,7 +175,9 @@ single argument -- the current value of the option.")
   (let* ((env-vars (option-env-vars option))
 	 (value-from-env (some #'uiop:getenvp env-vars))
 	 (value (or value-from-env (option-initial-value option))))
-    (setf (option-value option) value)))
+    (when value
+      (setf (option-value option) value)
+      (setf (option-is-set-p option) t))))
 
 (defmethod finalize-option ((option option) &key)
   "Finalizes the option and sets it's value to the
