@@ -93,7 +93,10 @@
     :initarg :reduce-fn
     :initform (error "Must specify a reduce function")
     :reader option-reduce-fn
-    :documentation "A function taking two arguments of the prev and current option value")
+    :documentation "If the option takes a parameter this should be a
+function, which accepts two arguments -- prev and current value. If
+the option does not accept a parameter the function should receive a
+single argument -- the current value of the option.")
    (finalize-fn
     :initarg :finalize-fn
     :initform #'identity
@@ -115,6 +118,12 @@
     :accessor option-value
     :documentation "Computed value after finalizing the option"))
   (:documentation "A class representing a command-line option"))
+
+(defmethod print-object ((option option) stream)
+  (print-unreadable-object (option stream :type t)
+    (format stream "short=~A long=~A"
+	    (option-short-name option)
+	    (option-long-name option))))
 
 (defun make-option (&rest rest)
   "Create a new instance of OPTION"
