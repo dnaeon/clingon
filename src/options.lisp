@@ -33,7 +33,8 @@
    :boolean-option
    :list-option
    :always-true
-   :always-false))
+   :always-false
+   :counter-option))
 (in-package :clingon.options)
 
 (defparameter *end-of-options-marker*
@@ -175,8 +176,8 @@ single argument -- the current value of the option.")
   (let* ((env-vars (option-env-vars option))
 	 (value-from-env (some #'uiop:getenvp env-vars))
 	 (value (or value-from-env (option-initial-value option))))
+    (setf (option-value option) value)
     (when value
-      (setf (option-value option) value)
       (setf (option-is-set-p option) t))))
 
 (defmethod finalize-option ((option option) &key)
@@ -224,3 +225,13 @@ single argument -- the current value of the option.")
 
 (defmethod make-option ((kind (eql :list)) &rest rest)
   (apply #'make-instance 'list-option rest))
+
+(defclass counter-option (option)
+  ()
+  (:default-initargs
+   :initial-value 0
+   :reduce-fn #'1+)
+  (:documentation "An option which increments every time an option is set"))
+
+(defmethod make-option ((kind (eql :counter)) &rest rest)
+  (apply #'make-instance 'counter-option rest))
