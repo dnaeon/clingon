@@ -4,7 +4,8 @@
   (:import-from
    :clingon.conditions
    :circular-dependency
-   :unknown-option)
+   :unknown-option
+   :missing-option-argument)
   (:import-from
    :clingon.options
    :option-key
@@ -82,7 +83,7 @@
   (setf (context-initial-argv context) nil)
   (let ((result (context-reduced-options context)))
     (setf (context-arguments context)
-	  (nreverse (context-arguments context)))
+          (nreverse (context-arguments context)))
     (dolist (option (context-options context))
       (finalize-option option)
       (setf (gethash (option-key option) result) (option-value option)))))
@@ -96,16 +97,16 @@
 (defmethod make-child-context ((context context))
   "Makes a child context from the given context"
   (make-context :initial-argv (copy-list (context-initial-argv context))
-		:parent context))
+                :parent context))
 
 (defmethod context-lineage ((context context))
   "Returns the context lineage"
   (loop :for c = context :then (context-parent c)
-	:while c
-	:when (member c visited :test #'equal) :do
-	  (error 'circular-dependency :items visited)
-	:collect c :into visited
-	:finally (return visited)))
+        :while c
+        :when (member c visited :test #'equal) :do
+          (error 'circular-dependency :items visited)
+        :collect c :into visited
+        :finally (return visited)))
 
 (defmethod parse-option ((kind (eql :consume-all-arguments)) (context context) &key)
   "Consumes all arguments after the end-of-options flag"
@@ -122,50 +123,117 @@
   "Parses a short option from the arguments of the context"
   (let* ((arg (pop (context-initial-argv context)))
          (short-name (aref arg 1))
+         (short-name-full (subseq arg 0 2))
          (option (find-short-option context short-name)))
+    ;; Unknown option
     (unless option
-      (error 'unknown-option :kind :short :name (format nil "-~A" short-name)))
+      ;; Push remaining options, if the argument contains collapsed
+      ;; options. For example the arg `-abcd' where `a' is an unknown
+      ;; option would push `-bcd' for further processing.
+      (when (> (length arg) 2)
+        (push (format nil "-~A" (subseq arg 2)) (context-initial-argv context)))
+      (restart-case (error 'unknown-option :kind :short :name short-name-full)
+        (discard-option ()
+          :report "Discard the unknown option"
+          (return-from parse-option))
+        (treat-as-argument ()
+          :report "Treat the unknown option as a free argument"
+          (push short-name-full (context-arguments context))
+          (return-from parse-option))
+        (supply-new-value (value)
+          :report "Supply a new value to be parsed"
+          :interactive (lambda ()
+                         (format *query-io* "New option to parse: ")
+                         (force-output *query-io*)
+                         (list (read-line *query-io*)))
+          (push value (context-initial-argv context))
+          (return-from parse-option))))
+    ;; Valid option
     (let ((current-value (option-value option))
           (reduce-fn (option-reduce-fn option)))
       (cond
-	;; Option takes a parameter
-	((option-parameter option)
-	 (let ((optarg (if (> (length arg) 2)
-			   (subseq arg 2) ;; -xfoo
-			   (pop (context-initial-argv context))))) ;; -x foo
-	   (setf (option-value option)
-		 (funcall reduce-fn current-value optarg))))
-	;; Option does not take a parameter
-	(t
-	 (setf (option-value option)
-	       (funcall reduce-fn current-value))
-	 ;; Options may be collapsed into a single argument, e.g. `-abc'
-	 ;; For non-parameter option which length is greater than 2,
-	 ;; we should push the rest of the options for processing.
-	 (when (> (length arg) 2)
-	   (let ((next-option (format nil "-~A" (subseq arg 2))))
-	     (push next-option (context-initial-argv context)))))))))
+        ;; Option takes a parameter
+        ((option-parameter option)
+         (let ((optarg (if (> (length arg) 2)
+                           (subseq arg 2) ;; -xfoo
+                           (pop (context-initial-argv context))))) ;; -x foo
+           ;; Missing argument for an option
+           (unless optarg
+             (restart-case (error 'missing-option-argument :name short-name-full :kind :short)
+               (discard-option ()
+                 :report "Discard the option"
+                 (return-from parse-option))
+               (supply-argument (value)
+                 :report "Supply argument for the option"
+                 :interactive (lambda ()
+                                (format *query-io* "Argument for ~A option: " short-name-full)
+                                (force-output *query-io*)
+                                (list (read-line *query-io*)))
+                 (setf optarg value))))
+           (setf (option-value option)
+                 (funcall reduce-fn current-value optarg))))
+        ;; Option does not take an argument
+        (t
+         (setf (option-value option)
+               (funcall reduce-fn current-value))
+         ;; Options may be collapsed into a single argument,
+         ;; e.g. `-abc'. For options which which do not accept
+         ;; arguments, but we still have remaining tokens we should
+         ;; push them for further processing.
+         (when (> (length arg) 2)
+           (let ((next-option (format nil "-~A" (subseq arg 2))))
+             (push next-option (context-initial-argv context)))))))))
 
 (defmethod parse-option ((kind (eql :long)) (context context) &key)
   "Parses a long option from the arguments of the context"
   (let* ((arg (pop (context-initial-argv context)))
-	 (equals-position (position #\= arg))
+         (equals-position (position #\= arg))
          (long-name (subseq arg 2 equals-position))
+         (long-name-full (format nil "--~A" long-name))
          (option (find-long-option context long-name)))
+    ;; Unknown option
     (unless option
-      (error 'unknown-option :kind :long :name (format nil "--~A" long-name)))
+      (restart-case (error 'unknown-option :kind :long :name long-name-full)
+        (discard-option ()
+          :report "Discard the unknown option"
+          (return-from parse-option))
+        (treat-as-argument ()
+          :report "Treat the unknown option as a free argument"
+          (push long-name-full (context-arguments context))
+          (return-from parse-option))
+        (supply-new-value (value)
+          :report "Supply a new value to be parsed"
+          :interactive (lambda ()
+                         (format *query-io* "New option to parse: ")
+                         (force-output *query-io*)
+                         (list (read-line *query-io*)))
+          (push value (context-initial-argv context))
+          (return-from parse-option))))
     (let* ((current-value (option-value option))
            (reduce-fn (option-reduce-fn option)))
       (cond
-	;; Option takes a parameter
-	((option-parameter option)
-	 (let ((optarg (if equals-position
-			   (subseq arg (1+ equals-position))       ;; --arg=foo
-			   (pop (context-initial-argv context))))) ;; --arg foo
-	   (setf (option-value option)
-		 (funcall reduce-fn current-value optarg))))
-	;; Option does not take a parameter
-	(t
-	 (setf (option-value option)
-	       (funcall reduce-fn current-value)))))))
+        ;; Option takes a parameter
+        ((option-parameter option)
+         (let ((optarg (if equals-position
+                           (subseq arg (1+ equals-position))       ;; --arg=foo
+                           (pop (context-initial-argv context))))) ;; --arg foo
+           ;; Missing argument for the option
+           (unless optarg
+             (restart-case (error 'missing-option-argument :name long-name-full :kind :long)
+               (discard-option ()
+                 :report "Discard the option"
+                 (return-from parse-option))
+               (supply-argument (value)
+                 :report "Supply argument for the option"
+                 :interactive (lambda ()
+                                (format *query-io* "Argument for ~A option: " long-name-full)
+                                (force-output *query-io*)
+                                (list (read-line *query-io*)))
+                 (setf optarg value))))
+           (setf (option-value option)
+                 (funcall reduce-fn current-value optarg))))
+        ;; Option does not take a parameter
+        (t
+         (setf (option-value option)
+               (funcall reduce-fn current-value)))))))
 

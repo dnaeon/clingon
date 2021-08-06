@@ -5,8 +5,7 @@
    :clingon.conditions
    :circular-dependency
    :duplicate-options
-   :duplicate-commands
-   :unknown-option-p)
+   :duplicate-commands)
   (:import-from
    :clingon.context
    :context
@@ -168,44 +167,28 @@
 	:for sub-command = (and empty-ctx-arguments-p (find-sub-command command arg))
 	:for new-context = (and sub-command (make-child-context context))
 	:do
-	   (restart-case
-	       (cond
-		 ;; End of options.
-		 ((end-of-options-p arg) (parse-option :consume-all-arguments context))
-		 ;; Short options.
-		 ((short-option-p arg) (parse-option :short context))
-		 ;; Long options.
-		 ((long-option-p arg) (parse-option :long context))
-		 ;; Sub-commands.
-		 ;; The sub-command will be non-nil if it is the first
-		 ;; free argument we are processing and that argument
-		 ;; happens to be the name of a sub-command.
-		 ;; At this point we stop processing in the current
-		 ;; context and pass to the sub-command for further
-		 ;; processing.
-		 (sub-command
-		  ;; Remove the sub-command name from the arguments
-		  (pop (context-initial-argv new-context))
-		  (finalize-context context)
-		  (return-from parse-command-line%
-		    (parse-command-line% sub-command new-context)))
-		 ;; Free arguments
-		 (t
-		  (parse-option :free-argument context)))
-	     (discard-option ()
-	       :test unknown-option-p
-	       :report "Discard the unknown option")
-	     (treat-as-argument ()
-	       :test unknown-option-p
-	       :report "Treat the unknown option as a free argument"
-	       (push arg (context-arguments context)))
-	     (supply-new-value (value)
-	       :test unknown-option-p
-	       :report "Supply a new value to be parsed"
-	       :interactive (lambda ()
-			      (format *query-io* "New option to parse: ")
-			      (force-output *query-io*)
-			      (list (read-line *query-io*)))
-	       (push value (context-initial-argv context))))
+	   (cond
+	     ;; End of options.
+	     ((end-of-options-p arg) (parse-option :consume-all-arguments context))
+	     ;; Short options.
+	     ((short-option-p arg) (parse-option :short context))
+	     ;; Long options.
+	     ((long-option-p arg) (parse-option :long context))
+	     ;; Sub-commands.
+	     ;; The sub-command will be non-nil if it is the first
+	     ;; free argument we are processing and that argument
+	     ;; happens to be the name of a sub-command.
+	     ;; At this point we stop processing in the current
+	     ;; context and pass to the sub-command for further
+	     ;; processing.
+	     (sub-command
+	      ;; Remove the sub-command name from the arguments
+	      (pop (context-initial-argv new-context))
+	      (finalize-context context)
+	      (return-from parse-command-line%
+		(parse-command-line% sub-command new-context)))
+	     ;; Free arguments
+	     (t
+	      (parse-option :free-argument context)))
 	:finally (finalize-context context))
   (values command context))
