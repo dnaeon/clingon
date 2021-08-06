@@ -17,7 +17,8 @@
    :unknown-option-p
    :missing-option-argument
    :missing-option-argument-name
-   :missing-option-argument-kind))
+   :missing-option-argument-kind
+   :missing-option-argument-p))
 (in-package :clingon.conditions)
 
 (define-condition circular-dependency (simple-error)
@@ -94,3 +95,6 @@
 		     (missing-option-argument-name condition)
 		     (missing-option-argument-kind condition))))
   (:documentation "A condition which is signalled when an option expects an argument, but none was provided"))
+
+(defun missing-option-argument-p (value)
+  (typep value 'missing-option-argument))
