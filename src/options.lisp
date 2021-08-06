@@ -205,9 +205,22 @@ single argument -- the current value of the option.")
 (defclass boolean-option (option)
   ()
   (:default-initargs
-   :kind :boolean
-   :reduce-fn (lambda (value) (and value t)))
+   :reduce-fn (always-true)
+   :finalize-fn (lambda (value) (and value t)))
   (:documentation "An option which represents a boolean flag"))
 
 (defmethod make-option ((kind (eql :boolean)) &rest rest)
   (apply #'make-instance 'boolean-option rest))
+
+(defclass list-option (option)
+  ()
+  (:default-initargs
+   :initial-value (list)
+   :reduce-fn (lambda (prev new)
+		(cons new prev))
+   :finalize-fn #'nreverse
+   :parameter "ITEM")
+  (:documentation "An option which collects a list of values"))
+
+(defmethod make-option ((kind (eql :list)) &rest rest)
+  (apply #'make-instance 'list-option rest))
