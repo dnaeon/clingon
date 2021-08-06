@@ -21,8 +21,21 @@
    :missing-option-argument-p
    :invalid-option
    :invalid-option-item
-   :invalid-option-reason))
+   :invalid-option-reason
+   :missing-required-option-value
+   :missing-required-option-value-item))
 (in-package :clingon.conditions)
+
+(define-condition missing-required-option-value (simple-error)
+  ((item
+    :initarg :item
+    :initform (error "Must specify option item")
+    :reader missing-required-option-value-item
+    :documentation "The option item which requires a value"))
+  (:report (lambda (condition stream)
+             (declare (ignore condition))
+             (format stream "Required option not set")))
+  (:documentation "A condition which is signalled when a required option value was not set"))
 
 (define-condition circular-dependency (simple-error)
   ((items
@@ -30,8 +43,8 @@
     :initform (error "Must specify items")
     :reader circular-dependency-items))
   (:report (lambda (condition stream)
-	     (declare (ignore condition))
-	     (format stream "Circular dependency detected")))
+             (declare (ignore condition))
+             (format stream "Circular dependency detected")))
   (:documentation "A condition which is signalled when a circular dependency is detected"))
 
 (define-condition duplicate-options (simple-error)
@@ -48,9 +61,9 @@
     :initform (error "Must specify option name")
     :reader duplicate-option-name))
   (:report (lambda (condition stream)
-	     (format stream "Duplicate option ~A of kind ~A found"
-		     (duplicate-option-name condition)
-		     (duplicate-option-kind condition))))
+             (format stream "Duplicate option ~A of kind ~A found"
+                     (duplicate-option-name condition)
+                     (duplicate-option-kind condition))))
   (:documentation "A condition which is signalled when a command provides duplicate options"))
 
 (define-condition duplicate-commands (simple-error)
@@ -63,7 +76,7 @@
     :initform (error "Must specify command name")
     :reader duplicate-command-name))
   (:report (lambda (condition stream)
-	     (format stream "Duplicate commands ~A found" (duplicate-command-name condition))))
+             (format stream "Duplicate commands ~A found" (duplicate-command-name condition))))
   (:documentation "A condition which is signalled when a command provides duplicate sub-commands"))
 
 (define-condition unknown-option (error)
@@ -76,9 +89,9 @@
     :initform (error "Must specify option kind")
     :reader unknown-option-kind))
   (:report (lambda (condition stream)
-	     (format stream "Unknown option ~A of kind ~A"
-		     (unknown-option-name condition)
-		     (unknown-option-kind condition))))
+             (format stream "Unknown option ~A of kind ~A"
+                     (unknown-option-name condition)
+                     (unknown-option-kind condition))))
   (:documentation "A condition which is signalled when an unknown option is seen"))
 
 (defun unknown-option-p (value)
@@ -94,9 +107,9 @@
     :initform (error "Must specify option kind")
     :reader missing-option-argument-kind))
   (:report (lambda (condition stream)
-	     (format stream "Missing argument for option ~A of kind ~A"
-		     (missing-option-argument-name condition)
-		     (missing-option-argument-kind condition))))
+             (format stream "Missing argument for option ~A of kind ~A"
+                     (missing-option-argument-name condition)
+                     (missing-option-argument-kind condition))))
   (:documentation "A condition which is signalled when an option expects an argument, but none was provided"))
 
 (defun missing-option-argument-p (value)
@@ -114,5 +127,5 @@
     :reader invalid-option-reason
     :documentation "The reason why this option is invalid"))
   (:report (lambda (condition stream)
-	     (format stream "Invalid option: ~A" (invalid-option-reason condition))))
+             (format stream "Invalid option: ~A" (invalid-option-reason condition))))
   (:documentation "A condition which is signalled when an option is identified as invalid"))
