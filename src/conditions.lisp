@@ -18,7 +18,10 @@
    :missing-option-argument
    :missing-option-argument-name
    :missing-option-argument-kind
-   :missing-option-argument-p))
+   :missing-option-argument-p
+   :invalid-option
+   :invalid-option-item
+   :invalid-option-reason))
 (in-package :clingon.conditions)
 
 (define-condition circular-dependency (simple-error)
@@ -98,3 +101,18 @@
 
 (defun missing-option-argument-p (value)
   (typep value 'missing-option-argument))
+
+(define-condition invalid-option (simple-error)
+  ((item
+    :initarg :option
+    :initform (error "Must specify option item")
+    :reader invalid-option-item
+    :documentation "The option which is identified as invalid")
+   (reason
+    :initarg :reason
+    :initform (error "Must specify reason")
+    :reader invalid-option-reason
+    :documentation "The reason why this option is invalid"))
+  (:report (lambda (condition stream)
+	     (format stream "Invalid option: ~A" (invalid-option-reason condition))))
+  (:documentation "A condition which is signalled when an option is identified as invalid"))

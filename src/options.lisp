@@ -5,6 +5,7 @@
    :option
    :option-short-name
    :option-long-name
+   :option-required
    :option-parameter
    :option-help
    :option-env-vars
@@ -49,16 +50,21 @@
        (char= #\- (aref arg 1))))
 
 (defclass option ()
-  ((short-name
-    :initarg :short-name
-    :initform nil
-    :reader option-short-name
-    :documentation "Short option name")
-   (parameter
+  ((parameter
     :initarg :parameter
     :initform nil
     :reader option-parameter
     :documentation "Option takes a parameter identified by the given name")
+   (required
+    :initarg :required
+    :initform nil
+    :reader option-required
+    :documentation "Mark the option as required. Only valid if the option takes a parameter")
+   (short-name
+    :initarg :short-name
+    :initform nil
+    :reader option-short-name
+    :documentation "Short option name")
    (long-name
     :initarg :long-name
     :initform nil
