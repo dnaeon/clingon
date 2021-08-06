@@ -1,6 +1,9 @@
 (in-package :cl-user)
 (defpackage :clingon.options
   (:use :cl)
+  (:import-from
+   :clingon.conditions
+   :invalid-option)
   (:export
    :option
    :option-short-name
@@ -117,9 +120,23 @@
   (apply #'make-instance 'option rest))
 
 (defmethod initialize-instance :after ((option option) &key)
+  ;; Test for required short/long names
   (with-slots (short-name long-name key) option
     (unless (or short-name long-name)
-      (error "Option ~A must specify a short and/or long name" key))))
+      (error 'invalid-option :item option
+			     :reason (format nil "option must specify a short and/or long name"))))
+  ;; Required option must have a parameter associated with it
+  (when (and (option-required option)
+	     (not (option-parameter option)))
+    (error 'invalid-option :item option
+			   :reason (format nil "required option must have a parameter associated with it")))
+  ;; Required option must not have a default value associated with it.
+  ;; However, it can still be initialized through other means,
+  ;; e.g. environment variables.
+  (when (and (option-required option)
+	     (option-initial-value option))
+    (error 'invalid :item option
+		    :reason "required option may not have a default value")))
 
 (defmethod initialize-option ((option option) &key)
   "Initialize the value of the option.
