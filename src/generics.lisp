@@ -7,6 +7,8 @@
    :parse-option
    :initialize-option
    :finalize-option
+   :initialize-context
+   :finalize-context
    :make-option))
 (in-package :clingon.generics)
 
@@ -27,3 +29,9 @@
 
 (defgeneric make-option (kind &rest rest)
   (:documentation "Creates a new option of the given kind"))
+
+(defgeneric initialize-context (context &key)
+  (:documentation "Initializes a context"))
+
+(defgeneric finalize-context (context &key)
+  (:documentation "Finalizes a context"))

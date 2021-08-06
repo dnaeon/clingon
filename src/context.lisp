@@ -21,7 +21,9 @@
    :clingon.generics
    :find-short-option
    :find-long-option
-   :parse-option)
+   :parse-option
+   :initialize-context
+   :finalize-context)
   (:export
    :context
    :context-parent
@@ -35,12 +37,6 @@
    :finalize-context
    :make-child-context))
 (in-package :clingon.context)
-
-(defgeneric initialize-context (context &key)
-  (:documentation "Initializes a context"))
-
-(defgeneric finalize-context (context &key)
-  (:documentation "Finalizes a context"))
 
 (defclass context ()
   ((parent

@@ -12,12 +12,13 @@
    :make-context
    :make-child-context
    :context-arguments
-   :context-initial-argv
-   :initialize-context
-   :finalize-context)
+   :context-initial-argv)
   (:import-from
    :clingon.generics
-   :parse-option)
+   :parse-option
+   :make-option
+   :initialize-context
+   :finalize-context)
   (:import-from
    :clingon.options
    :end-of-options-p
