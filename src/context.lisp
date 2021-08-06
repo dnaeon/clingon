@@ -69,6 +69,10 @@
     :documentation "Reduced options, which are set when finalizing a context"))
   (:documentation "A context class represents the environment in which a command runs"))
 
+(defmethod print-object ((context context) stream)
+  (print-unreadable-object (context stream :type t)
+    (format stream "options=~A" (length (context-options context)))))
+
 (defun make-context (&rest rest)
   "Creates a new CONTEXT instance"
   (apply #'make-instance 'context rest))
@@ -236,4 +240,3 @@
         (t
          (setf (option-value option)
                (funcall reduce-fn current-value)))))))
-
