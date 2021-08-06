@@ -3,7 +3,8 @@
   (:use :cl)
   (:import-from
    :clingon.conditions
-   :invalid-option)
+   :invalid-option
+   :missing-required-option-value)
   (:export
    :option
    :option-short-name
@@ -153,8 +154,23 @@
 
 (defmethod finalize-option ((option option) &key)
   "Finalizes the option and sets it's value to the
-  result of invoking of :finalize-fn function"
-  (let* ((finalize-fn (option-finalize-fn option))
-	 (value (option-value option))
-	 (final-value (funcall finalize-fn value)))
-    (setf (option-value option) final-value)))
+  result of invoking the :finalize-fn function"
+  (let ((reduce-fn (option-reduce-fn option))
+	(finalize-fn (option-finalize-fn option))
+	(value (option-value option)))
+    ;; A required option value was not provided
+    (when (and (not value) (option-required option))
+      (restart-case (error 'missing-required-option-value :item option)
+        (supply-value (value)
+          :report "Supply value for the option"
+          :interactive (lambda ()
+                         (format *query-io* "New value: ")
+                         (force-output *query-io*)
+                         (list (read-line *query-io*)))
+	  (setf (option-value option)
+		(funcall reduce-fn nil value))
+	  (return-from finalize-option
+	    (finalize-option option)))))
+    ;; Finalize the option's value
+    (setf (option-value option)
+	  (funcall finalize-fn value))))
