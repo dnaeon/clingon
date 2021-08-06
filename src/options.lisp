@@ -53,7 +53,12 @@
        (char= #\- (aref arg 1))))
 
 (defclass option ()
-  ((parameter
+  ((kind
+    :initarg :kind
+    :initform :generic
+    :reader option-kind
+    :documentation "The option kind")
+   (parameter
     :initarg :parameter
     :initform nil
     :reader option-parameter
@@ -120,9 +125,14 @@ single argument -- the current value of the option.")
 
 (defmethod print-object ((option option) stream)
   (print-unreadable-object (option stream :type t)
-    (format stream "short=~A long=~A"
+    (format stream "kind=~A short=~A long=~A"
+	    (option-kind option)
 	    (option-short-name option)
 	    (option-long-name option))))
+
+(defmethod make-option ((kind (eql :generic)) &rest rest)
+  "Creates a generic option"
+  (apply #'make-instance 'option rest))
 
 (defmethod initialize-instance :after ((option option) &key)
   ;; Test for required short/long names
@@ -182,5 +192,9 @@ single argument -- the current value of the option.")
 (defclass boolean-option (option)
   ()
   (:default-initargs
-   :finalize-fn (lambda (value) (and value t)))
+   :kind :boolean
+   :reduce-fn (lambda (value) (and value t)))
   (:documentation "An option which represents a boolean flag"))
+
+(defmethod make-option ((kind (eql :boolean)) &rest rest)
+  (apply #'make-instance 'boolean-option rest))
