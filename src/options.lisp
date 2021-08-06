@@ -28,7 +28,8 @@
    :finalize-option
    :end-of-options-p
    :short-option-p
-   :long-option-p))
+   :long-option-p
+   :boolean-option))
 (in-package :clingon.options)
 
 (defparameter *end-of-options-marker*
@@ -123,10 +124,6 @@ single argument -- the current value of the option.")
 	    (option-short-name option)
 	    (option-long-name option))))
 
-(defun make-option (&rest rest)
-  "Create a new instance of OPTION"
-  (apply #'make-instance 'option rest))
-
 (defmethod initialize-instance :after ((option option) &key)
   ;; Test for required short/long names
   (with-slots (short-name long-name key) option
@@ -181,3 +178,9 @@ single argument -- the current value of the option.")
     ;; Finalize the option's value
     (setf (option-value option)
 	  (funcall finalize-fn value))))
+
+(defclass boolean-option (option)
+  ()
+  (:default-initargs
+   :finalize-fn (lambda (value) (and value t)))
+  (:documentation "An option which represents a boolean flag"))
