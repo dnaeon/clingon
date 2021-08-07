@@ -15,7 +15,7 @@
   :homepage "https://github.com/dnaeon/clingon"
   :bug-tracker "https://github.com/dnaeon/clingon"
   :source-control "https://github.com/dnaeon/clingon"
-  :depends-on ()
+  :depends-on (:cl-reexport)
   :components ((:module "utils"
 		:pathname #P"src/"
 		:components ((:file "utils")))
@@ -24,8 +24,7 @@
 		:components ((:file "conditions")
 			     (:file "generics")
 			     (:file "options")
-			     (:file "context" :depends-on ("conditions" "generics" "options"))
-			     (:file "command" :depends-on ("context")))
+			     (:file "command" :depends-on ("conditions" "generics" "options")))
 		:depends-on ("utils"))
 	       (:module "client-package"
 		:pathname #P"src/"

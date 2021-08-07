@@ -23,7 +23,8 @@
    :invalid-option-item
    :invalid-option-reason
    :missing-required-option-value
-   :missing-required-option-value-item))
+   :missing-required-option-value-item
+   :missing-required-option-value-command))
 (in-package :clingon.conditions)
 
 (define-condition missing-required-option-value (simple-error)
@@ -31,7 +32,12 @@
     :initarg :item
     :initform (error "Must specify option item")
     :reader missing-required-option-value-item
-    :documentation "The option item which requires a value"))
+    :documentation "The option item which requires a value")
+   (command
+    :initarg :command
+    :initform (error "Must specify command")
+    :reader missing-required-option-value-command
+    :documentation "The command to which the option is associated"))
   (:report (lambda (condition stream)
              (declare (ignore condition))
              (format stream "Required option not set")))
@@ -117,7 +123,7 @@
 
 (define-condition invalid-option (simple-error)
   ((item
-    :initarg :option
+    :initarg :item
     :initform (error "Must specify option item")
     :reader invalid-option-item
     :documentation "The option which is identified as invalid")

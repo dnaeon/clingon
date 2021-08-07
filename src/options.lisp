@@ -14,7 +14,7 @@
    :option
    :option-short-name
    :option-long-name
-   :option-required
+   :option-required-p
    :option-parameter
    :option-help
    :option-env-vars
@@ -74,7 +74,7 @@
    (required
     :initarg :required
     :initform nil
-    :reader option-required
+    :reader option-required-p
     :documentation "Mark the option as required. Only valid if the option takes a parameter")
    (short-name
     :initarg :short-name
@@ -148,19 +148,19 @@ single argument -- the current value of the option.")
 
 (defmethod initialize-instance :after ((option option) &key)
   ;; Test for required short/long names
-  (with-slots (short-name long-name key) option
+  (with-slots (short-name long-name) option
     (unless (or short-name long-name)
       (error 'invalid-option :item option
 			     :reason (format nil "option must specify a short and/or long name"))))
   ;; Required option must have a parameter associated with it
-  (when (and (option-required option)
+  (when (and (option-required-p option)
 	     (not (option-parameter option)))
     (error 'invalid-option :item option
 			   :reason (format nil "required option must have a parameter associated with it")))
   ;; Required option must not have a default value associated with it.
   ;; However, it can still be initialized through other means,
   ;; e.g. environment variables.
-  (when (and (option-required option)
+  (when (and (option-required-p option)
 	     (option-initial-value option))
     (error 'invalid :item option
 		    :reason "required option may not have a default value")))
