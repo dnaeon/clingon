@@ -192,6 +192,8 @@
 	     (sub-command
 	      ;; Remove the sub-command name from the arguments
 	      (pop (context-initial-argv new-context))
+	      ;; Configure the options for the child context
+	      (setf (context-options new-context) (command-options sub-command))
 	      (finalize-context context)
 	      (return-from parse-command-line%
 		(parse-command-line% sub-command new-context)))
