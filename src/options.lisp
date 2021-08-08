@@ -32,9 +32,9 @@
    :end-of-options-p
    :short-option-p
    :long-option-p
-   :boolean-option
-   :list-option
-   :counter-option))
+   :option-boolean
+   :option-boolean-true
+   :option-boolean-false))
 (in-package :clingon.options)
 
 (defgeneric initialize-option (option &key)
@@ -179,35 +179,52 @@
   "Finalizes the value of the option"
   (option-value option))
 
-(defclass boolean-option (option)
+(defclass option-boolean (option)
   ()
   (:default-initargs
-   :reduce-fn (always-true)
-   :finalize-fn (lambda (value) (and value t)))
+   :parameter "VALUE"
+   :initial-value :true)
   (:documentation "An option which represents a boolean flag"))
 
 (defmethod make-option ((kind (eql :boolean)) &rest rest)
-  (apply #'make-instance 'boolean-option rest))
+  (apply #'make-instance 'option-boolean rest))
 
-(defclass list-option (option)
+(defmethod derive-option-value ((option option-boolean) arg &key)
+  (let ((arg (string-downcase arg)))
+    (cond
+      ((string= "1" arg) :true)
+      ((string= "true" arg) :true)
+      (t :false))))
+
+(defmethod finalize-option ((option option-boolean) &key)
+  (ecase (option-value option)
+    (:true t)
+    (:false nil)))
+
+(defclass option-boolean-true (option-boolean)
   ()
   (:default-initargs
-   :initial-value nil
-   :reduce-fn (lambda (prev new)
-		(cons new prev))
-   :finalize-fn #'nreverse
-   :parameter "ITEM")
-  (:documentation "An option which collects a list of values"))
+   :parameter nil
+   :initial-value :true)
+  (:documentation "A boolean option which always returns true"))
 
-(defmethod make-option ((kind (eql :list)) &rest rest)
-  (apply #'make-instance 'list-option rest))
+(defmethod make-option ((kind (eql :boolean/true)) &rest rest)
+  (apply #'make-instance 'option-boolean-true rest))
 
-(defclass counter-option (option)
+(defmethod derive-option-value ((option option-boolean-true) arg &key)
+  (declare (ignore arg))
+  :true)
+
+(defclass option-boolean-false (option-boolean)
   ()
   (:default-initargs
-   :initial-value 0
-   :reduce-fn #'1+)
-  (:documentation "An option which increments every time it is set"))
+   :parameter nil
+   :initial-value :false)
+  (:documentation "A boolean option which always returns false"))
 
-(defmethod make-option ((kind (eql :counter)) &rest rest)
-  (apply #'make-instance 'counter-option rest))
+(defmethod make-option ((kind (eql :boolean/false)) &rest rest)
+  (apply #'make-instance 'option-boolean-false rest))
+
+(defmethod derive-option-value ((option option-boolean-false) arg &key)
+  (declare (ignore arg))
+  :false)
