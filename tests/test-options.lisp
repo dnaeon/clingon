@@ -147,3 +147,27 @@
 	(setf (clingon:option-value opt)
 	      (clingon:derive-option-value opt nil)))
       (ok (= 51 (clingon:finalize-option opt)) "finalized value matches"))))
+
+(deftest option-list
+  (testing "list with defaults"
+    (let ((opt (clingon:make-option :list
+				    :help "list with defaults"
+				    :short-name #\l
+				    :key :list))
+	  (items (list "foo" "bar" "baz")))
+      (clingon:initialize-option opt)
+      (loop :for item :in items :do
+	(setf (clingon:option-value opt)
+	      (clingon:derive-option-value opt item)))
+      (ok (equal items (clingon:finalize-option opt)) "finalized value matches")))
+
+  (testing "list with initial string value"
+    ;; The string value for a list would usually be provided from
+    ;; environment variables.
+    (let ((opt (clingon:make-option :list
+				    :help "list with defaults"
+				    :short-name #\l
+				    :key :list
+				    :initial-value "foo, bar, baz")))
+      (clingon:initialize-option opt)
+      (ok (equal (list "foo" "bar" "baz") (clingon:finalize-option opt)) "finalized value matches"))))
