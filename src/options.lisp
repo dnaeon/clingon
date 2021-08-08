@@ -19,8 +19,6 @@
    :option-help
    :option-env-vars
    :option-initial-value
-   :option-reduce-fn
-   :option-finalize-fn
    :option-key
    :option-category
    :option-value
@@ -35,7 +33,8 @@
    :option-boolean
    :option-boolean-true
    :option-boolean-false
-   :option-counter))
+   :option-counter
+   :option-list))
 (in-package :clingon.options)
 
 (defgeneric initialize-option (option &key)
@@ -242,3 +241,19 @@
 (defmethod derive-option-value ((option option-counter) arg &key)
   (declare (ignore arg))
   (1+ (option-value option)))
+
+(defclass option-list (option)
+  ()
+  (:default-initargs
+   :initial-value nil
+   :parameter "ITEM")
+  (:documentation "An option which collects values into a list"))
+
+(defmethod make-option ((kind (eql :list)) &rest rest)
+  (apply #'make-instance 'option-list rest))
+
+(defmethod derive-option-value ((option option-list) arg &key)
+  (cons arg (option-value option)))
+
+(defmethod finalize-option ((option option-list) &key)
+  (nreverse (option-value option)))
