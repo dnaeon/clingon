@@ -49,7 +49,12 @@
       (clingon:initialize-option foo)
       (ok (string= (clingon:option-value foo) "bar") "option foo is properly initialized")
       (ok (string= (clingon:derive-option-value foo "baz") "baz") "derive baz value")
-      (ok (string= (clingon:derive-option-value foo "qux") "qux") "derive qux value"))))
+      (ok (string= (clingon:derive-option-value foo "qux") "qux") "derive qux value")
+
+      ;; The finalized value of the option will still be "bar", since
+      ;; we haven't set that place yet. It is usually set by the
+      ;; parser.
+      (ok (string= (clingon:finalize-option foo) "bar") "finalized value matches"))))
 
 (deftest option-predicates
   (testing "short-options"
