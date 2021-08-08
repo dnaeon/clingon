@@ -19,5 +19,6 @@
 		:pathname #P"tests/"
 		:serial t
 		:components ((:file "test-package")
-			     (:file "test-utils"))))
+			     (:file "test-utils")
+			     (:file "test-options"))))
   :perform (test-op (op c) (uiop:symbol-call :rove :run-suite :clingon.test)))
