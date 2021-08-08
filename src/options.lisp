@@ -287,7 +287,9 @@
     (setf (option-value option)
 	(etypecase value
 	  (list value)
-	  (string (split-sequence:split-sequence separator value))))))
+	  (string (nreverse (mapcar (lambda (x)
+				      (string-trim #(#\ ) x))
+				    (split-sequence:split-sequence separator value))))))))
 
 (defmethod derive-option-value ((option option-list) arg &key)
   (cons arg (option-value option)))
