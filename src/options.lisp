@@ -46,7 +46,7 @@
   (:documentation "Finalizes an option, e.g. performs any value transformations"))
 
 (defgeneric derive-option-value (option value &key)
-  (:documentation "Derives a new value for the option based on the given VALUE"))
+  (:documentation "Derives a new value for the option based on the given string VALUE"))
 
 (defgeneric make-option (kind &rest rest)
   (:documentation "Creates a new option of the given kind"))
@@ -296,3 +296,40 @@
 
 (defmethod finalize-option ((option option-list) &key)
   (nreverse (option-value option)))
+
+(defun parse-integer-or-lose (value &key (radix 10))
+  (let ((int (parse-integer value :radix radix :junk-allowed t)))
+    (unless int
+      (error 'option-parse-error :reason "Cannot parse ~A as integer" value))
+    int))
+
+(defclass option-integer (option)
+  ((radix
+    :initarg :radix
+    :initform 10
+    :reader option-integer-radix))
+  (:default-initargs
+   :parameter "INT")
+  (:documentation "An option class to represent an integer"))
+
+(defmethod make-option ((kind (eql :integer)) &rest rest)
+  (apply #'make-instance 'option-integer rest))
+
+(defmethod initialize-option ((option option-integer) &key)
+  "Initializes the integer option. In case the option was
+  first initialized by other means, such as environment variables,
+  we make sure that the provided value is a valid integer."
+  (call-next-method)
+
+  ;; Nothing to initialize further
+  (unless (option-value option)
+    (return-from initialize-option))
+
+  (let ((value (option-value option)))
+    (setf (option-value option)
+	  (etypecase value
+	    (integer value)
+	    (string (parse-integer-or-lose value :radix (option-integer-radix option)))))))
+
+(defmethod derive-option-value ((option option-integer) arg &key)
+  (parse-integer-or-lose arg :radix (option-integer-radix option)))
