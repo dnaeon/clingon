@@ -122,3 +122,28 @@
       (ok (equal :false (clingon:derive-option-value foo nil)) "derive value from nil")
       (ok (equal :false (clingon:derive-option-value foo "random-string")) "derive value from \"random-string\"")
       (ok (equal nil (clingon:finalize-option foo)) "finalized value matches"))))
+
+(deftest option-counter
+  (testing "counter with defaults"
+    (let ((opt (clingon:make-option :counter
+				    :help "counter with defaults"
+				    :short-name #\c
+				    :key :counter)))
+      (clingon:initialize-option opt)
+      (loop :repeat 42 :do
+	(setf (clingon:option-value opt)
+	      (clingon:derive-option-value opt nil)))
+      (ok (= 42 (clingon:finalize-option opt)) "finalized value matches")))
+
+  (testing "counter with a step"
+    (let ((opt (clingon:make-option :counter
+				    :help "counter with a step"
+				    :short-name #\c
+				    :key :counter
+				    :initial-value 42
+				    :step 3)))
+      (clingon:initialize-option opt)
+      (loop :repeat 3 :do
+	(setf (clingon:option-value opt)
+	      (clingon:derive-option-value opt nil)))
+      (ok (= 51 (clingon:finalize-option opt)) "finalized value matches"))))
