@@ -5,11 +5,8 @@
    :find-short-option
    :find-long-option
    :parse-option
-   :initialize-option
-   :finalize-option
    :initialize-command
-   :finalize-command
-   :make-option))
+   :finalize-command))
 (in-package :clingon.generics)
 
 (defgeneric find-short-option (object name &key)
@@ -20,15 +17,6 @@
 
 (defgeneric parse-option (kind object &key)
   (:documentation "Parses an option of the given KIND"))
-
-(defgeneric initialize-option (option &key)
-  (:documentation "Initializes an option, e.g. sets initial option value"))
-
-(defgeneric finalize-option (option &key)
-  (:documentation "Finalizes an option"))
-
-(defgeneric make-option (kind &rest rest)
-  (:documentation "Creates a new option of the given kind"))
 
 (defgeneric initialize-command (command &key)
   (:documentation "Initializes a command"))

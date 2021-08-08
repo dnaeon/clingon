@@ -27,6 +27,8 @@
    :option-is-set-p
    :initialize-option
    :finalize-option
+   :derive-option-value
+   :make-option
    :end-of-options-p
    :short-option-p
    :long-option-p
@@ -34,6 +36,18 @@
    :list-option
    :counter-option))
 (in-package :clingon.options)
+
+(defgeneric initialize-option (option &key)
+  (:documentation "Initializes an option, e.g. sets initial option value"))
+
+(defgeneric finalize-option (option &key)
+  (:documentation "Finalizes an option, e.g. apply any value transformations"))
+
+(defgeneric derive-option-value (option value &key)
+  (:documentation "Derives a new value for the option based on the given VALUE"))
+
+(defgeneric make-option (kind &rest rest)
+  (:documentation "Creates a new option of the given kind"))
 
 (defparameter *end-of-options-marker*
   "--"
@@ -91,19 +105,6 @@
     :initform nil
     :reader option-initial-value
     :documentation "Initial value for the option")
-   (reduce-fn
-    :initarg :reduce-fn
-    :initform (error "Must specify a reduce function")
-    :reader option-reduce-fn
-    :documentation "If the option takes a parameter this should be a
-function, which accepts two arguments -- prev and current value. If
-the option does not accept a parameter the function should receive a
-single argument -- the current value of the option.")
-   (finalize-fn
-    :initarg :finalize-fn
-    :initform #'identity
-    :reader option-finalize-fn
-    :documentation "A function to finalize the option value. Takes a single argument.")
    (key
     :initarg :key
     :initform (error "Must specify option key")
