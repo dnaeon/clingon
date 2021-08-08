@@ -41,7 +41,7 @@
   (:documentation "Initializes an option, e.g. sets initial option value"))
 
 (defgeneric finalize-option (option &key)
-  (:documentation "Finalizes an option, e.g. apply any value transformations"))
+  (:documentation "Finalizes an option, e.g. performs any value transformations"))
 
 (defgeneric derive-option-value (option value &key)
   (:documentation "Derives a new value for the option based on the given VALUE"))
@@ -172,14 +172,12 @@
     (when value
       (setf (option-is-set-p option) t))))
 
+(defmethod derive-option-value ((option option) arg &key)
+  arg)
+
 (defmethod finalize-option ((option option) &key)
-  "Finalizes the option and sets it's value to the
-  result of invoking the :finalize-fn function"
-  (let ((reduce-fn (option-reduce-fn option))
-	(finalize-fn (option-finalize-fn option))
-	(value (option-value option)))
-    (setf (option-value option)
-	  (funcall finalize-fn value))))
+  "Finalizes the value of the option"
+  (option-value option))
 
 (defclass boolean-option (option)
   ()
