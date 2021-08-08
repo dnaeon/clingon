@@ -34,7 +34,8 @@
    :long-option-p
    :option-boolean
    :option-boolean-true
-   :option-boolean-false))
+   :option-boolean-false
+   :option-counter))
 (in-package :clingon.options)
 
 (defgeneric initialize-option (option &key)
@@ -228,3 +229,16 @@
 (defmethod derive-option-value ((option option-boolean-false) arg &key)
   (declare (ignore arg))
   :false)
+
+(defclass option-counter (option)
+  ()
+  (:default-initargs
+   :initial-value 0)
+  (:documentation "An option which increments every time it is set"))
+
+(defmethod make-option ((kind (eql :counter)) &rest rest)
+  (apply #'make-instance 'option-counter rest))
+
+(defmethod derive-option-value ((option option-counter) arg &key)
+  (declare (ignore arg))
+  (1+ (option-value option)))
