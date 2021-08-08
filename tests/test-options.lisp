@@ -27,9 +27,15 @@
 				      :help "foo"
 				      :key :foo)
 	    'clingon:invalid-option)
-	"Signals on required option with default value"))
+	"Signals on required option with default value")
+    (ok (signals (clingon:make-option :generic
+				      :help "foo"
+				      :short-name #\f
+				      :key "invalid-key")
+	    'clingon:invalid-option)
+	"Signals when option key is not a keyword"))
 
-  (testing "initialize option and derive a value"
+  (testing "initialize, derive and finalize"
     (let ((foo (clingon:make-option :generic
 				    :help "foo"
 				    :short-name #\f
