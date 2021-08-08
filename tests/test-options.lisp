@@ -67,6 +67,7 @@
     (ok (clingon:long-option-p "--foo") "--foo matches a long option")
     (ok (clingon:long-option-p "--foo=bar") "--foo=bar matches a long option")
     (ng (clingon:long-option-p "-x") "-x does not match a long option")
+    (ng (clingon:long-option-p "--") "`--' does not match a long option")
     (ng (clingon:long-option-p "-abc") "-abc does not match a long option"))
 
   (testing "end-of-options-p"
