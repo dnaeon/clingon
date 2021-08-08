@@ -138,23 +138,29 @@
   (apply #'make-instance 'option rest))
 
 (defmethod initialize-instance :after ((option option) &key)
+  (unless (keywordp (option-key option))
+    (error 'invalid-option :item option
+			   :reason "key must be a keyword"))
+
   ;; Test for required short/long names
   (with-slots (short-name long-name) option
     (unless (or short-name long-name)
       (error 'invalid-option :item option
 			     :reason (format nil "option must specify a short and/or long name"))))
+
   ;; Required option must have a parameter associated with it
   (when (and (option-required-p option)
 	     (not (option-parameter option)))
     (error 'invalid-option :item option
 			   :reason (format nil "required option must have a parameter associated with it")))
+
   ;; Required option must not have a default value associated with it.
   ;; However, it can still be initialized through other means,
   ;; e.g. environment variables.
   (when (and (option-required-p option)
 	     (option-initial-value option))
-    (error 'invalid :item option
-		    :reason "required option may not have a default value")))
+    (error 'invalid-option :item option
+			   :reason "required option may not have a default value")))
 
 (defmethod initialize-option ((option option) &key)
   "Initialize the value of the option.
