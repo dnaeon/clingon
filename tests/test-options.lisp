@@ -3,44 +3,44 @@
 (deftest generic-options
   (testing "invalid options"
     (ok (signals (clingon:make-option :generic
-				      :help "foo"
-				      :short-name #\f
-				      :initial-value "bar"))
-	"Signals on missing option key")
+                                      :help "foo"
+                                      :short-name #\f
+                                      :initial-value "bar"))
+        "Signals on missing option key")
     (ok (signals (clingon:make-option :generic
-				      :help "foo"
-				      :key :foo)
-	    'clingon:invalid-option)
-	"Signals on missing short and long options")
+                                      :help "foo"
+                                      :key :foo)
+            'clingon:invalid-option)
+        "Signals on missing short and long options")
     (ok (signals (clingon:make-option :generic
-				      :short-name #\f
-				      :required t
-				      :help "foo"
-				      :key :foo)
-	    'clingon:invalid-option)
-	"Signals on required option with missing parameter")
+                                      :short-name #\f
+                                      :required t
+                                      :help "foo"
+                                      :key :foo)
+            'clingon:invalid-option)
+        "Signals on required option with missing parameter")
     (ok (signals (clingon:make-option :generic
-				      :parameter "FOO"
-				      :initial-value "some-value"
-				      :short-name #\f
-				      :required t
-				      :help "foo"
-				      :key :foo)
-	    'clingon:invalid-option)
-	"Signals on required option with default value")
+                                      :parameter "FOO"
+                                      :initial-value "some-value"
+                                      :short-name #\f
+                                      :required t
+                                      :help "foo"
+                                      :key :foo)
+            'clingon:invalid-option)
+        "Signals on required option with default value")
     (ok (signals (clingon:make-option :generic
-				      :help "foo"
-				      :short-name #\f
-				      :key "invalid-key")
-	    'clingon:invalid-option)
-	"Signals when option key is not a keyword"))
+                                      :help "foo"
+                                      :short-name #\f
+                                      :key "invalid-key")
+            'clingon:invalid-option)
+        "Signals when option key is not a keyword"))
 
   (testing "initialize, derive and finalize"
     (let ((foo (clingon:make-option :generic
-				    :help "foo"
-				    :short-name #\f
-				    :key :foo
-				    :initial-value "bar")))
+                                    :help "foo"
+                                    :short-name #\f
+                                    :key :foo
+                                    :initial-value "bar")))
       (ok (equal (clingon:option-value foo) nil) "value of foo is nil")
 
       ;; Initialize the option and derive a few sample values.  The
@@ -77,9 +77,9 @@
 (deftest option-booleans
   (testing "generic boolean"
     (let ((foo (clingon:make-option :boolean
-				    :help "foo boolean"
-				    :short-name #\b
-				    :key :boolean)))
+                                    :help "foo boolean"
+                                    :short-name #\b
+                                    :key :boolean)))
       (clingon:initialize-option foo)
       (ok (equal :true (clingon:option-value foo)) "option is properly initialized")
       (ok (equal :true (clingon:derive-option-value foo "true")) "derive value from \"true\"")
@@ -94,9 +94,9 @@
 
   (testing "boolean-always-true"
     (let ((foo (clingon:make-option :boolean/true
-				    :help "always true option"
-				    :short-name #\b
-				    :key :boolean)))
+                                    :help "always true option"
+                                    :short-name #\b
+                                    :key :boolean)))
       (clingon:initialize-option foo)
       (ok (equal :true (clingon:option-value foo)) "option is properly initialized")
       (ok (equal :true (clingon:derive-option-value foo "true")) "derive value from \"true\"")
@@ -105,5 +105,20 @@
       (ok (equal :true (clingon:derive-option-value foo "0")) "derive value from \"0\"")
       (ok (equal :true (clingon:derive-option-value foo nil)) "derive value from nil")
       (ok (equal :true (clingon:derive-option-value foo "random-string")) "derive value from \"random-string\"")
-      (ok (equal t (clingon:finalize-option foo)) "finalized value matches"))))
+      (ok (equal t (clingon:finalize-option foo)) "finalized value matches")))
+
+  (testing "boolean-always-false"
+    (let ((foo (clingon:make-option :boolean/false
+                                    :help "always false option"
+                                    :short-name #\b
+                                    :key :boolean)))
+      (clingon:initialize-option foo)
+      (ok (equal :false (clingon:option-value foo)) "option is properly initialized")
+      (ok (equal :false (clingon:derive-option-value foo "true")) "derive value from \"true\"")
+      (ok (equal :false (clingon:derive-option-value foo "1")) "derive value from \"1\"")
+      (ok (equal :false (clingon:derive-option-value foo "false")) "derive value from \"false\"")
+      (ok (equal :false (clingon:derive-option-value foo "0")) "derive value from \"0\"")
+      (ok (equal :false (clingon:derive-option-value foo nil)) "derive value from nil")
+      (ok (equal :false (clingon:derive-option-value foo "random-string")) "derive value from \"random-string\"")
+      (ok (equal nil (clingon:finalize-option foo)) "finalized value matches"))))
 
