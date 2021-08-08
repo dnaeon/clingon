@@ -24,8 +24,20 @@
    :invalid-option-reason
    :missing-required-option-value
    :missing-required-option-value-item
-   :missing-required-option-value-command))
+   :missing-required-option-value-command
+   :option-parse-error
+   :option-parse-error-reason))
 (in-package :clingon.conditions)
+
+(define-condition option-parse-error (simple-error)
+  ((reason
+    :initarg :reason
+    :initform (error "Must specify reason")
+    :reader parse-error-reason
+    :documentation "Reason for which parsing failed"))
+  (:report (lambda (condition stream)
+	     (format stream "~A" (parse-error-reason condition))))
+  (:documentation "A condition which is signalled when parsing an option has failed"))
 
 (define-condition missing-required-option-value (simple-error)
   ((item
