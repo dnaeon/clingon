@@ -34,7 +34,9 @@
    :option-boolean-true
    :option-boolean-false
    :option-counter
-   :option-list))
+   :option-counter-step
+   :option-list
+   :option-list-separator))
 (in-package :clingon.options)
 
 (defgeneric initialize-option (option &key)
