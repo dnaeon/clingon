@@ -32,8 +32,6 @@
    :long-option-p
    :boolean-option
    :list-option
-   :always-true
-   :always-false
    :counter-option))
 (in-package :clingon.options)
 
@@ -56,14 +54,6 @@
   (and (> (length arg) 2)
        (char= #\- (aref arg 0))
        (char= #\- (aref arg 1))))
-
-(defun always-true ()
-  "An option reducer function which always returns T"
-  (constantly t))
-
-(defun always-false ()
-  "An option reducer function which always returns NIL"
-  (constantly nil))
 
 (defclass option ()
   ((parameter
@@ -187,20 +177,6 @@ single argument -- the current value of the option.")
   (let ((reduce-fn (option-reduce-fn option))
 	(finalize-fn (option-finalize-fn option))
 	(value (option-value option)))
-    ;; A required option value was not provided
-    (when (and (not value) (option-required option))
-      (restart-case (error 'missing-required-option-value :item option)
-        (supply-value (value)
-          :report "Supply value for the option"
-          :interactive (lambda ()
-                         (format *query-io* "New value: ")
-                         (force-output *query-io*)
-                         (list (read-line *query-io*)))
-	  (setf (option-value option)
-		(funcall reduce-fn nil value))
-	  (return-from finalize-option
-	    (finalize-option option)))))
-    ;; Finalize the option's value
     (setf (option-value option)
 	  (funcall finalize-fn value))))
 
@@ -217,7 +193,7 @@ single argument -- the current value of the option.")
 (defclass list-option (option)
   ()
   (:default-initargs
-   :initial-value (list)
+   :initial-value nil
    :reduce-fn (lambda (prev new)
 		(cons new prev))
    :finalize-fn #'nreverse
@@ -232,7 +208,7 @@ single argument -- the current value of the option.")
   (:default-initargs
    :initial-value 0
    :reduce-fn #'1+)
-  (:documentation "An option which increments every time an option is set"))
+  (:documentation "An option which increments every time it is set"))
 
 (defmethod make-option ((kind (eql :counter)) &rest rest)
   (apply #'make-instance 'counter-option rest))
