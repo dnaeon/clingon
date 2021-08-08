@@ -252,6 +252,30 @@
 (defmethod make-option ((kind (eql :list)) &rest rest)
   (apply #'make-instance 'option-list rest))
 
+(defparameter *list-items-separator*
+  #\,
+  "Character used to separate the items in a list represented as a string")
+
+(defmethod initialize-option ((option option-list) &key)
+  "Initializes a list option. If the option has been initialized
+  via environment variables, the initial value for the list would
+  be represented as a string. This method will ensure that if the
+  option is initialized from a string source it is represented as
+  a valid list before deriving any other values for the option."
+  ;; Make sure we call our parent initialization method first to set
+  ;; things up.
+  (call-next-method)
+
+  ;; Nothing to initialize further
+  (unless (option-value option)
+    (return-from initialize-option))
+
+  (let ((value (option-value option)))
+    (setf (option-value option)
+	(etypecase value
+	  (list value)
+	  (string (split-sequence:split-sequence *list-items-separator* value))))))
+
 (defmethod derive-option-value ((option option-list) arg &key)
   (cons arg (option-value option)))
 
