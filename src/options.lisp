@@ -236,7 +236,11 @@
   :false)
 
 (defclass option-counter (option)
-  ()
+  ((step
+    :initarg :step
+    :initform 1
+    :reader option-counter-step
+    :documentation "Numeric value to increase the counter with"))
   (:default-initargs
    :initial-value 0)
   (:documentation "An option which increments every time it is set"))
@@ -246,7 +250,7 @@
 
 (defmethod derive-option-value ((option option-counter) arg &key)
   (declare (ignore arg))
-  (1+ (option-value option)))
+  (+ (option-value option) (option-counter-step option)))
 
 (defclass option-list (option)
   ((separator
