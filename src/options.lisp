@@ -249,7 +249,11 @@
   (1+ (option-value option)))
 
 (defclass option-list (option)
-  ()
+  ((separator
+    :initarg :separator
+    :initform #\,
+    :reader option-list-separator
+    :documentation "Character used to separate items in a list represented as a string"))
   (:default-initargs
    :initial-value nil
    :parameter "ITEM")
@@ -257,10 +261,6 @@
 
 (defmethod make-option ((kind (eql :list)) &rest rest)
   (apply #'make-instance 'option-list rest))
-
-(defparameter *list-items-separator*
-  #\,
-  "Character used to separate the items in a list represented as a string")
 
 (defmethod initialize-option ((option option-list) &key)
   "Initializes a list option. If the option has been initialized
@@ -276,11 +276,12 @@
   (unless (option-value option)
     (return-from initialize-option))
 
-  (let ((value (option-value option)))
+  (let ((value (option-value option))
+	(separator (option-list-separator option)))
     (setf (option-value option)
 	(etypecase value
 	  (list value)
-	  (string (split-sequence:split-sequence *list-items-separator* value))))))
+	  (string (split-sequence:split-sequence separator value))))))
 
 (defmethod derive-option-value ((option option-list) arg &key)
   (cons arg (option-value option)))

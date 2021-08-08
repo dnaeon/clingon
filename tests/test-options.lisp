@@ -122,4 +122,3 @@
       (ok (equal :false (clingon:derive-option-value foo nil)) "derive value from nil")
       (ok (equal :false (clingon:derive-option-value foo "random-string")) "derive value from \"random-string\"")
       (ok (equal nil (clingon:finalize-option foo)) "finalized value matches"))))
-
