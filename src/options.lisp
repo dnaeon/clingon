@@ -173,6 +173,7 @@ single argument -- the current value of the option.")
 
   The first environment variable that resolves to a
   non-NIL result will be used to set the option."
+  (setf (option-is-set-p option) nil)
   (let* ((env-vars (option-env-vars option))
 	 (value-from-env (some #'uiop:getenvp env-vars))
 	 (value (or value-from-env (option-initial-value option))))
