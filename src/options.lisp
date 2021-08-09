@@ -36,7 +36,11 @@
    :option-counter
    :option-counter-step
    :option-list
-   :option-list-separator))
+   :option-list-separator
+   :option-choice
+   :option-choices
+   :option-integer
+   :option-integer-radix))
 (in-package :clingon.options)
 
 (defgeneric initialize-option (option &key)
@@ -300,7 +304,7 @@
 (defun parse-integer-or-lose (value &key (radix 10))
   (let ((int (parse-integer value :radix radix :junk-allowed t)))
     (unless int
-      (error 'option-parse-error :reason "Cannot parse ~A as integer" value))
+      (error 'option-parse-error :reason (format nil "Cannot parse ~A as integer" value)))
     int))
 
 (defclass option-integer (option)
@@ -333,3 +337,29 @@
 
 (defmethod derive-option-value ((option option-integer) arg &key)
   (parse-integer-or-lose arg :radix (option-integer-radix option)))
+
+(defclass option-list-integer (option-list)
+  ((radix
+    :initarg :radix
+    :initform 10
+    :reader option-integer-radix))
+  (:documentation "An option which collects integers into a list"))
+
+(defmethod make-option ((kind (eql :list/integer)) &rest rest)
+  (apply #'make-instance 'option-list-integer rest))
+
+(defmethod initialize-option ((option option-list-integer) &key)
+  (call-next-method)
+  (unless (option-value option)
+    (return-from initialize-option))
+
+  (setf (option-value option)
+	(mapcar (lambda (x)
+		  (etypecase x
+		    (integer x)
+		    (string (parse-integer-or-lose x :radix (option-integer-radix option)))))
+		(option-value option))))
+
+(defmethod derive-option-value ((option option-list-integer) arg &key)
+  (cons (parse-integer-or-lose arg :radix (option-integer-radix option))
+	(option-value option)))
