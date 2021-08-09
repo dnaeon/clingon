@@ -126,48 +126,84 @@
 (deftest option-counter
   (testing "counter with defaults"
     (let ((opt (clingon:make-option :counter
-				    :help "counter with defaults"
-				    :short-name #\c
-				    :key :counter)))
+                                    :help "counter with defaults"
+                                    :short-name #\c
+                                    :key :counter)))
       (clingon:initialize-option opt)
       (loop :repeat 42 :do
-	(setf (clingon:option-value opt)
-	      (clingon:derive-option-value opt nil)))
+        (setf (clingon:option-value opt)
+              (clingon:derive-option-value opt nil)))
       (ok (= 42 (clingon:finalize-option opt)) "finalized value matches")))
 
   (testing "counter with a step"
     (let ((opt (clingon:make-option :counter
-				    :help "counter with a step"
-				    :short-name #\c
-				    :key :counter
-				    :initial-value 42
-				    :step 3)))
+                                    :help "counter with a step"
+                                    :short-name #\c
+                                    :key :counter
+                                    :initial-value 42
+                                    :step 3)))
       (clingon:initialize-option opt)
       (loop :repeat 3 :do
-	(setf (clingon:option-value opt)
-	      (clingon:derive-option-value opt nil)))
+        (setf (clingon:option-value opt)
+              (clingon:derive-option-value opt nil)))
       (ok (= 51 (clingon:finalize-option opt)) "finalized value matches"))))
 
 (deftest option-list
   (testing "list with defaults"
     (let ((opt (clingon:make-option :list
-				    :help "list with defaults"
-				    :short-name #\l
-				    :key :list))
-	  (items (list "foo" "bar" "baz")))
+                                    :help "list with defaults"
+                                    :short-name #\l
+                                    :key :list))
+          (items (list "foo" "bar" "baz")))
       (clingon:initialize-option opt)
       (loop :for item :in items :do
-	(setf (clingon:option-value opt)
-	      (clingon:derive-option-value opt item)))
+        (setf (clingon:option-value opt)
+              (clingon:derive-option-value opt item)))
       (ok (equal items (clingon:finalize-option opt)) "finalized value matches")))
 
   (testing "list with initial string value"
     ;; The string value for a list would usually be provided from
     ;; environment variables.
     (let ((opt (clingon:make-option :list
-				    :help "list with defaults"
-				    :short-name #\l
-				    :key :list
-				    :initial-value "foo, bar, baz")))
+                                    :help "list with defaults"
+                                    :short-name #\l
+                                    :key :list
+                                    :initial-value "foo, bar, baz")))
       (clingon:initialize-option opt)
       (ok (equal (list "foo" "bar" "baz") (clingon:finalize-option opt)) "finalized value matches"))))
+
+(deftest option-integer
+  (testing "integer with defaults"
+    (let ((opt (clingon:make-option :integer
+                                    :help "int with defaults"
+                                    :short-name #\i
+                                    :key :int
+                                    :initial-value 0)))
+      (clingon:initialize-option opt)
+      (ok (= 0 (clingon:option-value opt)) "initial value matches")
+      (ok (= 42 (clingon:derive-option-value opt "42")) "derive 42 as int")
+      (ok (= 42 (clingon:derive-option-value opt "42.0")) "derive 42.0 as int")
+      (ok (= 42 (clingon:derive-option-value opt "42.42")) "derive 42.42 as int")
+      (ok (signals (clingon:derive-option-value opt "NaN")) "signals on NaN")
+
+      ;; The value's place has not been set at all
+      (ok (= 0 (clingon:finalize-option opt)) "finalized value matches")))
+
+  (testing "integer initialized from string with good input"
+    ;; The string initial-value would usually come from an env var
+    (let ((opt (clingon:make-option :integer
+                                    :help "int with default string value"
+                                    :short-name #\i
+                                    :key :int
+                                    :initial-value "42")))
+      (clingon:initialize-option opt)
+      (ok (= 42 (clingon:finalize-option opt)) "finalized value matches")))
+
+  (testing "integer initialized with bad input"
+    (let ((opt (clingon:make-option :integer
+                                    :help "int with bad default string value"
+                                    :short-name #\i
+                                    :key :int
+                                    :initial-value "NaN")))
+      (ok (signals (clingon:initialize-option opt)) "signals on invalid initialization"))))
+
