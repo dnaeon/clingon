@@ -40,7 +40,12 @@
    :option-choice
    :option-choices
    :option-integer
-   :option-integer-radix))
+   :option-integer-radix
+   :option-list-integer
+   :option-choice
+   :option-choice-items
+   :option-enum
+   :option-enum-items))
 (in-package :clingon.options)
 
 (defgeneric initialize-option (option &key)
@@ -136,8 +141,12 @@
 (defmethod print-object ((option option) stream)
   (print-unreadable-object (option stream :type t)
     (format stream "short=~A long=~A"
-	    (option-short-name option)
-	    (option-long-name option))))
+            (option-short-name option)
+            (option-long-name option))))
+
+;;;;
+;;;; Generic options
+;;;;
 
 (defmethod make-option ((kind (eql :generic)) &rest rest)
   "Creates a generic option"
@@ -146,27 +155,27 @@
 (defmethod initialize-instance :after ((option option) &key)
   (unless (keywordp (option-key option))
     (error 'invalid-option :item option
-			   :reason "key must be a keyword"))
+                           :reason "key must be a keyword"))
 
   ;; Test for required short/long names
   (with-slots (short-name long-name) option
     (unless (or short-name long-name)
       (error 'invalid-option :item option
-			     :reason (format nil "option must specify a short and/or long name"))))
+                             :reason (format nil "option must specify a short and/or long name"))))
 
   ;; Required option must have a parameter associated with it
   (when (and (option-required-p option)
-	     (not (option-parameter option)))
+             (not (option-parameter option)))
     (error 'invalid-option :item option
-			   :reason (format nil "required option must have a parameter associated with it")))
+                           :reason (format nil "required option must have a parameter associated with it")))
 
   ;; Required option must not have a default value associated with it.
   ;; However, it can still be initialized through other means,
   ;; e.g. environment variables.
   (when (and (option-required-p option)
-	     (option-initial-value option))
+             (option-initial-value option))
     (error 'invalid-option :item option
-			   :reason "required option may not have a default value")))
+                           :reason "required option may not have a default value")))
 
 (defmethod initialize-option ((option option) &key)
   "Initialize the value of the option.
@@ -178,8 +187,8 @@
   non-NIL result will be used to set the option."
   (setf (option-is-set-p option) nil)
   (let* ((env-vars (option-env-vars option))
-	 (value-from-env (some #'uiop:getenvp env-vars))
-	 (value (or value-from-env (option-initial-value option))))
+         (value-from-env (some #'uiop:getenvp env-vars))
+         (value (or value-from-env (option-initial-value option))))
     (setf (option-value option) value)
     (when value
       (setf (option-is-set-p option) t))))
@@ -190,6 +199,10 @@
 (defmethod finalize-option ((option option) &key)
   "Finalizes the value of the option"
   (option-value option))
+
+;;;;
+;;;; Boolean options
+;;;;
 
 (defclass option-boolean (option)
   ()
@@ -241,6 +254,10 @@
   (declare (ignore arg))
   :false)
 
+;;;;
+;;;; Counter options
+;;;;
+
 (defclass option-counter (option)
   ((step
     :initarg :step
@@ -257,6 +274,10 @@
 (defmethod derive-option-value ((option option-counter) arg &key)
   (declare (ignore arg))
   (+ (option-value option) (option-counter-step option)))
+
+;;;;
+;;;; List options
+;;;;
 
 (defclass option-list (option)
   ((separator
@@ -287,19 +308,23 @@
     (return-from initialize-option))
 
   (let ((value (option-value option))
-	(separator (option-list-separator option)))
+        (separator (option-list-separator option)))
     (setf (option-value option)
-	(etypecase value
-	  (list (reverse value))
-	  (string (nreverse (mapcar (lambda (x)
-				      (string-trim #(#\ ) x))
-				    (split-sequence:split-sequence separator value))))))))
+        (etypecase value
+          (list (reverse value))
+          (string (nreverse (mapcar (lambda (x)
+                                      (string-trim #(#\ ) x))
+                                    (split-sequence:split-sequence separator value))))))))
 
 (defmethod derive-option-value ((option option-list) arg &key)
   (cons arg (option-value option)))
 
 (defmethod finalize-option ((option option-list) &key)
   (nreverse (option-value option)))
+
+;;;;
+;;;; Integer options
+;;;;
 
 (defun parse-integer-or-lose (value &key (radix 10))
   (when (integerp value)
@@ -334,9 +359,9 @@
 
   (let ((value (option-value option)))
     (setf (option-value option)
-	  (etypecase value
-	    (integer value)
-	    (string (parse-integer-or-lose value :radix (option-integer-radix option)))))))
+          (etypecase value
+            (integer value)
+            (string (parse-integer-or-lose value :radix (option-integer-radix option)))))))
 
 (defmethod derive-option-value ((option option-integer) arg &key)
   (parse-integer-or-lose arg :radix (option-integer-radix option)))
@@ -357,15 +382,19 @@
     (return-from initialize-option))
 
   (setf (option-value option)
-	(mapcar (lambda (x)
-		  (etypecase x
-		    (integer x)
-		    (string (parse-integer-or-lose x :radix (option-integer-radix option)))))
-		(option-value option))))
+        (mapcar (lambda (x)
+                  (etypecase x
+                    (integer x)
+                    (string (parse-integer-or-lose x :radix (option-integer-radix option)))))
+                (option-value option))))
 
 (defmethod derive-option-value ((option option-list-integer) arg &key)
   (cons (parse-integer-or-lose arg :radix (option-integer-radix option))
-	(option-value option)))
+        (option-value option)))
+
+;;;;
+;;;; Choice/enum options
+;;;;
 
 (defclass option-choice (option)
   ((items
@@ -397,3 +426,32 @@
     (unless (member arg items :test #'string=)
       (error 'option-parse-error :reason (format nil "Invalid choice: must be one of ~A" items))))
   arg)
+
+(defclass option-enum (option)
+  ((items
+    :initarg :items
+    :initform (error "Must specify available variants")
+    :reader option-enum-items
+    :documentation "The enum variants and their associated values"))
+  (:default-initargs
+   :parameter "VARIANT")
+  (:documentation "An option which represents an enum with variants and associated values"))
+
+(defmethod make-option ((kind (eql :enum)) &rest rest)
+  (apply #'make-instance 'option-enum rest))
+
+(defmethod initialize-option ((option option-enum) &key)
+  (call-next-method)
+  (unless (option-value option)
+    (return-from initialize-option))
+
+  (let ((current (option-value option)))
+    (setf (option-value option) (derive-option-value option current))))
+
+(defmethod derive-option-value ((option option-enum) arg &key)
+  (let* ((items (option-enum-items option))
+         (pair (find arg items :key #'car :test #'string=)))
+    (unless pair
+      (error 'option-parse-error
+             :reason (format nil "Invalid choice: must be one of ~A" (mapcar #'cdr items))))
+    (cdr pair)))
