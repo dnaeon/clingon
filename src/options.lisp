@@ -286,7 +286,7 @@
 	(separator (option-list-separator option)))
     (setf (option-value option)
 	(etypecase value
-	  (list value)
+	  (list (reverse value))
 	  (string (nreverse (mapcar (lambda (x)
 				      (string-trim #(#\ ) x))
 				    (split-sequence:split-sequence separator value))))))))
