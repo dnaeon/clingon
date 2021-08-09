@@ -170,7 +170,17 @@
                                     :key :list
                                     :initial-value "foo, bar, baz")))
       (clingon:initialize-option opt)
-      (ok (equal (list "foo" "bar" "baz") (clingon:finalize-option opt)) "finalized value matches"))))
+      (ok (equal (list "foo" "bar" "baz") (clingon:finalize-option opt)) "finalized value matches")))
+
+  (testing "list with initial list value"
+    (let ((opt (clingon:make-option :list
+                                    :help "list initialized from a list"
+                                    :short-name #\l
+                                    :key :list
+                                    :initial-value '("foo" "bar" "baz"))))
+      (clingon:initialize-option opt)
+      (setf (clingon:option-value opt) (clingon:derive-option-value opt "qux"))
+      (ok (equal (list "foo" "bar" "baz" "qux") (clingon:finalize-option opt)) "finalized value matches"))))
 
 (deftest option-integer
   (testing "integer with defaults"
