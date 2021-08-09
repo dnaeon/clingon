@@ -366,3 +366,34 @@
 (defmethod derive-option-value ((option option-list-integer) arg &key)
   (cons (parse-integer-or-lose arg :radix (option-integer-radix option))
 	(option-value option)))
+
+(defclass option-choice (option)
+  ((items
+    :initarg :items
+    :initform (error "Must specify available items")
+    :reader option-choice-items
+    :documentation "The available choices"))
+  (:default-initargs
+   :parameter "CHOICE")
+  (:documentation "An option which allows selecting an item from a predefined list"))
+
+(defmethod make-option ((kind (eql :choice)) &rest rest)
+  (apply #'make-instance 'option-choice rest))
+
+(defmethod initialize-option ((option option-choice) &key)
+  ;; Set things up
+  (call-next-method)
+
+  ;; Nothing to be done further
+  (unless (option-value option)
+    (return-from initialize-option))
+
+  ;; Derive a new value based on the already set initialized value
+  (let ((current (option-value option)))
+    (setf (option-value option) (derive-option-value option current))))
+
+(defmethod derive-option-value ((option option-choice) arg &key)
+  (let ((items (option-choice-items option)))
+    (unless (member arg items :test #'string=)
+      (error 'option-parse-error :reason (format nil "Invalid choice: must be one of ~A" items))))
+  arg)
