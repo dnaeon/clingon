@@ -302,6 +302,9 @@
   (nreverse (option-value option)))
 
 (defun parse-integer-or-lose (value &key (radix 10))
+  (when (integerp value)
+    (return-from parse-integer-or-lose value))
+
   (let ((int (parse-integer value :radix radix :junk-allowed t)))
     (unless int
       (error 'option-parse-error :reason (format nil "Cannot parse ~A as integer" value)))
