@@ -263,3 +263,37 @@
         (setf (clingon:option-value opt)
               (clingon:derive-option-value opt (format nil "~d" i))))
       (ok (equal '(-3 -2 -1 0 1 2 3 4 5) (clingon:finalize-option opt)) "finalized value matches"))))
+
+(deftest option-choice
+  (testing "test with no default choice set"
+    (let ((opt (clingon:make-option :choice
+                                    :help "choice option"
+                                    :short-name #\c
+                                    :key :choice
+                                    :items '("foo" "bar" "baz"))))
+      (clingon:initialize-option opt)
+      (ok (string= "foo" (clingon:derive-option-value opt "foo")) "derive foo choice")
+      (ok (string= "bar" (clingon:derive-option-value opt "bar")) "derive bar choice")
+      (ok (string= "baz" (clingon:derive-option-value opt "baz")) "derive baz choice")
+      (ok (signals (clingon:derive-option-value opt "INVALID")
+              'clingon:option-parse-error)
+          "signals on invalid choice")))
+
+  (testing "test with a default choice"
+    (let ((opt (clingon:make-option :choice
+                                    :help "choice option with default value"
+                                    :short-name #\c
+                                    :key :choice
+                                    :items '("foo" "bar" "baz")
+				    :initial-value "foo")))
+      (clingon:initialize-option opt)
+      (ok (string= "foo" (clingon:finalize-option opt)) "finalized value matches")))
+
+  (testing "test with invalid default choice"
+    (let ((opt (clingon:make-option :choice
+                                    :help "choice option with invalid default value"
+                                    :short-name #\c
+                                    :key :choice
+                                    :items '("foo" "bar" "baz")
+				    :initial-value "INVALID")))
+      (ok (signals (clingon:initialize-option opt) 'clingon:option-parse-error) "signals on invalid default choice"))))
