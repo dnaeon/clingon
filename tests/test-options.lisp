@@ -217,3 +217,49 @@
                                     :initial-value "NaN")))
       (ok (signals (clingon:initialize-option opt)) "signals on invalid initialization"))))
 
+(deftest option-list-integer
+  (testing "derive values from integers"
+    (let ((opt (clingon:make-option :list/integer
+                                    :help "list of integers"
+                                    :short-name #\l
+                                    :key :list-of-integers)))
+      (clingon:initialize-option opt)
+      (loop :for i :from 0 :to 5 :do
+        (setf (clingon:option-value opt)
+              (clingon:derive-option-value opt i)))
+      (ok (equal '(0 1 2 3 4 5) (clingon:finalize-option opt)) "finalized value matches")))
+
+  (testing "derive values from strings"
+    (let ((opt (clingon:make-option :list/integer
+                                    :help "list of integers"
+                                    :short-name #\l
+                                    :key :list-of-integers)))
+      (clingon:initialize-option opt)
+      (loop :for i :from 0 :to 5 :do
+        (setf (clingon:option-value opt)
+              (clingon:derive-option-value opt (format nil "~d" i))))
+      (ok (equal '(0 1 2 3 4 5) (clingon:finalize-option opt)) "finalized value matches")))
+
+  (testing "derive values with a default value as a list"
+    (let ((opt (clingon:make-option :list/integer
+                                    :help "list of integers"
+                                    :short-name #\l
+                                    :key :list-of-integers
+                                    :initial-value '(-3 -2 -1))))
+      (clingon:initialize-option opt)
+      (loop :for i :from 0 :to 5 :do
+        (setf (clingon:option-value opt)
+              (clingon:derive-option-value opt (format nil "~d" i))))
+      (ok (equal '(-3 -2 -1 0 1 2 3 4 5) (clingon:finalize-option opt)) "finalized value matches")))
+
+  (testing "derive values with a default value as a string"
+    (let ((opt (clingon:make-option :list/integer
+                                    :help "list of integers"
+                                    :short-name #\l
+                                    :key :list-of-integers
+                                    :initial-value "-3, -2, -1")))
+      (clingon:initialize-option opt)
+      (loop :for i :from 0 :to 5 :do
+        (setf (clingon:option-value opt)
+              (clingon:derive-option-value opt (format nil "~d" i))))
+      (ok (equal '(-3 -2 -1 0 1 2 3 4 5) (clingon:finalize-option opt)) "finalized value matches"))))
