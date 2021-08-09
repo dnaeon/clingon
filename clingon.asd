@@ -15,7 +15,8 @@
   :homepage "https://github.com/dnaeon/clingon"
   :bug-tracker "https://github.com/dnaeon/clingon"
   :source-control "https://github.com/dnaeon/clingon"
-  :depends-on (:cl-reexport)
+  :depends-on (:cl-reexport
+	       :split-sequence)
   :components ((:module "utils"
 		:pathname #P"src/"
 		:components ((:file "utils")))
