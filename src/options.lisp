@@ -204,8 +204,7 @@
 (defclass option-boolean (option)
   ()
   (:default-initargs
-   :parameter "VALUE"
-   :initial-value :true)
+   :parameter "VALUE")
   (:documentation "An option which represents a boolean flag"))
 
 (defmethod make-option ((kind (eql :boolean)) &rest rest)
@@ -226,8 +225,7 @@
 (defclass option-boolean-true (option-boolean)
   ()
   (:default-initargs
-   :parameter nil
-   :initial-value :true)
+   :parameter nil)
   (:documentation "A boolean option which always returns true"))
 
 (defmethod make-option ((kind (eql :boolean/true)) &rest rest)
@@ -240,8 +238,7 @@
 (defclass option-boolean-false (option-boolean)
   ()
   (:default-initargs
-   :parameter nil
-   :initial-value :false)
+   :parameter nil)
   (:documentation "A boolean option which always returns false"))
 
 (defmethod make-option ((kind (eql :boolean/false)) &rest rest)

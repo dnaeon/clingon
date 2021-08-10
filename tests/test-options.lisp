@@ -82,7 +82,7 @@
                                     :short-name #\b
                                     :key :boolean)))
       (clingon:initialize-option foo)
-      (ok (equal :true (clingon:option-value foo)) "option is properly initialized")
+      (ok (equal nil (clingon:option-value foo)) "option is properly initialized")
       (ok (equal :true (clingon:derive-option-value foo "true")) "derive value from \"true\"")
       (ok (equal :true (clingon:derive-option-value foo "1")) "derive value from \"1\"")
       (ok (equal :false (clingon:derive-option-value foo "false")) "derive value from \"false\"")
@@ -90,8 +90,10 @@
       (ok (equal :false (clingon:derive-option-value foo nil)) "derive value from nil")
       (ok (equal :false (clingon:derive-option-value foo "random-string")) "derive value from \"random-string\"")
 
-      ;; value place has not been set, so it defaults to :true
-      (ok (equal t (clingon:finalize-option foo)) "finalized value matches")))
+      ;; Set option and test finalized value
+      (setf (clingon:option-value foo)
+	    (clingon:derive-option-value foo "false"))
+      (ok (equal nil (clingon:finalize-option foo)) "finalized value matches")))
 
   (testing "boolean-always-true"
     (let ((foo (clingon:make-option :boolean/true
@@ -99,13 +101,17 @@
                                     :short-name #\b
                                     :key :boolean)))
       (clingon:initialize-option foo)
-      (ok (equal :true (clingon:option-value foo)) "option is properly initialized")
+      (ok (equal nil (clingon:option-value foo)) "option is properly initialized")
       (ok (equal :true (clingon:derive-option-value foo "true")) "derive value from \"true\"")
       (ok (equal :true (clingon:derive-option-value foo "1")) "derive value from \"1\"")
       (ok (equal :true (clingon:derive-option-value foo "false")) "derive value from \"false\"")
       (ok (equal :true (clingon:derive-option-value foo "0")) "derive value from \"0\"")
       (ok (equal :true (clingon:derive-option-value foo nil)) "derive value from nil")
       (ok (equal :true (clingon:derive-option-value foo "random-string")) "derive value from \"random-string\"")
+
+      ;; Set option and test finalized value
+      (setf (clingon:option-value foo)
+	    (clingon:derive-option-value foo nil))
       (ok (equal t (clingon:finalize-option foo)) "finalized value matches")))
 
   (testing "boolean-always-false"
@@ -114,13 +120,17 @@
                                     :short-name #\b
                                     :key :boolean)))
       (clingon:initialize-option foo)
-      (ok (equal :false (clingon:option-value foo)) "option is properly initialized")
+      (ok (equal nil (clingon:option-value foo)) "option is properly initialized")
       (ok (equal :false (clingon:derive-option-value foo "true")) "derive value from \"true\"")
       (ok (equal :false (clingon:derive-option-value foo "1")) "derive value from \"1\"")
       (ok (equal :false (clingon:derive-option-value foo "false")) "derive value from \"false\"")
       (ok (equal :false (clingon:derive-option-value foo "0")) "derive value from \"0\"")
       (ok (equal :false (clingon:derive-option-value foo nil)) "derive value from nil")
       (ok (equal :false (clingon:derive-option-value foo "random-string")) "derive value from \"random-string\"")
+
+      ;; Set option and test finalized value
+      (setf (clingon:option-value foo)
+	    (clingon:derive-option-value foo "true"))
       (ok (equal nil (clingon:finalize-option foo)) "finalized value matches"))))
 
 (deftest option-counter
