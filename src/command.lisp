@@ -82,7 +82,9 @@
     :initarg :handler
     :initform nil
     :reader command-handler
-    :documentation "A function taking a single argument, which is an instance of COMMAND and it's environment")
+    :documentation "A function which accepts a single argument. The
+     argument is an instance of the COMMAND class, which provides the
+     context and environment for options.")
    (sub-commands
     :initarg :sub-commands
     :initform nil
@@ -107,7 +109,32 @@
     :initarg :reduced-options
     :initform (make-hash-table :test #'equal)
     :accessor command-reduced-options
-    :documentation "The set of reduced option values, after finalizing the command"))
+    :documentation "The set of reduced option values, after finalizing the command")
+   (version
+    :initarg :version
+    :initform nil
+    :accessor command-version
+    :documentation "Version of the command")
+   (authors
+    :initarg :authors
+    :initform nil
+    :accessor command-authors
+    :documentation "Authors of the command")
+   (license
+    :initarg :license
+    :initform nil
+    :accessor command-license
+    :documentation "License for the command")
+   (description
+    :initarg :description
+    :initform nil
+    :accessor command-description
+    :documentation "Short description of what the command does")
+   (usage
+    :initarg :usage
+    :initform nil
+    :accessor command-usage
+    :documentation "Usage information for the command"))
   (:documentation "A class to represent a command to be handled"))
 
 (defun make-command (&rest rest)
@@ -378,7 +405,11 @@
     (funcall (command-handler cmd) cmd)))
 
 (defmethod parse-command-line ((top-level command) arguments)
-  "Parses the command-line arguments for the command"
+  "Parses the arguments for the given top-level command and
+   returns the most-specific command that is matched against the
+   given arguments. The returned command contains the environment
+   for the command handler to be executed with already populated
+   options."
   (validate-top-level-command top-level)
   (setf (command-args-to-parse top-level) arguments)
   (parse-command-line% top-level))
