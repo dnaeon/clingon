@@ -10,17 +10,6 @@
    :unknown-option
    :missing-option-argument)
   (:import-from
-   :clingon.generics
-   :parse-option
-   :make-option
-   :initialize-option
-   :finalize-option
-   :initialize-command
-   :finalize-command
-   :find-short-option
-   :find-long-option
-   :parse-option)
-  (:import-from
    :clingon.options
    :end-of-options-p
    :short-option-p
@@ -30,16 +19,23 @@
    :option-long-name
    :option-required-p
    :option-is-set-p
-   :option-reduce-fn
-   :option-finalize-fn
    :option-key
    :option-value
-   :option-parameter)
+   :option-parameter
+   :option-help
+   :initialize-option
+   :finalize-option
+   :derive-option-value)
   (:import-from
    :clingon.utils
    :argv
    :walk)
   (:export
+   :find-short-option
+   :find-long-option
+   :parse-option
+   :initialize-command
+   :finalize-command
    :command
    :command-name
    :command-options
@@ -47,13 +43,31 @@
    :command-sub-commands
    :command-parent
    :command-lineage
+   :command-arguments
    :make-command
    :command-full-path
    :find-sub-command
    :run
    :with-commands-walk
-   :parse-command-line))
+   :parse-command-line
+   :getopt
+   :opt-is-set-p))
 (in-package :clingon.command)
+
+(defgeneric find-short-option (object name &key)
+  (:documentation "Returns the short option with the given NAME, or NIL otherwise"))
+
+(defgeneric find-long-option (object name &key)
+  (:documentation "Returns the long option with the given NAME, or NIL otherwise"))
+
+(defgeneric parse-option (kind object &key)
+  (:documentation "Parses an option of the given KIND"))
+
+(defgeneric initialize-command (command &key)
+  (:documentation "Initializes a command"))
+
+(defgeneric finalize-command (command &key)
+  (:documentation "Finalizes a command and derives the set of reduced options"))
 
 (defclass command ()
   ((name

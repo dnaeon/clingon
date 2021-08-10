@@ -23,9 +23,8 @@
 	       (:module "core"
 		:pathname #P"src/"
 		:components ((:file "conditions")
-			     (:file "generics")
 			     (:file "options")
-			     (:file "command" :depends-on ("conditions" "generics" "options")))
+			     (:file "command" :depends-on ("conditions" "options")))
 		:depends-on ("utils"))
 	       (:module "client-package"
 		:pathname #P"src/"
