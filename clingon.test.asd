@@ -20,5 +20,6 @@
 		:serial t
 		:components ((:file "test-package")
 			     (:file "test-utils")
-			     (:file "test-options"))))
+			     (:file "test-options")
+			     (:file "test-command"))))
   :perform (test-op (op c) (uiop:symbol-call :rove :run-suite :clingon.test)))
