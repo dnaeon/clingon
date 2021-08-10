@@ -25,19 +25,23 @@
    :missing-required-option-value
    :missing-required-option-value-item
    :missing-required-option-value-command
-   :option-parse-error
-   :option-parse-error-reason))
+   :option-derive-error
+   :option-derive-error-reason
+   :option-derive-error-p))
 (in-package :clingon.conditions)
 
-(define-condition option-parse-error (simple-error)
+(define-condition option-derive-error (simple-error)
   ((reason
     :initarg :reason
     :initform (error "Must specify reason")
-    :reader parse-error-reason
-    :documentation "Reason for which parsing failed"))
+    :reader option-derive-error-reason
+    :documentation "Reason for which deriving a value failed"))
   (:report (lambda (condition stream)
-	     (format stream "~A" (parse-error-reason condition))))
-  (:documentation "A condition which is signalled when parsing an option has failed"))
+	     (format stream "~A" (option-derive-error-reason condition))))
+  (:documentation "A condition which is signalled when deriving an option's value has failed"))
+
+(defun option-derive-error-p (value)
+  (typep value 'option-derive-error))
 
 (define-condition missing-required-option-value (simple-error)
   ((item

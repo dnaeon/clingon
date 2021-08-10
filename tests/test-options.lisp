@@ -286,7 +286,7 @@
       (ok (string= "bar" (clingon:derive-option-value opt "bar")) "derive bar choice")
       (ok (string= "baz" (clingon:derive-option-value opt "baz")) "derive baz choice")
       (ok (signals (clingon:derive-option-value opt "INVALID")
-              'clingon:option-parse-error)
+              'clingon:option-derive-error)
           "signals on invalid choice")))
 
   (testing "test with a default choice"
@@ -306,7 +306,7 @@
                                     :key :choice
                                     :items '("foo" "bar" "baz")
 				    :initial-value "INVALID")))
-      (ok (signals (clingon:initialize-option opt) 'clingon:option-parse-error) "signals on invalid default choice"))))
+      (ok (signals (clingon:initialize-option opt) 'clingon:option-derive-error) "signals on invalid default choice"))))
 
 (deftest option-enum
   (testing "test with no default value"
@@ -321,7 +321,7 @@
       (ok (= 1 (clingon:derive-option-value opt "one")) "derive value from \"one\"")
       (ok (= 2 (clingon:derive-option-value opt "two")) "derive value from \"two\"")
       (ok (= 3 (clingon:derive-option-value opt "three")) "derive value from \"three\"")
-      (ok (signals (clingon:derive-option-value opt "INVALID") 'clingon:option-parse-error)
+      (ok (signals (clingon:derive-option-value opt "INVALID") 'clingon:option-derive-error)
 	  "signals on invalid enum variant")))
 
   (testing "test with default value"
@@ -345,5 +345,5 @@
 					     ("two" . 2)
 					     ("three" . 3))
 				    :initial-value "INVALID")))
-      (ok (signals (clingon:initialize-option opt) 'clingon:option-parse-error)
+      (ok (signals (clingon:initialize-option opt) 'clingon:option-derive-error)
 	  "signals on invalid default value"))))

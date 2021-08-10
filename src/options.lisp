@@ -5,7 +5,7 @@
    :clingon.conditions
    :invalid-option
    :missing-required-option-value
-   :option-parse-error)
+   :option-derive-error)
    (:export
    :*end-of-options-marker*
    :option
@@ -326,7 +326,7 @@
 
   (let ((int (parse-integer value :radix radix :junk-allowed t)))
     (unless int
-      (error 'option-parse-error :reason (format nil "Cannot parse ~A as integer" value)))
+      (error 'option-derive-error :reason (format nil "Cannot parse ~A as integer" value)))
     int))
 
 (defclass option-integer (option)
@@ -418,7 +418,7 @@
 (defmethod derive-option-value ((option option-choice) arg &key)
   (let ((items (option-choice-items option)))
     (unless (member arg items :test #'string=)
-      (error 'option-parse-error :reason (format nil "Invalid choice: must be one of ~A" items))))
+      (error 'option-derive-error :reason (format nil "Invalid choice: must be one of ~A" items))))
   arg)
 
 (defclass option-enum (option)
@@ -446,6 +446,6 @@
   (let* ((items (option-enum-items option))
          (pair (find arg items :key #'car :test #'string=)))
     (unless pair
-      (error 'option-parse-error
+      (error 'option-derive-error
              :reason (format nil "Invalid choice: must be one of ~A" (mapcar #'cdr items))))
     (cdr pair)))
