@@ -20,6 +20,18 @@
 			:description "foo command"
 			:options (foo/options)))
 
+(defun make-duplicate-options ()
+  "Returns a list of options which contain duplicates"
+  (list
+   (clingon:make-option :generic
+			:short-name #\a
+			:description "option a"
+			:key :a)
+   (clingon:make-option :generic
+			:short-name #\a ;; <- duplicate short option
+			:description "option b"
+			:key :b)))
+
 (deftest initialize-command-instance
   (testing "ensure parent is set"
     (let* ((child (clingon:make-command :name "child"
@@ -57,3 +69,12 @@
     (let ((c (foo/command)))
       (ng (clingon:find-option :short c #\x) "missing short option")
       (ng (clingon:find-option :long c "missing-option") "missing long option"))))
+
+(deftest ensure-unique-options
+  (testing "ensure no duplicates"
+    (let ((c (clingon:make-command :name "foo"
+				   :description "command with duplicate options"
+				   :options (make-duplicate-options))))
+      (ok (signals (clingon:ensure-unique-options c) 'clingon:duplicate-options)
+	  "signals on duplicate options"))))
+
