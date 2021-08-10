@@ -2,15 +2,12 @@
 (defpackage :clingon.options
   (:use :cl)
   (:import-from
-   :clingon.generics
-   :initialize-option
-   :finalize-option
-   :make-option)
-  (:import-from
    :clingon.conditions
    :invalid-option
-   :missing-required-option-value)
-  (:export
+   :missing-required-option-value
+   :option-parse-error)
+   (:export
+   :*end-of-options-marker*
    :option
    :option-short-name
    :option-long-name
