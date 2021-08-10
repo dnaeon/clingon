@@ -3,19 +3,19 @@
 (deftest generic-options
   (testing "invalid options"
     (ok (signals (clingon:make-option :generic
-                                      :help "foo"
+                                      :description "foo"
                                       :short-name #\f
                                       :initial-value "bar"))
         "Signals on missing option key")
     (ok (signals (clingon:make-option :generic
-                                      :help "foo"
+                                      :description "foo"
                                       :key :foo)
             'clingon:invalid-option)
         "Signals on missing short and long options")
     (ok (signals (clingon:make-option :generic
                                       :short-name #\f
                                       :required t
-                                      :help "foo"
+                                      :description "foo"
                                       :key :foo)
             'clingon:invalid-option)
         "Signals on required option with missing parameter")
@@ -24,12 +24,12 @@
                                       :initial-value "some-value"
                                       :short-name #\f
                                       :required t
-                                      :help "foo"
+                                      :description "foo"
                                       :key :foo)
             'clingon:invalid-option)
         "Signals on required option with default value")
     (ok (signals (clingon:make-option :generic
-                                      :help "foo"
+                                      :description "foo"
                                       :short-name #\f
                                       :key "invalid-key")
             'clingon:invalid-option)
@@ -37,7 +37,7 @@
 
   (testing "initialize, derive and finalize"
     (let ((foo (clingon:make-option :generic
-                                    :help "foo"
+                                    :description "foo"
                                     :short-name #\f
                                     :key :foo
                                     :initial-value "bar")))
@@ -78,7 +78,7 @@
 (deftest option-booleans
   (testing "generic boolean"
     (let ((foo (clingon:make-option :boolean
-                                    :help "foo boolean"
+                                    :description "foo boolean"
                                     :short-name #\b
                                     :key :boolean)))
       (clingon:initialize-option foo)
@@ -97,7 +97,7 @@
 
   (testing "boolean-always-true"
     (let ((foo (clingon:make-option :boolean/true
-                                    :help "always true option"
+                                    :description "always true option"
                                     :short-name #\b
                                     :key :boolean)))
       (clingon:initialize-option foo)
@@ -116,7 +116,7 @@
 
   (testing "boolean-always-false"
     (let ((foo (clingon:make-option :boolean/false
-                                    :help "always false option"
+                                    :description "always false option"
                                     :short-name #\b
                                     :key :boolean)))
       (clingon:initialize-option foo)
@@ -136,7 +136,7 @@
 (deftest option-counter
   (testing "counter with defaults"
     (let ((opt (clingon:make-option :counter
-                                    :help "counter with defaults"
+                                    :description "counter with defaults"
                                     :short-name #\c
                                     :key :counter)))
       (clingon:initialize-option opt)
@@ -147,7 +147,7 @@
 
   (testing "counter with a step"
     (let ((opt (clingon:make-option :counter
-                                    :help "counter with a step"
+                                    :description "counter with a step"
                                     :short-name #\c
                                     :key :counter
                                     :initial-value 42
@@ -161,7 +161,7 @@
 (deftest option-list
   (testing "list with defaults"
     (let ((opt (clingon:make-option :list
-                                    :help "list with defaults"
+                                    :description "list with defaults"
                                     :short-name #\l
                                     :key :list))
           (items (list "foo" "bar" "baz")))
@@ -175,7 +175,7 @@
     ;; The string value for a list would usually be provided from
     ;; environment variables.
     (let ((opt (clingon:make-option :list
-                                    :help "list with defaults"
+                                    :description "list with defaults"
                                     :short-name #\l
                                     :key :list
                                     :initial-value "foo, bar, baz")))
@@ -184,7 +184,7 @@
 
   (testing "list with initial list value"
     (let ((opt (clingon:make-option :list
-                                    :help "list initialized from a list"
+                                    :description "list initialized from a list"
                                     :short-name #\l
                                     :key :list
                                     :initial-value '("foo" "bar" "baz"))))
@@ -195,7 +195,7 @@
 (deftest option-integer
   (testing "integer with defaults"
     (let ((opt (clingon:make-option :integer
-                                    :help "int with defaults"
+                                    :description "int with defaults"
                                     :short-name #\i
                                     :key :int
                                     :initial-value 0)))
@@ -212,7 +212,7 @@
   (testing "integer initialized from string with good input"
     ;; The string initial-value would usually come from an env var
     (let ((opt (clingon:make-option :integer
-                                    :help "int with default string value"
+                                    :description "int with default string value"
                                     :short-name #\i
                                     :key :int
                                     :initial-value "42")))
@@ -221,7 +221,7 @@
 
   (testing "integer initialized with bad input"
     (let ((opt (clingon:make-option :integer
-                                    :help "int with bad default string value"
+                                    :description "int with bad default string value"
                                     :short-name #\i
                                     :key :int
                                     :initial-value "NaN")))
@@ -230,7 +230,7 @@
 (deftest option-list-integer
   (testing "derive values from integers"
     (let ((opt (clingon:make-option :list/integer
-                                    :help "list of integers"
+                                    :description "list of integers"
                                     :short-name #\l
                                     :key :list-of-integers)))
       (clingon:initialize-option opt)
@@ -241,7 +241,7 @@
 
   (testing "derive values from strings"
     (let ((opt (clingon:make-option :list/integer
-                                    :help "list of integers"
+                                    :description "list of integers"
                                     :short-name #\l
                                     :key :list-of-integers)))
       (clingon:initialize-option opt)
@@ -252,7 +252,7 @@
 
   (testing "derive values with a default value as a list"
     (let ((opt (clingon:make-option :list/integer
-                                    :help "list of integers"
+                                    :description "list of integers"
                                     :short-name #\l
                                     :key :list-of-integers
                                     :initial-value '(-3 -2 -1))))
@@ -264,7 +264,7 @@
 
   (testing "derive values with a default value as a string"
     (let ((opt (clingon:make-option :list/integer
-                                    :help "list of integers"
+                                    :description "list of integers"
                                     :short-name #\l
                                     :key :list-of-integers
                                     :initial-value "-3, -2, -1")))
@@ -277,7 +277,7 @@
 (deftest option-choice
   (testing "test with no default choice set"
     (let ((opt (clingon:make-option :choice
-                                    :help "choice option"
+                                    :description "choice option"
                                     :short-name #\c
                                     :key :choice
                                     :items '("foo" "bar" "baz"))))
@@ -291,7 +291,7 @@
 
   (testing "test with a default choice"
     (let ((opt (clingon:make-option :choice
-                                    :help "choice option with default value"
+                                    :description "choice option with default value"
                                     :short-name #\c
                                     :key :choice
                                     :items '("foo" "bar" "baz")
@@ -301,7 +301,7 @@
 
   (testing "test with invalid default choice"
     (let ((opt (clingon:make-option :choice
-                                    :help "choice option with invalid default value"
+                                    :description "choice option with invalid default value"
                                     :short-name #\c
                                     :key :choice
                                     :items '("foo" "bar" "baz")
@@ -311,7 +311,7 @@
 (deftest option-enum
   (testing "test with no default value"
     (let ((opt (clingon:make-option :enum
-				    :help "enum option"
+				    :description "enum option"
 				    :short-name #\e
 				    :key :enum
 				    :items '(("one" . 1)
@@ -326,7 +326,7 @@
 
   (testing "test with default value"
     (let ((opt (clingon:make-option :enum
-				    :help "enum option"
+				    :description "enum option"
 				    :short-name #\e
 				    :key :enum
 				    :items '(("one" . 1)
@@ -338,7 +338,7 @@
 
   (testing "test with invalid default value"
     (let ((opt (clingon:make-option :enum
-				    :help "enum option"
+				    :description "enum option"
 				    :short-name #\e
 				    :key :enum
 				    :items '(("one" . 1)

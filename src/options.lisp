@@ -13,7 +13,7 @@
    :option-long-name
    :option-required-p
    :option-parameter
-   :option-help
+   :option-description
    :option-env-vars
    :option-initial-value
    :option-key
@@ -98,11 +98,11 @@
     :initform nil
     :reader option-long-name
     :documentation "Long option name")
-   (help
-    :initarg :help
-    :initform (error "Must specify help message")
-    :reader option-help
-    :documentation "Usage documentation of the option")
+   (description
+    :initarg :description
+    :initform (error "Must specify description")
+    :reader option-description
+    :documentation "Short description of the option")
    (env-vars
     :initarg :env-vars
     :initform nil
