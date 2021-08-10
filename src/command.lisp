@@ -33,8 +33,7 @@
    :argv
    :walk)
   (:export
-   :find-short-option
-   :find-long-option
+   :find-option
    :parse-option
    :initialize-command
    :finalize-command
@@ -56,11 +55,8 @@
    :opt-is-set-p))
 (in-package :clingon.command)
 
-(defgeneric find-short-option (object name &key)
-  (:documentation "Returns the short option with the given NAME, or NIL otherwise"))
-
-(defgeneric find-long-option (object name &key)
-  (:documentation "Returns the long option with the given NAME, or NIL otherwise"))
+(defgeneric find-option (kind object name &key)
+  (:documentation "Returns the option of the given KIND and NAME, or NIL otherwise"))
 
 (defgeneric parse-option (kind object &key)
   (:documentation "Parses an option of the given KIND"))
@@ -155,12 +151,12 @@
               (finalize-option option))
         (setf (gethash (option-key option) result) (option-value option))))))
 
-(defmethod find-short-option ((command command) name &key)
-  "Finds the short option with the given name"
+(defmethod find-option ((kind (eql :short)) (command command) name &key)
+  "Finds the option with the given short name"
   (find name (command-options command) :key #'option-short-name :test #'char=))
 
-(defmethod find-long-option ((command command) name &key)
-  "Finds the long option with the given name"
+(defmethod find-option ((kind (eql :long)) (command command) name &key)
+  "Finds the option with the given long name"
   (find name (command-options command) :key #'option-long-name :test #'string=))
 
 (defmethod ensure-unique-options ((command command))
@@ -303,7 +299,7 @@
   (let* ((arg (pop (command-args-to-parse command)))
          (short-name (aref arg 1))
          (short-name-full (subseq arg 0 2))
-         (option (find-short-option command short-name))
+         (option (find-option :short command short-name))
          (optarg nil))
     ;; Unknown option
     (unless option
@@ -347,7 +343,7 @@
          (equals-position (position #\= arg))
          (long-name (subseq arg 2 equals-position))
          (long-name-full (format nil "--~A" long-name))
-         (option (find-long-option command long-name))
+         (option (find-option :long command long-name))
          (optarg nil))
     ;; Unknown option
     (unless option
