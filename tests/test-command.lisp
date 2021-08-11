@@ -4,56 +4,56 @@
   "Creates some sample options"
   (list
    (clingon:make-option :generic
-			:short-name #\a
-			:long-name "a-option"
-			:description "option a"
-			:key :a)
+                        :short-name #\a
+                        :long-name "a-option"
+                        :description "option a"
+                        :key :a)
    (clingon:make-option :generic
-			:short-name #\b
-			:long-name "b-option"
-			:description "option b"
-			:key :b)))
+                        :short-name #\b
+                        :long-name "b-option"
+                        :description "option b"
+                        :key :b)))
 
 (defun foo/command ()
   "A sample command with options"
   (clingon:make-command :name "foo"
-			:description "foo command"
-			:options (foo/options)))
+                        :description "foo command"
+                        :options (foo/options)))
 
 (defun make-duplicate-options ()
   "Returns a list of options which contain duplicates"
   (list
    (clingon:make-option :generic
-			:short-name #\a
-			:description "option a"
-			:key :a)
+                        :short-name #\a
+                        :description "option a"
+                        :key :a)
    (clingon:make-option :generic
-			:short-name #\a ;; <- duplicate short option
-			:description "option b"
-			:key :b)))
+                        :short-name #\a ;; <- duplicate short option
+                        :description "option b"
+                        :key :b)))
 
 (deftest initialize-command-instance
   (testing "ensure parent is set"
     (let* ((child (clingon:make-command :name "child"
-					:description "child command"))
-	   (parent (clingon:make-command :name "parent"
-					 :description "parent command"
-					 :sub-commands (list child))))
+                                        :description "child command"))
+           (parent (clingon:make-command :name "parent"
+                                         :description "parent command"
+                                         :sub-commands (list child))))
       (ok (equal (clingon:command-parent child) parent) "parent command matches"))))
 
 (deftest initialize-command
   (testing "ensure command arguments are nil"
     (let ((c (clingon:make-command :name "foo"
-				   :description "foo command"
-				   :arguments '(1 2 3))))
+                                   :description "foo command"
+                                   :arguments '(1 2 3))))
       (clingon:initialize-command c)
       (ok (equal (clingon:command-arguments c) nil) "free arguments are nil upon initialization"))))
 
 (deftest finalize-command
   (testing "args to parse are nil"
     (let ((c (clingon:make-command :name "foo"
-				   :description "foo command"
-				   :arguments '(1 2 3))))
+                                   :description "foo command"
+                                   :arguments '(1 2 3))))
       (clingon:initialize-command c)
       (clingon:finalize-command c)
       (ok (equal (clingon.command:command-args-to-parse c) nil) "no more args to parse"))))
@@ -73,66 +73,101 @@
 (deftest ensure-unique-options
   (testing "ensure no duplicates"
     (let ((c (clingon:make-command :name "foo"
-				   :description "command with duplicate options"
-				   :options (make-duplicate-options))))
+                                   :description "command with duplicate options"
+                                   :options (make-duplicate-options))))
       (ok (signals (clingon:ensure-unique-options c) 'clingon:duplicate-options)
-	  "signals on duplicate options"))))
+          "signals on duplicate options"))))
 
 (deftest ensure-unique-sub-commands
   (testing "ensure no duplicate sub commands"
     (let* ((foo (clingon:make-command :name "foo" :description "foo command"))
-	   (bar (clingon:make-command :name "foo" :description "bar command")) ;; <- duplicate name
-	   (top-level (clingon:make-command :name "top-level"
-					    :description "top-level command"
-					    :sub-commands (list foo bar))))
+           (bar (clingon:make-command :name "foo" :description "bar command")) ;; <- duplicate name
+           (top-level (clingon:make-command :name "top-level"
+                                            :description "top-level command"
+                                            :sub-commands (list foo bar))))
       (ok (signals (clingon:ensure-unique-sub-commands top-level) 'clingon:duplicate-commands)
-	  "signals on duplicate sub-commands"))))
+          "signals on duplicate sub-commands"))))
 
-(deftest command-lineage
+(deftest command-relationships
   (testing "verify command lineage"
     (let* ((c3 (clingon:make-command :name "c3"
-				     :description "c3 command"))
-	   (c2 (clingon:make-command :name "c2"
-				     :description "c2 command"
-				     :sub-commands (list c3)))
-	   (c1 (clingon:make-command :name "c1"
-				     :description "c1 command"
-				     :sub-commands (list c2)))
-	   (top-level (clingon:make-command :name "top-level"
-					    :description "top-level command"
-					    :sub-commands (list c1))))
+                                     :description "c3 command"))
+           (c2 (clingon:make-command :name "c2"
+                                     :description "c2 command"
+                                     :sub-commands (list c3)))
+           (c1 (clingon:make-command :name "c1"
+                                     :description "c1 command"
+                                     :sub-commands (list c2)))
+           (top-level (clingon:make-command :name "top-level"
+                                            :description "top-level command"
+                                            :sub-commands (list c1))))
       (let ((lineage (clingon:command-lineage c3)))
-	(ok (equal (list c3 c2 c1 top-level) lineage) "nodes match"))))
+        (ok (equal (list c3 c2 c1 top-level) lineage) "nodes match"))))
 
   (testing "circular dependencies"
     (let* ((c3 (clingon:make-command :name "c3"
-				     :description "c3 command"))
-	   (c2 (clingon:make-command :name "c2"
-				     :description "c2 command"
-				     :sub-commands (list c3)))
-	   (c1 (clingon:make-command :name "c1"
-				     :description "c1 command"
-				     :sub-commands (list c2)))
-	   (top-level (clingon:make-command :name "top-level"
-					    :description "top-level command"
-					    :sub-commands (list c1))))
+                                     :description "c3 command"))
+           (c2 (clingon:make-command :name "c2"
+                                     :description "c2 command"
+                                     :sub-commands (list c3)))
+           (c1 (clingon:make-command :name "c1"
+                                     :description "c1 command"
+                                     :sub-commands (list c2)))
+           (top-level (clingon:make-command :name "top-level"
+                                            :description "top-level command"
+                                            :sub-commands (list c1))))
       ;; Create a circular dependency between top-level and c3
       (setf (clingon:command-parent top-level) c3)
       (ok (signals (clingon:command-lineage c3) 'clingon:circular-dependency)
-	  "signals on circular dependencies"))))
+          "signals on circular dependencies")))
 
-(deftest find-sub-command
+  (testing "verify full path to command"
+    (let* ((c3 (clingon:make-command :name "c3"
+                                     :description "c3 command"))
+           (c2 (clingon:make-command :name "c2"
+                                     :description "c2 command"
+                                     :sub-commands (list c3)))
+           (c1 (clingon:make-command :name "c1"
+                                     :description "c1 command"
+                                     :sub-commands (list c2)))
+           (top-level (clingon:make-command :name "top-level"
+                                            :description "top-level command"
+                                            :sub-commands (list c1)))
+           (full-path (clingon:command-full-path c3)))
+      (declare (ignore top-level))
+      (ok (equal '("top-level" "c1" "c2" "c3") full-path)
+          "full path matches")))
+
   (testing "find sub-commands"
     (let* ((foo (clingon:make-command :name "foo"
-				      :description "foo command"))
-	   (bar (clingon:make-command :name "bar"
-				      :description "bar command"))
-	   (top-level (clingon:make-command :name "top-level"
-					    :description "top-level command"
-					    :sub-commands (list foo bar))))
+                                      :description "foo command"))
+           (bar (clingon:make-command :name "bar"
+                                      :description "bar command"))
+           (top-level (clingon:make-command :name "top-level"
+                                            :description "top-level command"
+                                            :sub-commands (list foo bar))))
       (ok (equal foo (clingon:find-sub-command top-level "foo"))
-	  "find existing command \"foo\"")
+          "find existing command \"foo\"")
       (ok (equal bar (clingon:find-sub-command top-level "bar"))
-	  "find existing command \"bar\"")
+          "find existing command \"bar\"")
       (ok (equal nil (clingon:find-sub-command top-level "INVALID"))
-	  "returns nil on missing command"))))
+          "returns nil on missing command")))
+
+  (testing "walk commands tree"
+    (let* ((c3 (clingon:make-command :name "c3"
+                                     :description "c3 command"))
+           (c2 (clingon:make-command :name "c2"
+                                     :description "c2 command"
+                                     :sub-commands (list c3)))
+           (c1 (clingon:make-command :name "c1"
+                                     :description "c1 command"
+                                     :sub-commands (list c2)))
+           (top-level (clingon:make-command :name "top-level"
+                                            :description "top-level command"
+                                            :sub-commands (list c1)))
+	   (result nil))
+      (clingon:with-commands-walk (c top-level)
+	(push c result))
+      (setf result (nreverse result))
+      (ok (equal '("top-level" "c1" "c2" "c3") (mapcar #'clingon:command-name result))
+	  "walked nodes match"))))
