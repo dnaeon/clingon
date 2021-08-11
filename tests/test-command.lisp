@@ -3,12 +3,12 @@
 (defun foo/options ()
   "Creates some sample options"
   (list
-   (clingon:make-option :generic
+   (clingon:make-option :boolean/true
                         :short-name #\a
                         :long-name "a-option"
                         :description "option a"
                         :key :a)
-   (clingon:make-option :generic
+   (clingon:make-option :boolean/true
                         :short-name #\b
                         :long-name "b-option"
                         :description "option b"
@@ -198,4 +198,40 @@
       ;; After finalizing the command we don't have any remaining args to parse
       (clingon:finalize-command c)
       (ok (equal nil (clingon:command-args-to-parse c)) "no more args to parse")
-      (ok (equal '("foo" "bar") (clingon:command-arguments c)) "free arguments match"))))
+      (ok (equal '("foo" "bar") (clingon:command-arguments c)) "free arguments match")))
+
+  (testing "parse short option"
+    (let ((c (foo/command)))
+      ;; Set some args to parse
+      (setf (clingon:command-args-to-parse c) '("-a" "-b" "-X" "--long"))
+      (clingon:initialize-command c)
+      (ok (equal :true (clingon:parse-option :short c)) "parse -a flag")
+      (ok (equal :true (clingon:parse-option :short c)) "parse -b flag")
+      (ok (signals (clingon:parse-option :short c) 'clingon:unknown-option)
+	  "signals on first unknown option")
+      (ok (signals (clingon:parse-option :short c) 'clingon:unknown-option)
+	  "signals on second unknown option")
+      (clingon:finalize-command c)))
+
+  (testing "parse short options with restarts"
+    (let ((c (clingon:make-command :name "foo"  ;; <- no options defined for the command
+				   :description "foo with restarts"
+				   :args-to-parse '("-X" "-Y" "-Z"))))
+      (clingon:initialize-command c)
+      (handler-bind ((clingon:unknown-option #'clingon:treat-as-argument))
+	(clingon:parse-option :short c)
+	(clingon:parse-option :short c)
+	(clingon:parse-option :short c))
+      (clingon:finalize-command c)
+      (ok (equal '("-X" "-Y" "-Z") (clingon:command-arguments c))
+	  "treat unknowns as free arguments")
+
+      ;; Re-initialize the command with different input
+      (setf (clingon:command-args-to-parse c) '("-X" "-Y" "-Z"))
+      (clingon:initialize-command c)
+      (handler-bind ((clingon:unknown-option #'clingon:discard-option))
+	(clingon:parse-option :short c)
+	(clingon:parse-option :short c)
+	(clingon:parse-option :short c))
+      (clingon:finalize-command c)
+      (ok (equal nil (clingon:command-arguments c)) "discard unknown options"))))
