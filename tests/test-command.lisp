@@ -120,3 +120,19 @@
       (setf (clingon:command-parent top-level) c3)
       (ok (signals (clingon:command-lineage c3) 'clingon:circular-dependency)
 	  "signals on circular dependencies"))))
+
+(deftest find-sub-command
+  (testing "find sub-commands"
+    (let* ((foo (clingon:make-command :name "foo"
+				      :description "foo command"))
+	   (bar (clingon:make-command :name "bar"
+				      :description "bar command"))
+	   (top-level (clingon:make-command :name "top-level"
+					    :description "top-level command"
+					    :sub-commands (list foo bar))))
+      (ok (equal foo (clingon:find-sub-command top-level "foo"))
+	  "find existing command \"foo\"")
+      (ok (equal bar (clingon:find-sub-command top-level "bar"))
+	  "find existing command \"bar\"")
+      (ok (equal nil (clingon:find-sub-command top-level "INVALID"))
+	  "returns nil on missing command"))))
