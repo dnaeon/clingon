@@ -198,6 +198,18 @@
   (option-value option))
 
 ;;;;
+;;;; String options
+;;;;
+(defclass option-string (option)
+  ()
+  (:default-initargs
+   :parameter "VALUE")
+  (:documentation "An option which represents a string"))
+
+(defmethod make-option ((kind (eql :string)) &rest rest)
+  (apply #'make-instance 'option-string rest))
+
+;;;;
 ;;;; Boolean options
 ;;;;
 
