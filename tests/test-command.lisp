@@ -165,29 +165,29 @@
            (top-level (clingon:make-command :name "top-level"
                                             :description "top-level command"
                                             :sub-commands (list c1)))
-	   (result nil))
+           (result nil))
       (clingon:with-commands-walk (c top-level)
-	(push c result))
+        (push c result))
       (setf result (nreverse result))
       (ok (equal '("top-level" "c1" "c2" "c3") (mapcar #'clingon:command-name result))
-	  "walked nodes match"))))
+          "walked nodes match"))))
 
 (deftest parse-options
   (testing "consume all arguments"
     (let ((c (clingon:make-command :name "top-level"
-				   :description "sample top-level command"
-				   :args-to-parse (list "--" "foo" "bar" "baz" "qux"))))
+                                   :description "sample top-level command"
+                                   :args-to-parse (list "--" "foo" "bar" "baz" "qux"))))
       (clingon:initialize-command c)
       (clingon:parse-option :consume-all-arguments c)
       (clingon:finalize-command c)
       (ok (equal nil (clingon:command-args-to-parse c)) "args to parse is nil")
       (ok (equal '("foo" "bar" "baz" "qux") (clingon:command-arguments c))
-	  "free arguments match")))
+          "free arguments match")))
 
   (testing "parse free arguments"
     (let ((c (clingon:make-command :name "top-level"
-				   :description "sample top-level command"
-				   :args-to-parse (list "foo" "bar" "baz"))))
+                                   :description "sample top-level command"
+                                   :args-to-parse (list "foo" "bar" "baz"))))
       (clingon:initialize-command c)
       ;; Parse just two arguments
       (clingon:parse-option :free-argument c)
@@ -200,38 +200,86 @@
       (ok (equal nil (clingon:command-args-to-parse c)) "no more args to parse")
       (ok (equal '("foo" "bar") (clingon:command-arguments c)) "free arguments match")))
 
-  (testing "parse short option"
+  (testing "parse short and long options"
     (let ((c (foo/command)))
       ;; Set some args to parse
-      (setf (clingon:command-args-to-parse c) '("-a" "-b" "-X" "--long"))
+      (setf (clingon:command-args-to-parse c) '("-a" "-b" "--a-option" "--b-option" "-X" "--invalid"))
       (clingon:initialize-command c)
       (ok (equal :true (clingon:parse-option :short c)) "parse -a flag")
       (ok (equal :true (clingon:parse-option :short c)) "parse -b flag")
+      (ok (equal :true (clingon:parse-option :long c)) "parse --a-option flag")
+      (ok (equal :true (clingon:parse-option :long c)) "parse --b-option flag")
       (ok (signals (clingon:parse-option :short c) 'clingon:unknown-option)
-	  "signals on first unknown option")
+          "signals on first unknown -X option")
       (ok (signals (clingon:parse-option :short c) 'clingon:unknown-option)
-	  "signals on second unknown option")
+          "signals on second unknown --invalid option")
       (clingon:finalize-command c)))
 
-  (testing "parse short options with restarts"
+  (testing "parse options with restarts"
     (let ((c (clingon:make-command :name "foo"  ;; <- no options defined for the command
-				   :description "foo with restarts"
-				   :args-to-parse '("-X" "-Y" "-Z"))))
+                                   :description "foo with restarts"
+                                   :args-to-parse '("-a" "--long" "-b"))))
       (clingon:initialize-command c)
       (handler-bind ((clingon:unknown-option #'clingon:treat-as-argument))
-	(clingon:parse-option :short c)
-	(clingon:parse-option :short c)
-	(clingon:parse-option :short c))
+        (clingon:parse-option :short c)
+        (clingon:parse-option :long c)
+        (clingon:parse-option :short c))
       (clingon:finalize-command c)
-      (ok (equal '("-X" "-Y" "-Z") (clingon:command-arguments c))
-	  "treat unknowns as free arguments")
+      (ok (equal '("-a" "--long" "-b") (clingon:command-arguments c))
+          "treat unknowns as free arguments")
 
       ;; Re-initialize the command with different input
-      (setf (clingon:command-args-to-parse c) '("-X" "-Y" "-Z"))
+      (setf (clingon:command-args-to-parse c) '("-a" "--long" "-b"))
       (clingon:initialize-command c)
       (handler-bind ((clingon:unknown-option #'clingon:discard-option))
-	(clingon:parse-option :short c)
-	(clingon:parse-option :short c)
-	(clingon:parse-option :short c))
+        (clingon:parse-option :short c)
+        (clingon:parse-option :long c)
+        (clingon:parse-option :short c))
       (clingon:finalize-command c)
-      (ok (equal nil (clingon:command-arguments c)) "discard unknown options"))))
+      (ok (equal nil (clingon:command-arguments c)) "discard unknown options")))
+
+  (testing "parse required options"
+    (let ((c (clingon:make-command :name "foo"
+                                   :description "foo command"
+                                   :options
+                                   (list
+                                    (clingon:make-option :string
+                                                         :short-name #\s
+                                                         :long-name "string"
+                                                         :description "required options"
+                                                         :required t
+                                                         :key :string)))))
+      ;; Test short option parsing
+      (setf (clingon:command-args-to-parse c) '("-s" "foo"))
+      (clingon:initialize-command c)
+      (clingon:parse-option :short c)
+      (clingon:finalize-command c)
+      (ok (string= "foo" (clingon:getopt c :string)) "short option value matches")
+
+      ;; Test long option parsing
+      (setf (clingon:command-args-to-parse c) '("--string" "bar"))
+      (clingon:initialize-command c)
+      (clingon:parse-option :long c)
+      (clingon:finalize-command c)
+      (ok (string= "bar" (clingon:getopt c :string)) "long option value matches")
+
+      ;; Test with missing optarg for short option
+      (setf (clingon:command-args-to-parse c) '("-s"))
+      (clingon:initialize-command c)
+      (ok (signals (clingon:parse-option :short c) 'clingon:missing-option-argument)
+          "signals on missing option argument (short option)")
+      (clingon:finalize-command c)
+
+      ;; Test with missing optarg for long option
+      (setf (clingon:command-args-to-parse c) '("--string"))
+      (clingon:initialize-command c)
+      (ok (signals (clingon:parse-option :long c) 'clingon:missing-option-argument)
+          "signals on missing option argument (long option) #1")
+      (clingon:finalize-command c)
+
+      ;; Test with missing optarg for long option
+      (setf (clingon:command-args-to-parse c) '("--string="))
+      (clingon:initialize-command c)
+      (ok (signals (clingon:parse-option :long c) 'clingon:missing-option-argument)
+          "signals on missing option argument (long option) #2")
+      (clingon:finalize-command c))))
