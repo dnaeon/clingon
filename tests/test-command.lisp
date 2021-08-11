@@ -78,3 +78,12 @@
       (ok (signals (clingon:ensure-unique-options c) 'clingon:duplicate-options)
 	  "signals on duplicate options"))))
 
+(deftest ensure-unique-sub-commands
+  (testing "ensure no duplicate sub commands"
+    (let* ((foo (clingon:make-command :name "foo" :description "foo command"))
+	   (bar (clingon:make-command :name "foo" :description "bar command")) ;; <- duplicate name
+	   (top-level (clingon:make-command :name "top-level"
+					    :description "top-level command"
+					    :sub-commands (list foo bar))))
+      (ok (signals (clingon:ensure-unique-sub-commands top-level) 'clingon:duplicate-commands)
+	  "signals on duplicate sub-commands"))))
