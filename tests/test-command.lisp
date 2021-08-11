@@ -87,3 +87,36 @@
 					    :sub-commands (list foo bar))))
       (ok (signals (clingon:ensure-unique-sub-commands top-level) 'clingon:duplicate-commands)
 	  "signals on duplicate sub-commands"))))
+
+(deftest command-lineage
+  (testing "verify command lineage"
+    (let* ((c3 (clingon:make-command :name "c3"
+				     :description "c3 command"))
+	   (c2 (clingon:make-command :name "c2"
+				     :description "c2 command"
+				     :sub-commands (list c3)))
+	   (c1 (clingon:make-command :name "c1"
+				     :description "c1 command"
+				     :sub-commands (list c2)))
+	   (top-level (clingon:make-command :name "top-level"
+					    :description "top-level command"
+					    :sub-commands (list c1))))
+      (let ((lineage (clingon:command-lineage c3)))
+	(ok (equal (list c3 c2 c1 top-level) lineage) "nodes match"))))
+
+  (testing "circular dependencies"
+    (let* ((c3 (clingon:make-command :name "c3"
+				     :description "c3 command"))
+	   (c2 (clingon:make-command :name "c2"
+				     :description "c2 command"
+				     :sub-commands (list c3)))
+	   (c1 (clingon:make-command :name "c1"
+				     :description "c1 command"
+				     :sub-commands (list c2)))
+	   (top-level (clingon:make-command :name "top-level"
+					    :description "top-level command"
+					    :sub-commands (list c1))))
+      ;; Create a circular dependency between top-level and c3
+      (setf (clingon:command-parent top-level) c3)
+      (ok (signals (clingon:command-lineage c3) 'clingon:circular-dependency)
+	  "signals on circular dependencies"))))
