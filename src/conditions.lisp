@@ -10,7 +10,6 @@
    :duplicate-option-name
    :duplicate-commands
    :duplicate-command-items
-   :duplicate-command-name
    :unknown-option
    :unknown-option-name
    :unknown-option-kind
@@ -92,14 +91,11 @@
   ((items
     :initarg :items
     :initform (error "Must specify duplicate items")
-    :reader duplicate-command-items)
-   (name
-    :initarg :name
-    :initform (error "Must specify command name")
-    :reader duplicate-command-name))
+    :reader duplicate-command-items))
   (:report (lambda (condition stream)
-             (format stream "Duplicate commands ~A found" (duplicate-command-name condition))))
-  (:documentation "A condition which is signalled when a command provides duplicate sub-commands"))
+             (format stream "There are ~A duplicate commands found"
+		     (length (duplicate-command-items conditions)))))
+   (:documentation "A condition which is signalled when a command provides duplicate sub-commands"))
 
 (define-condition unknown-option (error)
   ((name
