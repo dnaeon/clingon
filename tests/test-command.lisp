@@ -171,3 +171,31 @@
       (setf result (nreverse result))
       (ok (equal '("top-level" "c1" "c2" "c3") (mapcar #'clingon:command-name result))
 	  "walked nodes match"))))
+
+(deftest parse-options
+  (testing "consume all arguments"
+    (let ((c (clingon:make-command :name "top-level"
+				   :description "sample top-level command"
+				   :args-to-parse (list "--" "foo" "bar" "baz" "qux"))))
+      (clingon:initialize-command c)
+      (clingon:parse-option :consume-all-arguments c)
+      (clingon:finalize-command c)
+      (ok (equal nil (clingon:command-args-to-parse c)) "args to parse is nil")
+      (ok (equal '("foo" "bar" "baz" "qux") (clingon:command-arguments c))
+	  "free arguments match")))
+
+  (testing "parse free arguments"
+    (let ((c (clingon:make-command :name "top-level"
+				   :description "sample top-level command"
+				   :args-to-parse (list "foo" "bar" "baz"))))
+      (clingon:initialize-command c)
+      ;; Parse just two arguments
+      (clingon:parse-option :free-argument c)
+      (clingon:parse-option :free-argument c)
+
+      (ok (equal '("baz") (clingon:command-args-to-parse c)) "remaining args to parse match")
+
+      ;; After finalizing the command we don't have any remaining args to parse
+      (clingon:finalize-command c)
+      (ok (equal nil (clingon:command-args-to-parse c)) "no more args to parse")
+      (ok (equal '("foo" "bar") (clingon:command-arguments c)) "free arguments match"))))
