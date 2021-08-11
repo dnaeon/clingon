@@ -24,7 +24,6 @@
    :option-key
    :option-value
    :option-parameter
-   :option-help
    :initialize-option
    :finalize-option
    :derive-option-value)
@@ -45,6 +44,12 @@
    :command-parent
    :command-lineage
    :command-arguments
+   :command-authors
+   :command-version
+   :command-description
+   :command-license
+   :command-usage
+   :command-args-to-parse
    :make-command
    :command-full-path
    :find-sub-command
@@ -52,7 +57,9 @@
    :with-commands-walk
    :parse-command-line
    :getopt
-   :opt-is-set-p))
+   :opt-is-set-p
+   :ensure-unique-options
+   :ensure-unique-sub-commands))
 (in-package :clingon.command)
 
 (defgeneric find-option (kind object name &key)
@@ -449,3 +456,52 @@
           (parse-option :free-argument command)))
     :finally (finalize-command command))
   command)
+
+(defmethod getopt ((command command) opt-key)
+  "Returns the value of the option with the given OPT-KEY,
+   by traversing the lineage of the given COMMAND,
+   starting from the most-specific to least-specific command.
+
+   Make sure to call GETOPT on a command, which has been
+   finalized.
+
+   For example, if we have the following command line:
+
+   $ my-app --verbose --some-flag foo-command --foo-flag bar-command --bar-flag --some-flag
+
+   Where `cmd' is bound to the command named `bar-command' then
+   the result of the following expression:
+
+   (clingon:getopt cmd :verbose)
+
+   Will return the global flag `--verbose', which is associated with the
+   top-level `my-app' command.
+
+   However, if we request the value of the `--some-flag' option, which
+   is defined on both -- `my-app' and `bar-command' then the following
+   expression:
+
+   (clingon:getopt cmd :bar-flag)
+
+   Will return the most-specific flag, which in this case is the one
+   defined on `bar-command'.
+
+   This approach allows sub-commands to re-use already defined global
+   flags and options, which are defined by other commands from their
+   lineage."
+  (dolist (cmd (command-lineage command))
+    ;; Option exists in the current command and is set
+    (multiple-value-bind (value exists-p) (gethash opt-key (command-reduced-options cmd))
+      (when exists-p
+        (return-from getopt (values value exists-p))))
+    ;; Option is not set, but could be part of the current command.
+    ;; If that's the case we don't descend into the parent commands.
+    (when (member opt-key (command-options cmd) :key #'option-key :test #'equal)
+      (return (values nil nil))))
+  (values nil nil))
+
+(defmethod opt-is-set-p ((command command) opt-key)
+  "Returns T if the OPT-KEY is defined anywhere in the command's lineage"
+  (multiple-value-bind (value is-set-p) (getopt command opt-key)
+    (declare (ignore value))
+    is-set-p))
