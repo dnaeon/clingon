@@ -59,7 +59,9 @@
    :getopt
    :opt-is-set-p
    :ensure-unique-options
-   :ensure-unique-sub-commands))
+   :ensure-unique-sub-commands
+   :treat-as-argument
+   :discard-option))
 (in-package :clingon.command)
 
 (defgeneric find-option (kind object name &key)
@@ -505,3 +507,11 @@
   (multiple-value-bind (value is-set-p) (getopt command opt-key)
     (declare (ignore value))
     is-set-p))
+
+(defun treat-as-argument (condition)
+  "A handler which can be used to invoke the `treat-as-argument' restart"
+  (invoke-restart (find-restart 'treat-as-argument condition)))
+
+(defun discard-option (condition)
+  "A handler which can be used to invoke the `discard-option' restart"
+  (invoke-restart (find-restart 'discard-option condition)))
