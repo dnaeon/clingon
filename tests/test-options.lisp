@@ -347,3 +347,23 @@
 				    :initial-value "INVALID")))
       (ok (signals (clingon:initialize-option opt) 'clingon:option-derive-error)
 	  "signals on invalid default value"))))
+
+(deftest option-string
+  (testing "test with no default"
+    (let ((opt (clingon:make-option :string
+                                    :description "string option"
+                                    :short-name #\c
+                                    :key :string)))
+      (clingon:initialize-option opt)
+      (ok (string= "foo" (clingon:derive-option-value opt "foo")) "derive foo")
+      (ok (string= "bar" (clingon:derive-option-value opt "bar")) "derive bar")
+      (ok (string= "baz" (clingon:derive-option-value opt "baz")) "derive baz")))
+
+  (testing "test with a default value"
+    (let ((opt (clingon:make-option :string
+                                    :description "string with default value"
+                                    :short-name #\c
+                                    :key :string
+				    :initial-value "foo")))
+      (clingon:initialize-option opt)
+      (ok (string= "foo" (clingon:finalize-option opt)) "finalized value matches"))))
