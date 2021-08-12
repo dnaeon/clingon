@@ -48,7 +48,8 @@
    :option-choice-items
    :option-enum
    :option-enum-items
-   :make-default-help-option))
+   :make-default-help-option
+   :make-default-version-option))
 (in-package :clingon.options)
 
 (defgeneric initialize-option (option &key)
@@ -518,4 +519,11 @@
   (make-option :boolean/true
 	       :description "display usage information and exit"
 	       :long-name "help"
-	       :key :help))
+	       :key :clingon-builtin-help-option))
+
+(defun make-default-version-option ()
+  "Returns a default `--version' option, which can be added to commands"
+  (make-option :boolean/true
+	       :description "display version and exit"
+	       :long-name "version"
+	       :key :clingon-builtin-version-option))
