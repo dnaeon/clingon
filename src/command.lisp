@@ -35,7 +35,8 @@
    :clingon.utils
    :argv
    :walk
-   :join-list)
+   :join-list
+   :exit)
   (:export
    :find-option
    :parse-option
@@ -189,15 +190,21 @@
           (nreverse (command-arguments command)))
     ;; Finalize the options
     (dolist (option (command-options command))
-      ;; Option is required and was not set
-      (when (and (option-required-p option)
-                 (not (option-is-set-p option)))
-        (error 'missing-required-option-value :item option :command command))
       ;; Option is finalized, only if it has been set
       (when (option-is-set-p option)
         (setf (option-value option)
               (finalize-option option))
-        (setf (gethash (option-key option) context) (option-value option))))))
+        (setf (gethash (option-key option) context) (option-value option)))))
+
+  ;; Special case to handle the `--help' flag
+  (when (getopt command :help)
+    (print-usage-and-exit command t))
+
+  ;; Verify required options
+  (let ((required-options (remove-if-not #'option-required-p (command-options command))))
+    (dolist (option required-options)
+      (unless (option-is-set-p option)
+	(error 'missing-required-option-value :item option :command command)))))
 
 (defmethod find-option ((kind (eql :short)) (command command) name &key)
   "Finds the option with the given short name"
@@ -574,3 +581,7 @@
   (when (command-sub-commands command)
     (format stream "COMMANDS:~%")
     (print-sub-commands-usage command stream)))
+
+(defmethod print-usage-and-exit ((command command) stream)
+  (print-usage command stream)
+  (exit 64)) ;; EX_USAGE

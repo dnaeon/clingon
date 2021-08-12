@@ -514,6 +514,7 @@
     (cdr pair)))
 
 (defun make-default-help-option ()
+  "Returns a default `--help' option, which can be added to commands"
   (make-option :boolean/true
 	       :description "display usage information and exit"
 	       :long-name "help"
