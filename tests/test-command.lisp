@@ -329,13 +329,7 @@
 			:description "how noisy we want to be"
 			:short-name #\v
 			:long-name "verbose"
-			:key :verbose)
-   (clingon:make-option :enum
-			:description "make your choice"
-			:short-name #\c
-			:long-name "choice"
-			:key :choice
-			:items '(("one" . 1) ("two" . 2) ("three" . 3)))))
+			:key :verbose)))
 
 (defun top-level/command ()
   "Our sample top-level command.
