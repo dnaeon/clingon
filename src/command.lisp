@@ -33,7 +33,8 @@
   (:import-from
    :clingon.utils
    :argv
-   :walk)
+   :walk
+   :join-list)
   (:export
    :find-option
    :parse-option
@@ -64,7 +65,8 @@
    :ensure-unique-options
    :ensure-unique-sub-commands
    :treat-as-argument
-   :discard-option))
+   :discard-option
+   :print-usage))
 (in-package :clingon.command)
 
 (defgeneric find-option (kind object name &key)
@@ -78,6 +80,9 @@
 
 (defgeneric finalize-command (command &key)
   (:documentation "Finalizes a command and derives the set of reduced options"))
+
+(defgeneric print-usage (command stream &key)
+  (:documentation "Prints the usage information of the command"))
 
 (defclass command ()
   ((name
@@ -518,3 +523,50 @@
 (defun discard-option (condition)
   "A handler which can be used to invoke the `discard-option' restart"
   (invoke-restart (find-restart 'discard-option condition)))
+
+(defmethod print-options-usage ((command command) stream &key (wrap-at-width 65))
+  "Prints the usage information about the options for the given command"
+  (let* ((opts (command-options command))
+	 (usages (mapcar (lambda (o) (option-usage-details :default o)) opts))
+	 (width (+ 4 (apply #'max (mapcar #'length usages)))))
+    (loop :for (opt usage) :in (mapcar #'list opts usages) :do
+      (format stream "  ~A" usage)
+      (let* ((desc (option-description-details :default opt))
+	     (lines (split-sequence:split-sequence #\Newline (bobbin:wrap desc wrap-at-width))))
+	(format stream "~vA~A~&" (- width (length usage) 2) #\Space (first lines))
+	(dolist (remaining (rest lines))
+	  (format stream "~vA~A~&" width #\Space remaining)))))
+  (terpri stream))
+
+(defmethod print-sub-commands-usage ((command command) stream &key (wrap-at-width 65))
+  "Prints a summary of the sub-commands available for the command"
+  (let* ((sub-commands (command-sub-commands command))
+	 (names (mapcar #'command-name sub-commands))
+	 (descriptions (mapcar #'command-description sub-commands))
+	 (width (+ 4 (apply #'max (mapcar #'length names)))))
+    (loop :for (name desc) :in (mapcar #'list names descriptions) :do
+      (let* ((lines (split-sequence:split-sequence #\Newline
+						  (bobbin:wrap desc wrap-at-width))))
+	(format stream "  ~A" name)
+	(format stream "~vA~A~&" (- width (length name) 2) #\Space (first lines))
+	(dolist (remaining (rest lines))
+	  (format stream "~vA~A~&" width #\Space remaining)))))
+  (terpri stream))
+
+(defmethod print-usage ((command command) stream &key)
+  (format stream "NAME:~%")
+  (format stream "  ~A - ~A~2%"
+	  (join-list (command-full-path command) " ")
+	  (command-description command))
+
+  (format stream "USAGE:~%")
+  (format stream "  ~A [global options] command [command-options] [arguments ...]~2%"
+	  (command-name command))
+
+  (when (command-options command)
+    (format stream "OPTIONS:~%")
+    (print-options-usage command stream))
+
+  (when (command-sub-commands command)
+    (format stream "COMMANDS:~%")
+    (print-sub-commands-usage command stream)))
