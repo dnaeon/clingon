@@ -283,3 +283,139 @@
       (ok (signals (clingon:parse-option :long c) 'clingon:missing-option-argument)
           "signals on missing option argument (long option) #2")
       (clingon:finalize-command c))))
+
+(defun status/options ()
+  "Creates the options for the sample `status' command"
+  (list
+   (clingon:make-option :boolean
+			:description "real-time updates"
+			:short-name #\r
+			:long-name "real-time"
+			:required t
+			:key :real-time)))
+
+(defun status/command ()
+  "Creates the sample `status' command"
+  (clingon:make-command :name "status"
+			:description "status information"
+			:options (status/options)))
+
+(defun display/options ()
+  "Returns the options for the sample `display' sub-command"
+  ;; An option that acts as a switch
+  (list
+   (clingon:make-option :boolean/true
+			:description "enable progress reporting"
+			:short-name #\p
+			:long-name "progress"
+			:key :progress)
+   (clingon:make-option :boolean/false
+			:description "disable progress reporting"
+			:short-name #\P
+			:long-name "no-progress"
+			:key :progress)))
+
+(defun display/command ()
+  "Creates a sample `display' command"
+  (clingon:make-command :name "display"
+			:description "displays something funny"
+			:options (display/options)
+			:sub-commands (list (status/command))))
+
+(defun top-level/options ()
+  "Returns the top-level command options"
+  (list
+   (clingon:make-option :counter
+			:description "how noisy we want to be"
+			:short-name #\v
+			:long-name "verbose"
+			:key :verbose)
+   (clingon:make-option :enum
+			:description "make your choice"
+			:short-name #\c
+			:long-name "choice"
+			:key :choice
+			:items '(("one" . 1) ("two" . 2) ("three" . 3)))))
+
+(defun top-level/command ()
+  "Our sample top-level command.
+   The command we build here has the following usage spec:
+
+  $ top-level [-v] [display [--no|progress] [status --real-time=[false|true]]]"
+  (clingon:make-command :name "top-level"
+			:description "top-level command"
+			:options (top-level/options)
+			:sub-commands (list (display/command))))
+
+(deftest parse-command-line
+  (testing "test with no arguments"
+    (let* ((top-level (top-level/command))
+	   (c (clingon:parse-command-line top-level nil)))
+      (ok (string= "top-level" (clingon:command-name c)) "matches the top-level command")
+      (ok (= 0 (clingon:getopt c :verbose)) "verbose is 0")))
+
+  (testing "top-level command with global flag"
+    (let* ((top-level (top-level/command))
+	   (c (clingon:parse-command-line top-level '("-vvv" "--verbose"))))
+      (ok (string= "top-level" (clingon:command-name c)) "matches the top-level command")
+      (ok (= 4 (clingon:getopt c :verbose)) "verbose is 4")))
+
+  (testing "top-level command with free arguments"
+    (let* ((top-level (top-level/command))
+	   (c (clingon:parse-command-line top-level '("-v" "foo" "bar" "baz"))))
+      (ok (string= "top-level" (clingon:command-name c)) "matches the top-level command")
+      (ok (= 1 (clingon:getopt c :verbose)) "verbose is 4")
+      (ok (equal '("foo" "bar" "baz") (clingon:command-arguments c)) "free arguments match")))
+
+  (testing "top-level command with free args matching sub-command name"
+    (let* ((top-level (top-level/command))
+	   (c (clingon:parse-command-line top-level '("-v" "--" "display" "status" "-a" "-b" "-c"))))
+      (ok (string= "top-level" (clingon:command-name c)) "matches the top-level command")
+      (ok (= 1 (clingon:getopt c :verbose)) "verbose is 4")
+      (ok (equal '("display" "status" "-a" "-b" "-c") (clingon:command-arguments c)) "free arguments match")))
+
+  (testing "first level sub-command"
+    (let* ((top-level (top-level/command))
+	   (c (clingon:parse-command-line top-level '("-vvv" "display" "--progress" "a" "b" "c"))))
+      (ok (string= "display" (clingon:command-name c)) "matches first sub-command name")
+      (ok (equal '("top-level" "display") (clingon:command-full-path c)) "command full path matches")
+      (ok (= 3 (clingon:getopt c :verbose)) "global verbose option is 3")
+      (ok (equal t (clingon:getopt c :progress)) "flag --progress is set")
+      (ok (equal '("a" "b" "c") (clingon:command-arguments c)) "free arguments match")))
+
+  (testing "first level sub-command option being switched on/off"
+    (let* ((top-level (top-level/command))
+	   (c (clingon:parse-command-line top-level '("display" "--progress" "--no-progress"))))
+      (ok (string= "display" (clingon:command-name c)) "matches first sub-command name")
+      (ok (equal '("top-level" "display") (clingon:command-full-path c)) "command full path matches")
+      (ok (equal t (clingon:opt-is-set-p c :progress)) "the --progress|--no-progress flag was set")
+      (ok (equal nil (clingon:getopt c :progress)) "flag --progress is set to nil")))
+
+  (testing "second level sub-command with missing required option"
+    (let ((top-level (top-level/command)))
+      (ok (signals (clingon:parse-command-line top-level '("display" "status")) 'clingon:missing-required-option-value)
+	  "signals on missing required option value")))
+
+  (testing "second level sub-command with option set"
+    (let* ((top-level (top-level/command))
+	   (c (clingon:parse-command-line top-level
+					  '("-vvv" "display" "--progress" "status" "--real-time=false"))))
+      (ok (string= "status" (clingon:command-name c)) "matches second sub-command name")
+      (ok (equal '("top-level" "display" "status") (clingon:command-full-path c)) "command full path matches")
+      (ok (= 3 (clingon:getopt c :verbose)) "global verbose flag is 3")
+      (ok (equal t (clingon:opt-is-set-p c :progress)) "flag --progress is set")
+      (ok (equal t (clingon:getopt c :progress)) "flag --progress is set to t")
+      (ok (equal t (clingon:opt-is-set-p c :real-time)) "flag --real-time is set")
+      (ok (equal nil (clingon:getopt c :real-time)) "flag --real-time value is nil")))
+
+  (testing "second level sub-command with free arguments"
+    (let* ((top-level (top-level/command))
+	   (c (clingon:parse-command-line top-level
+					  '("display" "status" "--real-time=true" "a" "b" "c"))))
+      (ok (string= "status" (clingon:command-name c)) "matches second sub-command name")
+      (ok (equal '("top-level" "display" "status") (clingon:command-full-path c)) "command full path matches")
+      (ok (= 0 (clingon:getopt c :verbose)) "global verbose flag is 0")
+      (ok (equal nil (clingon:opt-is-set-p c :progress)) "flag --progress is not set")
+      (ok (equal t (clingon:opt-is-set-p c :real-time)) "flag --real-time is set")
+      (ok (equal t (clingon:getopt c :real-time)) "flag --real-time value is t")
+      (ok (equal '("a" "b" "c") (clingon:command-arguments c)) "free arguments match"))))
