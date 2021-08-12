@@ -2,6 +2,9 @@
 (defpackage :clingon.options
   (:use :cl)
   (:import-from
+   :clingon.utils
+   :join-list)
+  (:import-from
    :clingon.conditions
    :invalid-option
    :missing-required-option-value
@@ -170,17 +173,11 @@
 (defmethod option-description-details ((kind (eql :default)) (option option) &key)
   (with-output-to-string (s)
     (format s "~A" (option-description option))
-
     (when (option-initial-value option)
       (format s " [default: ~A]" (option-initial-value option)))
-
-    (loop
-      :initially (format s " [")
-      :for (var . remaining) :on (option-env-vars option) :while var :do
-	(if remaining
-	    (format s "$~A, " var)
-	    (format s "$~A" var))
-      :finally (format s "]"))))
+    (when (option-env-vars option)
+      (let ((vars (mapcar (lambda (var) (format nil "$~A" var)) (option-env-vars option))))
+	(format s " [env: ~A]" (join-list vars ", "))))))
 
 ;;;;
 ;;;; Generic options
@@ -453,6 +450,12 @@
    :parameter "CHOICE")
   (:documentation "An option which allows selecting an item from a predefined list"))
 
+(defmethod option-description-details ((kind (eql :default)) (option option-choice) &key)
+  (with-output-to-string (s)
+    (write-string (call-next-method) s)
+    (let ((choices (option-choice-items option)))
+      (format s " [choices: ~A]" (join-list choices ", ")))))
+
 (defmethod make-option ((kind (eql :choice)) &rest rest)
   (apply #'make-instance 'option-choice rest))
 
@@ -483,6 +486,12 @@
   (:default-initargs
    :parameter "VARIANT")
   (:documentation "An option which represents an enum with variants and associated values"))
+
+(defmethod option-description-details ((kind (eql :default)) (option option-enum) &key)
+  (with-output-to-string (s)
+    (write-string (call-next-method) s)
+    (let ((choices (mapcar #'car (option-enum-items option))))
+      (format s " [choices: ~A]" (join-list choices ", ")))))
 
 (defmethod make-option ((kind (eql :enum)) &rest rest)
   (apply #'make-instance 'option-enum rest))
