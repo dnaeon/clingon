@@ -24,6 +24,8 @@
    :finalize-option
    :derive-option-value
    :make-option
+   :option-usage-details
+   :option-description-details
    :end-of-options-p
    :short-option-p
    :long-option-p
@@ -56,6 +58,15 @@
 
 (defgeneric make-option (kind &rest rest)
   (:documentation "Creates a new option of the given kind"))
+
+(defgeneric option-usage-details (kind object &key)
+  (:documentation "Returns the usage details for the option as a
+  string. The returned string will be used for formatting and
+  displaying the option as part of help pages."))
+
+(defgeneric option-description-details (kind object &key)
+  (:documentation "Returns a formatted and probably enriched content
+  of the option's description"))
 
 (defparameter *end-of-options-marker*
   "--"
@@ -140,6 +151,36 @@
     (format stream "short=~A long=~A"
             (option-short-name option)
             (option-long-name option))))
+
+(defmethod option-usage-details ((kind (eql :default)) (option option) &key)
+  (with-output-to-string (s)
+    (cond
+      ;; Short and long names are defined
+      ((and (option-short-name option) (option-long-name option))
+       (format s "-~A, --~A" (option-short-name option) (option-long-name option)))
+      ;; We only have a short name defined
+      ((option-short-name option)
+       (format s "-~A" (option-short-name option)))
+      ;; Long name defined only, align it properly
+      (t
+       (format s "~vA--~A" 4 #\Space (option-long-name option))))
+    (when (option-parameter option)
+      (format s " <~A>" (option-parameter option)))))
+
+(defmethod option-description-details ((kind (eql :default)) (option option) &key)
+  (with-output-to-string (s)
+    (format s "~A" (option-description option))
+
+    (when (option-initial-value option)
+      (format s " [default: ~A]" (option-initial-value option)))
+
+    (loop
+      :initially (format s " [")
+      :for (var . remaining) :on (option-env-vars option) :while var :do
+	(if remaining
+	    (format s "$~A, " var)
+	    (format s "$~A" var))
+      :finally (format s "]"))))
 
 ;;;;
 ;;;; Generic options
