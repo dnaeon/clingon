@@ -41,3 +41,13 @@
 	   (want-bfs-from-a '(:A :B :C :E :D :F :G)))
       (ok (equal want-dfs-from-a dfs-from-a) "DFS walk from :A root")
       (ok (equal want-bfs-from-a bfs-from-a) "BFS walk from :A root"))))
+
+(deftest join-list
+  (testing "non-empty list"
+    (ok (string= "foo,bar,baz" (clingon:join-list '("foo" "bar" "baz") ","))
+	"joined string matches")
+    (ok (string= "127.0.0.1" (clingon:join-list '(127 0 0 1) "."))
+	"joined string matches"))
+  (testing "empty list"
+    (ok (string= "" (clingon:join-list nil "."))
+	"joined string matches")))
