@@ -71,7 +71,9 @@
    :ensure-unique-sub-commands
    :treat-as-argument
    :discard-option
-   :print-usage))
+   :print-usage
+   :print-usage-and-exit
+   :print-version-and-exit))
 (in-package :clingon.command)
 
 (defgeneric find-option (kind object name &key)
@@ -205,6 +207,10 @@
   ;; Special case to handle the `--help' flag
   (when (getopt command :clingon-builtin-help-option)
     (print-usage-and-exit command t))
+
+  ;; Special case to handle the `--version' flag
+  (when (getopt command :clingon-builtin-version-option)
+    (print-version-and-exit command t))
 
   ;; Verify required options
   (let ((required-options (remove-if-not #'option-required-p (command-options command))))
@@ -607,3 +613,9 @@
 (defmethod print-usage-and-exit ((command command) stream)
   (print-usage command stream)
   (exit 64)) ;; EX_USAGE
+
+(defmethod print-version-and-exit ((command command) stream)
+  (format stream "~A version ~A~&"
+	  (join-list (command-full-path command) " ")
+	  (command-version command))
+  (exit 0))
