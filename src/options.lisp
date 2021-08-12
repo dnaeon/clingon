@@ -283,6 +283,9 @@
 (defmethod make-option ((kind (eql :boolean/true)) &rest rest)
   (apply #'make-instance 'option-boolean-true rest))
 
+(defmethod make-option ((kind (eql :flag)) &rest rest)
+  (apply #'make-instance 'option-boolean-true rest))
+
 (defmethod derive-option-value ((option option-boolean-true) arg &key)
   (declare (ignore arg))
   :true)
