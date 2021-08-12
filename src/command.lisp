@@ -32,7 +32,8 @@
    :derive-option-value
    :option-usage-details
    :option-description-details
-   :make-default-help-option)
+   :make-default-help-option
+   :make-default-version-option)
   (:import-from
    :clingon.utils
    :argv
@@ -175,7 +176,10 @@
     (setf (command-parent sub) command))
 
   ;; Add a default `--help' option for the command
-  (push (make-default-help-option) (command-options command)))
+  (push (make-default-help-option) (command-options command))
+
+  ;; Add default `--version' option for the command as well
+  (push (make-default-version-option) (command-options command)))
 
 (defmethod initialize-command ((command command) &key)
   "Initializes the command and the options associated with it."
@@ -199,7 +203,7 @@
         (setf (gethash (option-key option) context) (option-value option)))))
 
   ;; Special case to handle the `--help' flag
-  (when (getopt command :help)
+  (when (getopt command :clingon-builtin-help-option)
     (print-usage-and-exit command t))
 
   ;; Verify required options
