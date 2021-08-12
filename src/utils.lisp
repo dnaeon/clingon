@@ -2,7 +2,8 @@
 (defpackage :clingon.utils
   (:use :cl)
   (:export
-   :walk))
+   :walk
+   :join-list))
 (in-package :clingon.utils)
 
 (defun walk (root neighbors-func &key (order :dfs))
@@ -32,3 +33,11 @@
 (defun argv ()
   "Returns the list of command-line arguments"
   (uiop:command-line-arguments))
+
+(defun join-list (list separator)
+  "Returns a string representing the items in the given LIST with SEPARATOR between each item"
+  (with-output-to-string (s)
+    (loop :for (item . remaining) :on list :while item :do
+      (if remaining
+	  (format s "~A~A" item separator)
+	  (format s "~A" item)))))
