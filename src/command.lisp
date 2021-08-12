@@ -7,6 +7,8 @@
    :duplicate-options
    :duplicate-commands
    :missing-required-option-value
+   :missing-required-option-value-item
+   :missing-required-option-value-command
    :unknown-option
    :missing-option-argument
    :option-derive-error-p)
@@ -428,11 +430,25 @@
 
 (defmethod run ((top-level command) &optional arguments)
   "Runs the specified top-level command"
-  (let* ((arguments (or arguments (argv)))
-         (cmd (parse-command-line top-level arguments)))
-    (unless (command-handler cmd)
-      (error "No handler registered for command ~A" (command-name cmd)))
-    (funcall (command-handler cmd) cmd)))
+  (handler-case
+      (let* ((arguments (or arguments (argv)))
+	     (cmd (parse-command-line top-level arguments)))
+	(unless (command-handler cmd)
+	  (error "No handler registered for command '~A'~%"
+		 (join-list (command-full-path cmd) " ")))
+	(funcall (command-handler cmd) cmd)
+	(exit 0))
+    ;; Missing required options
+    (missing-required-option-value (condition)
+      (let ((option (missing-required-option-value-item condition))
+	    (failed-cmd (missing-required-option-value-command condition)))
+	(format *error-output* "Required option ~A not set.~&See '~A --help' for more details.~&"
+		(option-usage-details :default option)
+		(join-list (command-full-path failed-cmd) " ")))
+      (exit 64)) ;; EX_USAGE
+    (error (condition)
+      (format *error-output* "~A~&" condition)
+      (exit 1))))
 
 (defmethod parse-command-line ((top-level command) arguments)
   "Parses the arguments for the given top-level command and
