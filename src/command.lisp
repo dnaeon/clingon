@@ -208,7 +208,9 @@
 
 (defmethod find-option ((kind (eql :short)) (command command) name &key)
   "Finds the option with the given short name"
-  (find name (command-options command) :key #'option-short-name :test #'char=))
+  (find name (command-options command)
+	:key (lambda (item) (or (option-short-name item) #\Nul))
+	:test #'char=))
 
 (defmethod find-option ((kind (eql :long)) (command command) name &key)
   "Finds the option with the given long name"
