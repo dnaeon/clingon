@@ -19,6 +19,7 @@
    :make-option
    :option-short-name
    :option-long-name
+   :option-description
    :option-required-p
    :option-is-set-p
    :option-key
@@ -26,7 +27,9 @@
    :option-parameter
    :initialize-option
    :finalize-option
-   :derive-option-value)
+   :derive-option-value
+   :option-usage-details
+   :option-description-details)
   (:import-from
    :clingon.utils
    :argv
@@ -114,11 +117,11 @@
     :initform nil
     :accessor command-arguments
     :documentation "Discovered free arguments after parsing the options")
-   (reduced-options
-    :initarg :reduced-options
+   (context
+    :initarg :context
     :initform (make-hash-table :test #'equal)
-    :accessor command-reduced-options
-    :documentation "The set of reduced option values, after finalizing the command")
+    :accessor command-context
+    :documentation "The context contains the reduced set of options for the command")
    (version
     :initarg :version
     :initform nil
@@ -164,7 +167,7 @@
 
 (defmethod initialize-command ((command command) &key)
   "Initializes the command and the options associated with it."
-  (setf (command-reduced-options command) (make-hash-table :test #'equal))
+  (setf (command-context command) (make-hash-table :test #'equal))
   (setf (command-arguments command) nil)
   (dolist (option (command-options command))
     (initialize-option option)))
@@ -172,7 +175,7 @@
 (defmethod finalize-command ((command command) &key)
   "Finalizes the command and derives the reduced set of option values"
   (setf (command-args-to-parse command) nil)
-  (let ((result (command-reduced-options command)))
+  (let ((context (command-context command)))
     (setf (command-arguments command)
           (nreverse (command-arguments command)))
     ;; Finalize the options
@@ -185,7 +188,7 @@
       (when (option-is-set-p option)
         (setf (option-value option)
               (finalize-option option))
-        (setf (gethash (option-key option) result) (option-value option))))))
+        (setf (gethash (option-key option) context) (option-value option))))))
 
 (defmethod find-option ((kind (eql :short)) (command command) name &key)
   "Finds the option with the given short name"
@@ -493,13 +496,13 @@
    lineage."
   (dolist (cmd (command-lineage command))
     ;; Option exists in the current command and is set
-    (multiple-value-bind (value exists-p) (gethash opt-key (command-reduced-options cmd))
+    (multiple-value-bind (value exists-p) (gethash opt-key (command-context cmd))
       (when exists-p
         (return-from getopt (values value exists-p))))
     ;; Option is not set, but could be part of the current command.
     ;; If that's the case we don't descend into the parent commands.
     (when (member opt-key (command-options cmd) :key #'option-key :test #'equal)
-      (return (values nil nil))))
+      (return-from getopt (values nil nil))))
   (values nil nil))
 
 (defmethod opt-is-set-p ((command command) opt-key)
