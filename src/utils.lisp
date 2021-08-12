@@ -3,7 +3,8 @@
   (:use :cl)
   (:export
    :walk
-   :join-list))
+   :join-list
+   :exit))
 (in-package :clingon.utils)
 
 (defun walk (root neighbors-func &key (order :dfs))
