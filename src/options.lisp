@@ -47,7 +47,8 @@
    :option-choice
    :option-choice-items
    :option-enum
-   :option-enum-items))
+   :option-enum-items
+   :make-default-help-option))
 (in-package :clingon.options)
 
 (defgeneric initialize-option (option &key)
@@ -511,3 +512,9 @@
       (error 'option-derive-error
              :reason (format nil "Invalid choice: must be one of ~A" (mapcar #'cdr items))))
     (cdr pair)))
+
+(defun make-default-help-option ()
+  (make-option :boolean/true
+	       :description "display usage information and exit"
+	       :long-name "help"
+	       :key :help))

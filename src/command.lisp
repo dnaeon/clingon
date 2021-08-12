@@ -29,7 +29,8 @@
    :finalize-option
    :derive-option-value
    :option-usage-details
-   :option-description-details)
+   :option-description-details
+   :make-default-help-option)
   (:import-from
    :clingon.utils
    :argv
@@ -93,7 +94,7 @@
    (options
     :initarg :options
     :initform nil
-    :reader command-options
+    :accessor command-options
     :documentation "Command options")
    (handler
     :initarg :handler
@@ -168,7 +169,10 @@
 (defmethod initialize-instance :after ((command command) &key)
   ;; Configure the parent for any of the sub-commands.
   (dolist (sub (command-sub-commands command))
-    (setf (command-parent sub) command)))
+    (setf (command-parent sub) command))
+
+  ;; Add a default `--help' option for the command
+  (push (make-default-help-option) (command-options command)))
 
 (defmethod initialize-command ((command command) &key)
   "Initializes the command and the options associated with it."
