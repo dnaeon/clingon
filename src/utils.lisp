@@ -41,3 +41,14 @@
       (if remaining
 	  (format s "~A~A" item separator)
 	  (format s "~A" item)))))
+
+(defun exit (&optional (status 0))
+  "Exit the program returning the given status code"
+  #+sbcl      (sb-ext:exit :code status)
+  #+cmu       (unix:unix-exit status)
+  #+ccl       (ccl:quit status)
+  #+ecl       (ext:quit status)
+  #+clisp     (ext:exit status)
+  #+abcl      (extensions:exit :status status)
+  #+allegro   (excl:exit status :quiet t)
+  #+lispworks (lispworks:quit :status status))
