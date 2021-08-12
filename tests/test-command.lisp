@@ -12,7 +12,11 @@
                         :short-name #\b
                         :long-name "b-option"
                         :description "option b"
-                        :key :b)))
+                        :key :b)
+   (clingon:make-option :boolean/true
+		       :long-name "lonely-long-option"
+		       :description "no short option defined here"
+		       :key :x)))
 
 (defun foo/command ()
   "A sample command with options"
