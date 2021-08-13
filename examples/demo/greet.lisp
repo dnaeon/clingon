@@ -1,0 +1,25 @@
+(in-package :clingon.example.demo)
+
+(defun greet/options ()
+  "Returns the options for the `greet' command"
+  (list
+   (clingon:make-option :string
+			:description "Person to greet"
+			:short-name #\u
+			:long-name "user"
+			:env-vars '("USER")
+			:key :user)))
+
+(defun greet/handler (cmd)
+  "Handler for the `greet' command"
+  (let ((who (clingon:getopt cmd :user "Stranger")))
+    (format t "Hello, ~A!~%" who)))
+
+(defun greet/command ()
+  "Creates a new command to greet people"
+  (clingon:make-command
+   :name "greet"
+   :description "greets people"
+   :version "0.1.0"
+   :options (greet/options)
+   :handler #'greet/handler))
