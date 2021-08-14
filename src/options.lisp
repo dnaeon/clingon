@@ -9,7 +9,7 @@
    :invalid-option
    :missing-required-option-value
    :option-derive-error)
-   (:export
+  (:export
    :*end-of-options-marker*
    :option
    :option-short-name
@@ -47,9 +47,7 @@
    :option-choice
    :option-choice-items
    :option-enum
-   :option-enum-items
-   :make-default-help-option
-   :make-default-version-option))
+   :option-enum-items))
 (in-package :clingon.options)
 
 (defgeneric initialize-option (option &key)
@@ -514,19 +512,5 @@
          (pair (find arg items :key #'car :test #'string=)))
     (unless pair
       (error 'option-derive-error
-             :reason (format nil "Invalid choice: must be one of ~A" (mapcar #'cdr items))))
+             :reason (format nil "Invalid choice: must be one of ~A" (mapcar #'car items))))
     (cdr pair)))
-
-(defun make-default-help-option ()
-  "Returns a default `--help' option, which can be added to commands"
-  (make-option :boolean/true
-	       :description "display usage information and exit"
-	       :long-name "help"
-	       :key :clingon-builtin-help-option))
-
-(defun make-default-version-option ()
-  "Returns a default `--version' option, which can be added to commands"
-  (make-option :boolean/true
-	       :description "display version and exit"
-	       :long-name "version"
-	       :key :clingon-builtin-version-option))

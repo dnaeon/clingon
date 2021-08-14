@@ -31,9 +31,7 @@
    :finalize-option
    :derive-option-value
    :option-usage-details
-   :option-description-details
-   :make-default-help-option
-   :make-default-version-option)
+   :option-description-details)
   (:import-from
    :clingon.utils
    :argv
@@ -90,6 +88,33 @@
 
 (defgeneric print-usage (command stream &key)
   (:documentation "Prints the usage information of the command"))
+
+(defparameter *default-help-flag*
+  (make-option :flag
+	       :description "display usage information and exit"
+	       :long-name "help"
+	       :key :clingon.help.flag)
+  "The default `--help' flag")
+
+(defparameter *default-version-flag*
+  (make-option :flag
+	       :description "display version and exit"
+	       :long-name "version"
+	       :key :clingon.version.flag)
+  "The default `--version' flag")
+
+(defparameter *default-bash-completions-flag*
+  (make-option :flag
+	       :description "generate bash completions"
+	       :long-name "bash-completions"
+	       :key :clingon.bash-completions.flag)
+  "The default `--bash-completions' flag")
+
+(defparameter *default-options*
+  (list *default-help-flag*
+	*default-version-flag*
+	*default-bash-completions-flag*)
+  "A list of default options to add to each sub-command")
 
 (defclass command ()
   ((name
@@ -177,11 +202,9 @@
   (dolist (sub (command-sub-commands command))
     (setf (command-parent sub) command))
 
-  ;; Add a default `--help' option for the command
-  (push (make-default-help-option) (command-options command))
-
-  ;; Add default `--version' option for the command as well
-  (push (make-default-version-option) (command-options command)))
+  ;; Add default options to each command
+  (dolist (default-opt *default-options*)
+    (push default-opt (command-options command))))
 
 (defmethod initialize-command ((command command) &key)
   "Initializes the command and the options associated with it."
@@ -204,13 +227,11 @@
               (finalize-option option))
         (setf (gethash (option-key option) context) (option-value option)))))
 
-  ;; Special case to handle the `--help' flag
-  (when (getopt command :clingon-builtin-help-option)
-    (print-usage-and-exit command t))
-
-  ;; Special case to handle the `--version' flag
-  (when (getopt command :clingon-builtin-version-option)
-    (print-version-and-exit command t))
+  ;; Handle special cases for some options/flags
+  (cond
+    ((getopt command :clingon.help.flag) (print-usage-and-exit command t))
+    ((getopt command :clingon.version.flag) (print-version-and-exit command t))
+    ((getopt command :clingon.bash-completions.flag) (print-bash-completions-and-exit command t)))
 
   ;; Verify required options
   (let ((required-options (remove-if-not #'option-required-p (command-options command))))
