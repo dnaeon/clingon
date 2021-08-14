@@ -71,7 +71,9 @@
    :discard-option
    :print-usage
    :print-usage-and-exit
-   :print-version-and-exit))
+   :print-version-and-exit
+   :print-bash-completions
+   :print-bash-completions-and-exit))
 (in-package :clingon.command)
 
 (defgeneric find-option (kind object name &key)
@@ -639,4 +641,14 @@
   (format stream "~A version ~A~&"
 	  (join-list (command-full-path command) " ")
 	  (command-version command))
+  (exit 0))
+
+(defmethod print-bash-completions ((command command) stream)
+  "Prints the bash completions for the given command"
+  (dolist (sub (command-sub-commands command))
+    (format stream "~A~%" (command-name sub))))
+
+(defmethod print-bash-completions-and-exit ((command command) stream)
+  "Prints the bash completions for the given command and exits"
+  (print-bash-completions command stream)
   (exit 0))
