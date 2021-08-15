@@ -8,13 +8,25 @@
 
 APP=${APP:-$(basename ${BASH_SOURCE})}
 
-function _clingon_bash_completions() {
-    local current="${COMP_WORDS[${COMP_CWORD}]}"
-    local suggestions=$( ${COMP_WORDS[@]:0:${COMP_CWORD}} --bash-completions )
-    COMPREPLY=( $(compgen -W "${suggestions}" -- "${current}") )
+function _clingon_app_completions() {
+    local cur prev words cword
+    _init_completion -s || return
+
+    local _suggestions=$( "${words[@]:0:${cword}}" --bash-completions )
+    local _options=$( egrep '^-' <<<${_suggestions} )
+    local _sub_commands=$( egrep -v '^-' <<<${_suggestions} )
+
+    if [[ "${cur}" == "-"* ]]; then
+        # Options only
+        COMPREPLY=( $(compgen -W "${_options}" -- "${cur}") )
+    else
+        # Sub-commands only
+        COMPREPLY=( $(compgen -W "${_sub_commands}" -- "${cur}") )
+    fi
 }
 
 complete -o bashdefault \
          -o default \
          -o nospace \
-         -F _clingon_bash_completions ${APP}
+         -F _clingon_app_completions ${APP}
+unset APP
