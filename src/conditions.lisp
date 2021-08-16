@@ -15,8 +15,7 @@
    :unknown-option-kind
    :unknown-option-p
    :missing-option-argument
-   :missing-option-argument-name
-   :missing-option-argument-kind
+   :missing-option-argument-item
    :missing-option-argument-p
    :invalid-option
    :invalid-option-item
@@ -116,18 +115,13 @@
   (typep value 'unknown-option))
 
 (define-condition missing-option-argument (simple-error)
-  ((name
-    :initarg :name
-    :initform (error "Must specify option name")
-    :reader missing-option-argument-name)
-   (kind
-    :initarg :kind
-    :initform (error "Must specify option kind")
-    :reader missing-option-argument-kind))
+  ((item
+    :initarg :item
+    :initform (error "Must specify option item")
+    :reader missing-option-argument-item))
   (:report (lambda (condition stream)
-             (format stream "Missing argument for option ~A of kind ~A"
-                     (missing-option-argument-name condition)
-                     (missing-option-argument-kind condition))))
+	     (declare (ignore condition))
+             (format stream "Missing argument for option"))
   (:documentation "A condition which is signalled when an option expects an argument, but none was provided"))
 
 (defun missing-option-argument-p (value)

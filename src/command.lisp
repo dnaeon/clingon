@@ -11,6 +11,7 @@
    :missing-required-option-value-command
    :unknown-option
    :missing-option-argument
+   :missing-option-argument-item
    :option-derive-error-p)
   (:import-from
    :clingon.options
@@ -378,7 +379,7 @@
          ;; Pick either one of the short or long option names here
          (full-name (or (and short-name (format nil "-~A" short-name))
                         (and long-name (format nil "--~A" long-name)))))
-    (restart-case (error 'missing-option-argument :name full-name :kind :short)
+    (restart-case (error 'missing-option-argument :item option)
       (discard-option ()
         :report "Discard the option"
         (setf (option-is-set-p option) nil)
@@ -472,8 +473,7 @@
       (let* ((arguments (or arguments (argv)))
 	     (cmd (parse-command-line top-level arguments)))
 	(unless (command-handler cmd)
-	  (error "No handler registered for command '~A'~%"
-		 (join-list (command-full-path cmd) " ")))
+	  (error "No handler registered for command '~A'~%" (command-full-name cmd)))
 	(funcall (command-handler cmd) cmd)
 	(exit 0))
     ;; Missing required options
@@ -481,9 +481,16 @@
       (let ((option (missing-required-option-value-item condition))
 	    (failed-cmd (missing-required-option-value-command condition)))
 	(format *error-output* "Required option ~A not set.~&See '~A --help' for more details.~&"
-		(option-usage-details :default option)
-		(join-list (command-full-path failed-cmd) " ")))
-      (exit 64)) ;; EX_USAGE
+		(string-trim #(#\Space) (option-usage-details :default option))
+		(command-full-name cmd))
+	(exit 64))) ;; EX_USAGE
+    ;; Missing argument for an option
+    (missing-option-argument (condition)
+      (let ((option (missing-option-argument-item condition)))
+	(format *error-output* "No value specified for ~A option.~&See '~A --help' for more details.~&"
+		(string-trim #(#\Space) (option-usage-details :default option))
+		(command-full-name cmd))
+	(exit 64))) ;; EX_USAGE
     (error (condition)
       (format *error-output* "~A~&" condition)
       (exit 1))))
