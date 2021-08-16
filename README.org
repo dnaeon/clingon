@@ -712,7 +712,6 @@ WHY ARE YELLING AT ME?!
 You can find the code we've developed in this guide in the
 [[https://github.com/dnaeon/clingon/tree/master/examples][clingon/examples]] directory of the repo.
 
-
 * Options
 
 The =clingon= system supports various kinds of options, each of which
@@ -1036,9 +1035,13 @@ consistent interface for option creation.
 
 * Developing New Options
 
-This section is a short guide explaining how to develop new option
-kinds for =clingon=. The new option, which we'll develop will be used
-for specifying email addresses.
+This section contains short guides explaining how to develop new
+options for =clingon=.
+
+** Developing an Email Option
+
+The option which we'll develop in this section will be used for
+specifying email addresses.
 
 Start up your Lisp REPL session and do let's some work. Load the
 =:clingon= and =:cl-ppcre= systems, since we will need them.
@@ -1064,7 +1067,9 @@ symbols we will need from the =:clingon= and =:cl-ppcre= systems.
    :derive-option-value
    :make-option
    :option-value
-   :option-derive-error))
+   :option-derive-error)
+  (:export
+   :option-email))
 (in-package :clingon.extensions/option-email)
 #+end_src
 
@@ -1169,6 +1174,56 @@ Last thing to do is actually package this up as an extension system
 and register it in Quicklisp. That way everyone else, can benefit from
 the newly developed option.
 
+* Shell Completions
+
+=clingon= provides basic support for shell completions. Currently only
+Bash completions are supported.
+
+In order to enable the Bash completions for your =clingon= app,
+follow these instructions.
+
+#+begin_src shell
+APP=app-name source extras/completions.bash
+#+end_src
+
+Make sure to set =APP= to your correct application name.
+
+The [[https://github.com/dnaeon/clingon/blob/master/extras/completions.bash][completions.bash]] script will dynamically provide completions by
+invoking the =clingon= app with the =--bash-completions= flag. This
+builtin flag when provided on the command-line will return completions
+for the sub-commands and the available flags.
+
+* Ideas For Future Improvements
+
+While the current bash completions work, there's plenty of room for
+improvement there.
+
+One area which can be improved in terms of shell completions is to
+avoid invoking the =clingon= app with the =--bash-completions=
+flag, which would speed things up a lot.
+
+A better approach would be to have =clingon= generate the full
+completions of each sub-command as one single completions script, in a
+single pass.
+
+Possible approach for this would be to walk the tree of commands using
+=CLINGON:COMMAND-TREE= and/or =CLINGON:WITH-COMMAND-TREE= and then
+generate a completion function for each visited node in the tree.
+
+Some pseudo-code of how this would look like.
+
+#+begin_src lisp
+(clingon:with-command-tree (node top-level)
+  ;; node will be bound to each command we visit starting from top-level
+  ...
+  (generate-shell-completions node stream)
+  ...)
+#+end_src
+
+A similar approach can be taken for documentation generating, e.g.
+we can have =clingon= extensions, which generate documentation in
+/Markdown/, /man/, /HTML/ or some other format.
+
 * Contributing
 
 =clingon= is hosted on [[https://github.com/dnaeon/clingon][Github]]. Please contribute by reporting issues,
@@ -1181,3 +1236,4 @@ This project is Open Source and licensed under the [[http://opensource.org/licen
 * Authors
 
 - Marin Atanasov Nikolov <dnaeon@gmail.com>
+
