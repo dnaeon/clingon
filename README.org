@@ -1,0 +1,727 @@
+* clingon
+
+=clingon= is a command-line options parser system for Common Lisp.
+
+A summary of the features supported by =clingon= is provided below.
+
+- Native support for sub-commands
+- Short and long option names are supported
+- Short options may be collapsed as a single argument, e.g. =-xyz=
+- Long options support both notations - =--long-opt arg= and
+  =--long-opt=arg=.
+- Automatic generation of help/usage information for commands and
+  sub-commands
+- Out of the box support for =--version= and =--help= flags
+- Support for various kinds of options like /string, /integer/,
+  /boolean/, /switches/, /enums/, /list/, /counter/, etc.
+- Sub-commands can lookup global options and flags defined in parent
+  commands
+- Support for options, which may be required
+- Options can be initialized via environment variables
+- Single interface for creating options using =CLINGON:MAKE-OPTION=
+- Basic support for shell completions
+- =clingon= is extensible, so if you don't find something you need you
+  can extend it by developing a new option kind, or even new mechanism
+  for initializing options, e.g. by looking up an external key/value
+  store.
+
+Other Common Lisp option parser systems, which you might consider
+checking out.
+
+- [[https://github.com/libre-man/unix-opts][unix-opts]]
+- [[https://github.com/sjl/adopt/][adopt]]
+- [[https://github.com/didierverna/clon][clon]]
+
+* Quick Example
+
+Here's a really quick example of a simple CLI application, which
+greets people.
+
+#+begin_src lisp
+(in-package :cl-user)
+(defpackage :clingon.example.greet
+  (:use :cl)
+  (:import-from :clingon)
+  (:export
+   :main))
+(in-package :clingon.example.greet)
+
+(defun greet/options ()
+  "Returns the options for the `greet' command"
+  (list
+   (clingon:make-option
+    :string
+    :description "Person to greet"
+    :short-name #\u
+    :long-name "user"
+    :env-vars '("USER")
+    :key :user)))
+
+(defun greet/handler (cmd)
+  "Handler for the `greet' command"
+  (let ((who (clingon:getopt cmd :user "stranger")))
+    (format t "Hello, ~A!~%" who)))
+
+(defun greet/command ()
+  "Creates a new command to perform basic math on integers"
+  (clingon:make-command
+   :name "greet"
+   :description "greets people"
+   :version "0.1.0"
+   :authors '("John Doe <john.doe@example.org")
+   :license "BSD 2-Clause"
+   :options (greet/options)
+   :handler #'greet/handler))
+
+(defun main ()
+  "The main entrypoint of our CLI program"
+  (let ((app (greet/command)))
+    (clingon:run app)))
+#+end_src
+
+This small example shows a lot of details about how apps are
+structured with =clingon=.
+
+You can see there's a =main= function, which will be the entrypoint
+for our ASDF system. Then you can find the =greet/command= function,
+which creates and returns a new command.
+
+The =greet/options= functions returns the options associated with our
+sample command.
+
+And we also have the =greet/handler= function, which is the function
+that will be invoked when users run our command-line app.
+
+This way of organizing command, options and handlers makes it easy to
+re-use common options, or even handlers, and wire up any sub-commands
+anyway you prefer.
+
+* Demo
+
+You can also build and run the =clingon= demo application, which
+includes the =greet= command introduced in the previous section, along
+with other examples.
+
+Clone the [[https://github.com/dnaeon/clingon][clingon]] repo in your [[https://www.quicklisp.org/beta/faq.html][Quicklisp local-projects]] directory.
+
+#+begin_src shell
+git clone https://github.com/dnaeon/clingon
+#+end_src
+
+Register your local Quicklisp projects.
+
+#+begin_src lisp
+CL-USER> (ql:register-local-projects)
+#+end_src
+
+Build the demo application.
+
+#+begin_src shell
+sbcl --eval '(ql:quickload :clingon.demo)' \
+     --eval '(asdf:make :clingon.demo)' \
+     --eval '(quit)'
+#+end_src
+
+This will create a new binary located in the =clingon='s system
+directory called =clingon-demo=, which you can now execute.
+
+Optionally, you can also enable the basic shell completions support,
+which currently only support the Bash shell.
+
+#+begin_src shell
+APP=clingon-demo source /path/to/clingon/extras/completions.bash
+#+end_src
+
+Use the =--help= flag to see some usage information about the demo
+application.
+
+#+begin_src shell
+./clingon-demo --help
+#+end_src
+
+* Requirements
+
+- [[https://www.quicklisp.org/beta/][Quicklisp]]
+
+* Installation
+
+The =clingon= system is not yet part of Quicklisp, so for now
+you need to install it in your local Quicklisp projects.
+
+Clone the repo in your [[https://www.quicklisp.org/beta/faq.html][Quicklisp local-projects]] directory.
+
+#+begin_src lisp
+(ql:register-local-projects)
+#+end_src
+
+Then load the system.
+
+#+begin_src lisp
+(ql:quickload :clingon)
+#+end_src
+
+* Step By Step Guide
+
+In this section we will implement a simple CLI application, and
+explain at each step what and why we do the things we do.
+
+Once you are done with it, you should have a pretty good understanding
+of the =clingon= system and be able to further extend the sample
+application on your own.
+
+We will be developing the application interactively and in the
+REPL. Finally we will create an ASDF system for our CLI app, so we can
+build it and ship it.
+
+The code we develop as part of this section will reside in a file
+named =intro.lisp=. Anything we write will be sent to the Lisp REPL, so
+we can compile it and get quick feedback about the things we've done
+so far.
+
+** Start the REPL
+
+Start up your REPL session and let's load the =clingon= system.
+
+#+begin_src lisp
+CL-USER> (ql:quickload :clingon)
+To load "clingon":
+  Load 1 ASDF system:
+    clingon
+; Loading "clingon"
+
+(:CLINGON)
+#+end_src
+
+** Create a new package
+
+First, we will define a new package for our application and switch to
+it.
+
+#+begin_src lisp
+(in-package :cl-user)
+(defpackage :clingon.intro
+  (:use :cl)
+  (:import-from :clingon)
+  (:export :main))
+(in-package :clingon.intro)
+#+end_src
+
+We have our package, so now we can proceed to the next section and
+create our first command.
+
+** Creating a new command
+
+The first thing we'll do is to create a new command. Commands are
+created using the =CLINGON:MAKE-COMMAND= function.
+
+Each command has a name, description, any options that
+the command accepts, any sub-commands the command knows about, etc.
+
+The command in =clingon= is represented by the =CLINGON:COMMAND=
+class, which contains many other slots as well, which you can lookup.
+
+#+begin_src lisp
+(defun top-level/command ()
+  "Creates and returns the top-level command"
+  (clingon:make-command
+   :name "clingon-intro"
+   :description "my first clingon cli app"
+   :version "0.1.0"
+   :license "BSD 2-Clause"
+   :authors '("John Doe <john.doe@example.com>")))
+#+end_src
+
+This is how our simple command looks like. For now it doesn't do much,
+and in fact it won't execute anything, but we will fix that as we go.
+
+What is important to note, is that we are using a convention here
+to make things easier to understand and organize our code base.
+
+Functions that return new commands will be named =<name>/command=.  A
+similar approach is taken when we define options for a given command,
+e.g. =<name>/options= and for sub-commands we use
+=<name>/sub-commands=. Handlers will use the =<name>/handler=
+notation.
+
+This makes things easier later on, when we introduce new sub-commands,
+and when we need to wire things up we can refer to our commands using
+the established naming convention. Of course, it's up to you to decide
+which approach to take, so free to adjust the layout of the code to
+your personal preferences. In this guide we will use the afore
+mentioned approach.
+
+Commands can be linked together in order to form a tree of commands
+and sub-commands. We will talk about that one in more details in the
+later sections of this guide.
+
+** Adding options
+
+Next, we will add a couple of options. Similar to the previous section
+we will define a new function, which simply returns a list of valid
+options. Defining it in the following way would make it easier to
+re-use these options later on, in case you have another command, which
+uses the exact same set of options.
+
+=clingon= exposes a single interface for creating options via the
+=CLINGON:MAKE-OPTION= generic function. This unified interface will
+allow developers to create and ship new option kinds, and still have
+their users leverage a common interface for the options via the
+=CLINGON:MAKE-OPTION= interface.
+
+#+begin_src lisp
+(defun top-level/options ()
+  "Creates and returns the options for the top-level command"
+  (list
+   (clingon:make-option
+    :counter
+    :description "verbosity level"
+    :short-name #\v
+    :long-name "verbose"
+    :key :verbose)
+   (clingon:make-option
+    :string
+    :description "user to greet"
+    :short-name #\u
+    :long-name "user"
+    :initial-value "stranger"
+    :env-vars '("USER")
+    :key :user)))
+#+end_src
+
+Let's break things down a bit and explain what we just did.
+
+We've defined two options -- one of =:COUNTER= kind and another one,
+which is of =:STRING= kind. Each option specifies a short and long
+name, along with a description of what the option is meant for.
+
+Another important thing we did is to specify a =:KEY= for our options.
+This is the key which we will later use in order to get the value
+associated with our option, when we use =CLINGON:GETOPT=.
+
+And we have also defined that our ==--user= option can be initialized
+via environment variables. We can specify multiple environment variables,
+if we need to, and the first one that resolves to something will be used
+as the initial value for the option.
+
+If none of the environment variables are defined, the option will be
+initialized with the value specified by the =:INITIAL-VALUE= initarg.
+
+Before we move to the next section of this guide we will update the
+definition of our =TOP-LEVEL/COMMAND= function, so that we include our
+options.
+
+#+begin_src lisp
+(defun top-level/command ()
+  "Creates and returns the top-level command"
+  (clingon:make-command
+   :name "clingon-intro"
+   ...
+   :usage "[-v] [-u <USER>]"      ;; <- new code
+   :options (top-level/options))) ;; <- new code
+#+end_src
+
+** Defining a handler
+
+A /handler/ in =clingon= is a function, which accepts an instance of
+=CLINGON:COMMAND= and is responsible for performing some work.
+
+The single argument a handler receives will be used to inspect the
+values of parsed options and any free arguments that were provided on the
+command-line.
+
+A command may or may not specify a handler. Some commands may be used
+purely as /namespaces/ for other sub-commands, and it might make no
+sense to have a handler for such commands. In other situations you may
+still want to provide a handler for parent commands, provide usage
+information, etc.
+
+Let's define the handler for our /top-level/ command.
+
+#+begin_src lisp
+(defun top-level/handler (cmd)
+  "The top-level handler"
+  (let ((args (clingon:command-arguments cmd))
+	(user (clingon:getopt cmd :user))
+	(verbose (clingon:getopt cmd :verbose)))
+    (format t "Hello, ~A!~%" user)
+    (format t "The current verbosity level is set to ~A~%" verbose)
+    (format t "You have provided ~A arguments~%" (length args))
+    (format t "Bye.~%")))
+#+end_src
+
+We are introducing a couple of new functions, which we haven't
+described before.
+
+We are using =CLINGON:COMMAND-ARGUMENTS=, which will give us the free
+arguments we've provided to our command, when we invoke it on the
+command-line.
+
+We also use the =CLINGON:GETOPT= function to lookup the values
+associated with our options. Remember the =:KEY= initarg we've used in
+=CLINGON:MAKE-OPTION= when defining our options?
+
+And we will again update our =TOP-LEVEL/COMMAND= definition, this time
+with our handler included.
+
+#+begin_src lisp
+(defun top-level/command ()
+  "Creates and returns the top-level command"
+  (clingon:make-command
+   :name "clingon-intro"
+   ...
+   :handler #'top-level/handler)) ;; <- new code
+#+end_src
+
+At this point we are basically done with our simple application. But
+before we move to the point where build our binary and start playing
+with it on the command-line we can test things out on the REPL, just
+to make sure everything works as expected.
+
+** Testing things out on the REPL
+
+Create a new instance of our command and bind it to some variable.
+
+#+begin_src lisp
+INTRO> (defparameter *app* (top-level/command))
+*APP*
+#+end_src
+
+Inspecting the returned instance would give you something like this.
+
+#+begin_src lisp
+#<CLINGON.COMMAND:COMMAND {1004648293}>
+--------------------
+Class: #<STANDARD-CLASS CLINGON.COMMAND:COMMAND>
+--------------------
+ Group slots by inheritance [ ]
+ Sort slots alphabetically  [X]
+
+All Slots:
+[ ]  ARGS-TO-PARSE    = NIL
+[ ]  ARGUMENTS        = NIL
+[ ]  AUTHORS          = ("John Doe <john.doe@example.com>")
+[ ]  CONTEXT          = #<HASH-TABLE :TEST EQUAL :COUNT 0 {1004648433}>
+[ ]  DESCRIPTION      = "my first clingon cli app"
+[ ]  EXAMPLES         = NIL
+[ ]  HANDLER          = #<FUNCTION TOP-LEVEL/HANDLER>
+[ ]  LICENSE          = "BSD 2-Clause"
+[ ]  LONG-DESCRIPTION = NIL
+[ ]  NAME             = "clingon-intro"
+[ ]  OPTIONS          = (#<CLINGON.OPTIONS:OPTION-BOOLEAN-TRUE short=NIL long=bash-completions> #<CLINGON.OPTIONS:OPTION-BOOLEAN-TRUE short=NIL long=version> #<CLINGON.OPTIONS:OPTION-BOOLEAN-TRUE short=NIL long=help> #<CLINGON.OPTIONS:OPTION-COUNTER short=v long=verbose> #<CLINGON.OPTIONS::OPTION-STRING short=u long=user>)
+[ ]  PARENT           = NIL
+[ ]  SUB-COMMANDS     = NIL
+[ ]  USAGE            = "[-v] [-u <USER>]"
+[ ]  VERSION          = "0.1.0"
+
+[set value]  [make unbound]
+#+end_src
+
+You might also notice that besides the options we've defined ourselves,
+there are few additional options, that we haven't defined at all.
+
+These options are automatically added by =clingon= itself for each new
+command and provide flags for =--help=, =--version= and
+=--bash-completions= for you automatically, so you don't have to deal
+with them manually.
+
+Before we dive into testing out our application, first we will check
+that we have a correct help information for our command.
+
+#+begin_src lisp
+INTRO> (clingon:print-usage *app* t)
+NAME:
+  clingon-intro - my first clingon cli app
+
+USAGE:
+  clingon-intro [-v] [-u <USER>]
+
+OPTIONS:
+      --help              display usage information and exit
+      --version           display version and exit
+  -u, --user <VALUE>      user to greet [default: stranger] [env: $USER]
+  -v, --verbose           verbosity level [default: 0]
+
+AUTHORS:
+  John Doe <john.doe@example.com>
+
+LICENSE:
+  BSD 2-Clause
+
+NIL
+#+end_src
+
+This help information will make it easier for our users, when they
+need to use it. And that is automatically handled for you, so you
+don't have to manually maintain an up-to-date usage information, each
+time you introduce a new option.
+
+Time to test out our application on the REPL. In order to test things
+out you can use the =CLINGON:PARSE-COMMAND-LINE= function by passing
+it an instance of your command, along with any arguments that need to
+be parsed. Let's try it out without any command-line arguments.
+
+#+begin_src lisp
+INTRO> (clingon:parse-command-line *app* nil)
+#<CLINGON.COMMAND:COMMAND name=clingon-intro options=5 sub-commands=0>
+#+end_src
+
+The =CLINGON:PARSE-COMMAND-LINE= function will (as the name suggests)
+parse the given arguments against the options associated with our
+command. Finally it will return an instance of =CLINGON:COMMAND=.
+
+In our simple CLI application, that would be the same instance as our
+=*APP*=, but things look differently when we have sub-commands.
+
+When we start adding new sub-commands, the result of
+=CLINGON:PARSE-COMMAND-LINE= will be different based on the arguments
+it needs to parse. That means that if our input matches a sub-command
+you will receive an instance of the sub-command that matched the given
+arguments.
+
+Internally the =clingon= system maintains a tree data structure,
+describing the relationships between commands. This allows a command
+to be related to some other command, and this is how the command and
+sub-commands support is implemented in =clingon=.
+
+Each command in =clingon= is associated with a /context/.  The
+/context/ or /environment/ provides the options and their values with
+respect to the command itself. This means that a parent command and a
+sub-command may have exactly the same set of options defined, but they
+will reside in different contexts. Depending on how you use it,
+sub-commands may /shadow/ a parent command option, but it also means
+that a sub-command can refer to an option defined in a global command.
+
+The /context/ of a command in =clingon= is available via the
+=CLINGON:COMMAND-CONTEXT= accessor. We will use the context in order
+to lookup our options and the values associated with them.
+
+The function that operates on command's context and retrieves
+values from it is called =CLINGON:GETOPT=.
+
+Let's see what we've got for our options.
+
+#+begin_src lisp
+INTRO> (let ((c (clingon:parse-command-line *app* nil)))
+	 (clingon:getopt c :user))
+"dnaeon"
+T
+#+end_src
+
+The =CLINGON:GETOPT= function returns multiple values -- first one
+specifies the value of the option, if it had any. And the second one
+indicates whether or not that option has been set at all on the
+command-line.
+
+If you need to simply test things out and tell whether an option has
+been set at all you can use the =CLINGON:OPT-IS-SET-P= function
+instead.
+
+Let's try it out with a different input.
+
+#+begin_src lisp
+INTRO> (let ((c (clingon:parse-command-line *app* (list "-vvv" "--user" "foo"))))
+	 (format t "Verbose is ~A~%" (clingon:getopt c :verbose))
+         (format t "User is ~A~%" (clingon:getopt c :user)))
+Verbose is 3
+User is foo
+#+end_src
+
+Something else, which is important to mention here. The default
+precedence list for options is:
+
+- The value provided by the =:INITIAL-VALUE= initarg
+- The value of the first environment variable, which successfully resolved,
+  provided by the =:ENV-VARS= init arg
+- The value provided on the command-line when invoking the application.
+
+Play with it using different command-line arguments. If you specify
+invalid or unknown options =clingon= will signal a condition and
+provide you a few recovery options. For example, if you specify an
+invalid flag like this:
+
+#+begin_src lisp
+INTRO> (clingon:parse-command-line *app* (list "--invalid-flag"))
+#+end_src
+
+We will be dropped into the debugger and be provided with restarts we
+can choose from, e.g.
+
+#+begin_src lisp
+Unknown option --invalid-flag of kind LONG
+   [Condition of type CLINGON.CONDITIONS:UNKNOWN-OPTION]
+
+Restarts:
+ 0: [DISCARD-OPTION] Discard the unknown option
+ 1: [TREAT-AS-ARGUMENT] Treat the unknown option as a free argument
+ 2: [SUPPLY-NEW-VALUE] Supply a new value to be parsed
+ 3: [RETRY] Retry SLY mREPL evaluation request.
+ 4: [ABORT] Return to sly-db level 1.
+ 5: [RETRY] Retry SLY mREPL evaluation request.
+ --more--
+...
+#+end_src
+
+This is similar to the way other Common Lisp options parsing systems
+behave such as [[https://github.com/sjl/adopt][adopt]] and [[https://github.com/libre-man/unix-opts][unix-opts]].
+
+Also worth mentioning again here is that =CLINGON:PARSE-COMMAND-LINE= is
+meant to be used within the REPL, and not called directly by handlers.
+
+** Adding a sub-command
+
+Before we wrap up, let's add one sub-command to our application.
+
+Sub-commands are no different than regular commands, and in fact are
+created exactly the way we did it for our /top-level/ command.
+
+#+begin_src lisp
+(defun shout/handler (cmd)
+  "The handler for the `shout' command"
+  (let ((args (mapcar #'string-upcase (clingon:command-arguments cmd)))
+	(user (clingon:getopt cmd :user))) ;; <- a global option
+    (format t "HEY, ~A!~%" user)
+    (format t "~A!~%" (clingon:join-list args #\Space))))
+
+(defun shout/command ()
+  "Returns a command which SHOUTS back anything we write on the command-line"
+  (clingon:make-command
+   :name "shout"
+   :description "shouts back anything you write"
+   :usage "[options] [arguments ...]"
+   :handler #'shout/handler))
+#+end_src
+
+And now, we will wire up our sub-command making it part of the
+/top-level/ command we have so far.
+
+#+begin_src lisp
+(defun top-level/command ()
+  "Creates and returns the top-level command"
+  (clingon:make-command
+   :name "clingon-intro"
+   ...
+   :sub-commands (list (shout/command)))) ;; <- new code
+#+end_src
+
+You should also notice here that within the =SHOUT/HANDLER= we are
+actually referencing an option, which is defined somewhere else.  This
+option is actually defined on our top-level command, but thanks's to
+the automatic management of relationships that =clingon= provides we
+can now refer to global options as well.
+
+Let's move on to the final section of this guide, where we will create
+a system definition for our application and build it.
+
+** Packaging it up
+
+One final piece which remains to be added to our code is to provide an
+entrypoint for our application, so let's do it now.
+
+#+begin_src lisp
+(defun main ()
+  (let ((app (top-level/command)))
+    (clingon:run app)))
+#+end_src
+
+This is the entrypoint which will be used when we invoke our
+application on the command-line, which we'll set in our ASDF
+definition.
+
+And here's a simple system definition for the application we've
+developed so far.
+
+#+begin_src lisp
+(defpackage :clingon-intro-system
+  (:use :cl :asdf))
+(in-package :clingon-intro-system)
+
+(defsystem "clingon.intro"
+  :name "clingon.intro"
+  :long-name "clingon.intro"
+  :description "An introduction to the clingon system"
+  :version "0.1.0"
+  :author "John Doe <john.doe@example.org>"
+  :license "BSD 2-Clause"
+  :depends-on (:clingon)
+  :components ((:module "intro"
+		:pathname #P"examples/intro/"
+		:components ((:file "intro"))))
+  :build-operation "program-op"
+  :build-pathname "clingon-intro"
+  :entry-point "clingon.intro:main")
+#+end_src
+
+Now we can build our application and start using it on the
+command-line.
+
+#+begin_src shell
+sbcl --eval '(ql:quickload :clingon.intro)' \
+     --eval '(asdf:make :clingon.intro)' \
+     --eval '(quit)'
+#+end_src
+
+This will produce a new binary called =clingon-intro= in the directory
+of the =clingon.intro= system.
+
+** Testing it out on the command-line
+
+Time to check things up on the command-line.
+
+#+begin_src shell
+$ ./clingon-intro --help
+NAME:
+  clingon-intro - my first clingon cli app
+
+USAGE:
+  clingon-intro [-v] [-u <USER>]
+
+OPTIONS:
+      --help              display usage information and exit
+      --version           display version and exit
+  -u, --user <VALUE>      user to greet [default: stranger] [env: $USER]
+  -v, --verbose           verbosity level [default: 0]
+
+COMMANDS:
+  shout  shouts back anything you write
+
+AUTHORS:
+  John Doe <john.doe@example.com>
+
+LICENSE:
+  BSD 2-Clause
+#+end_src
+
+Let's try out our commands.
+
+#+begin_src shell
+$ ./clingon-intro -vvv --user Lisper
+Hello, Lisper!
+The current verbosity level is set to 3
+You have provided 0 arguments
+Bye.
+#+end_src
+
+And let's try our sub-command as well.
+
+#+begin_src shell
+$ ./clingon-intro --user stranger shout why are yelling at me?
+HEY, stranger!
+WHY ARE YELLING AT ME?!
+#+end_src
+
+You can find the code we've developed in this guide in the
+[[https://github.com/dnaeon/clingon/tree/master/examples][clingon/examples]] directory of the repo.
+
+
+* Contributing
+
+=clingon= is hosted on [[https://github.com/dnaeon/clingon][Github]]. Please contribute by reporting issues,
+suggesting features or by sending patches using pull requests.
+
+* License
+
+This project is Open Source and licensed under the [[http://opensource.org/licenses/BSD-2-Clause][BSD License]].
+
+* Authors
+
+- Marin Atanasov Nikolov <dnaeon@gmail.com>
