@@ -68,6 +68,7 @@
    :command-full-path
    :command-full-name
    :command-tree
+   :command-is-top-level-p
    :with-command-tree
    :find-sub-command
    :run
@@ -312,6 +313,10 @@
           (error 'circular-dependency :items visited)
         :collect c :into visited
         :finally (return visited)))
+
+(defmethod command-is-top-level-p ((top-level command))
+  "Returns T if the command is a top-level command, NIL otherwise"
+  (= 1 (length (command-lineage top-level))))
 
 (defmethod find-sub-command ((command command) name &key)
   "Returns the sub-command with the given name"
