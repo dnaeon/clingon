@@ -2,6 +2,9 @@
 (defpackage :clingon.command
   (:use :cl)
   (:import-from
+   :split-sequence
+   :split-sequence)
+  (:import-from
    :clingon.conditions
    :circular-dependency
    :duplicate-options
@@ -64,9 +67,10 @@
    :make-command
    :command-full-path
    :command-full-name
+   :command-tree
+   :with-command-tree
    :find-sub-command
    :run
-   :with-commands-walk
    :parse-command-line
    :getopt
    :opt-is-set-p
@@ -323,17 +327,22 @@
   (let ((full-path (command-full-path command)))
     (join-list full-path #\Space)))
 
-(defmacro with-commands-walk ((command top-level) &body body)
-  "Walks over each command starting from TOP-LEVEL and evaluates BODY"
-  `(let ((nodes (walk ,top-level #'command-sub-commands :order :dfs)))
-     (dolist (,command nodes)
-       ,@body)))
+(defmethod command-tree ((top-level command))
+  "Collects the nodes representing the command's tree starting from TOP-LEVEL"
+  (walk top-level #'command-sub-commands :order :dfs))
+
+(defmacro with-command-tree ((node top-level) &body body)
+  "Evaluates BODY for each node in the command's tree starting from TOP-LEVEL"
+  (let ((tree (gensym)))
+    `(let ((,tree (command-tree ,top-level)))
+       (dolist (,node ,tree)
+	 ,@body))))
 
 (defmethod validate-top-level-command ((top-level command))
   "Validates the top-level command and it's sub-commands"
-  (with-commands-walk (cmd top-level)
-    (ensure-unique-sub-commands cmd)
-    (ensure-unique-options cmd))
+  (with-command-tree (node top-level)
+    (ensure-unique-sub-commands node)
+    (ensure-unique-options node))
   t)
 
 (defmethod parse-option ((kind (eql :consume-all-arguments)) (command command) &key)
@@ -364,7 +373,7 @@
       (push value (command-args-to-parse command)))))
 
 (defmethod derive-option-with-restarts ((command command) (option option) optarg)
-  "Provides possible restarts when deriving an option's value fails"
+  "Provides possible restarts when deriving an option's value"
   (let* ((short-name (option-short-name option))
          (long-name (option-long-name option))
          ;; Pick either one of the short or long option names here
@@ -396,7 +405,7 @@
          ;; Pick either one of the short or long option names here
          (full-name (or (and short-name (format nil "-~A" short-name))
                         (and long-name (format nil "--~A" long-name)))))
-    (restart-case (error 'missing-option-argument :item option)
+    (restart-case (error 'missing-option-argument :item option :command command)
       (discard-option ()
         :report "Discard the option"
         (setf (option-is-set-p option) nil)

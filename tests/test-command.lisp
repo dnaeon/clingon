@@ -170,8 +170,8 @@
                                             :description "top-level command"
                                             :sub-commands (list c1)))
            (result nil))
-      (clingon:with-commands-walk (c top-level)
-        (push c result))
+      (clingon:with-command-tree (node top-level)
+        (push node result))
       (setf result (nreverse result))
       (ok (equal '("top-level" "c1" "c2" "c3") (mapcar #'clingon:command-name result))
           "walked nodes match"))))
