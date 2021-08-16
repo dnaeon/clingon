@@ -243,11 +243,14 @@
               (finalize-option option))
         (setf (gethash (option-key option) context) (option-value option)))))
 
-  ;; Handle special cases for some options/flags
+  ;; Special cases for some options/flags
   (cond
-    ((getopt command :clingon.help.flag) (print-usage-and-exit command t))
-    ((getopt command :clingon.version.flag) (print-version-and-exit command t))
-    ((getopt command :clingon.bash-completions.flag) (print-bash-completions-and-exit command t)))
+    ((getopt command :clingon.bash-completions.flag)
+     (print-bash-completions-and-exit command t))
+    ((getopt command :clingon.version.flag)
+     (print-version-and-exit command t))
+    ((getopt command :clingon.help.flag)
+     (print-usage-and-exit command t)))
 
   ;; Verify required options
   (let ((required-options (remove-if-not #'option-required-p (command-options command))))
@@ -613,6 +616,10 @@
 
 (defmethod print-options-usage ((command command) stream &key (wrap-at-width 70))
   "Prints the usage information about the options for the given command"
+  (setf (command-options command)
+	(sort (command-options command)
+	      #'string<
+	      :key (lambda (x) (option-description-details :default x))))
   (let* ((opts (command-options command))
 	 (usages (mapcar (lambda (o) (option-usage-details :default o)) opts))
 	 (width (+ 4 (apply #'max (mapcar #'length usages)))))
