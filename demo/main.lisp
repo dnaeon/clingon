@@ -1,4 +1,4 @@
-(in-package :clingon.example.demo)
+(in-package :clingon.demo)
 
 (defun top-level/options ()
   "Returns the options for the top-level command"

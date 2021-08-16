@@ -1,4 +1,4 @@
-(in-package :clingon.example.demo)
+(in-package :clingon.demo)
 
 (defun greet/options ()
   "Returns the options for the `greet' command"
@@ -16,7 +16,7 @@
     (format t "Hello, ~A!~%" who)))
 
 (defun greet/command ()
-  "Creates a new command to greet people"
+  "Creates a new command to perform basic math on integers"
   (clingon:make-command
    :name "greet"
    :description "greets people"

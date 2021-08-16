@@ -1,10 +1,10 @@
-(defpackage :clingon-example-demo-system
+(defpackage :clingon-demo-system
   (:use :cl :asdf))
-(in-package :clingon-example-demo-system)
+(in-package :clingon-demo-system)
 
-(defsystem "clingon.example.demo"
-  :name "clingon.example.demo"
-  :long-name "clingon.example.demo"
+(defsystem "clingon.demo"
+  :name "clingon.demo"
+  :long-name "clingon.demo"
   :description "Example demo of the Common Lisp clingon system"
   :version "0.1.0"
   :author "Marin Atanasov Nikolov <dnaeon@gmail.com>"
@@ -14,12 +14,16 @@
   :bug-tracker "https://github.com/dnaeon/clingon"
   :source-control "https://github.com/dnaeon/clingon"
   :depends-on (:clingon)
-  :components ((:module "core"
-		:pathname #P"examples/demo/"
+  :components ((:module "demo"
+		:serial t
+		:pathname #P"demo/"
 		:components ((:file "package")
 			     (:file "greet")
+			     (:file "logging")
+			     (:file "math")
+			     (:file "echo")
 			     (:file "main"))))
 
   :build-operation "program-op"
   :build-pathname "clingon-demo"
-  :entry-point "clingon.example.demo:main")
+  :entry-point "clingon.demo:main")

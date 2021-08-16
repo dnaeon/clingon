@@ -1,7 +1,7 @@
 (in-package :cl-user)
-(defpackage :clingon.example.demo
+(defpackage :clingon.demo
   (:use :cl)
   (:import-from :clingon)
   (:export
    :main))
-(in-package :clingon.example.demo)
+(in-package :clingon.demo)
