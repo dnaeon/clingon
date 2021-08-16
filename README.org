@@ -1224,6 +1224,24 @@ A similar approach can be taken for documentation generating, e.g.
 we can have =clingon= extensions, which generate documentation in
 /Markdown/, /man/, /HTML/ or some other format.
 
+* Tests
+
+The =clingon= tests are provided as part of the =:clingon.test= system.
+
+In order to run the tests you can evaluate the following expressions.
+
+#+begin_src lisp
+CL-USER> (ql:quickload :clingon.test)
+CL-USER> (asdf:test-system :clingon.test)
+#+end_src
+
+You can also run the tests in a Docker container instead.
+
+#+begin_src shell
+docker build -t clingon:latest .
+docker run --rm clingon:latest
+#+end_src
+
 * Contributing
 
 =clingon= is hosted on [[https://github.com/dnaeon/clingon][Github]]. Please contribute by reporting issues,
