@@ -12,6 +12,7 @@
    :unknown-option
    :missing-option-argument
    :missing-option-argument-item
+   :missing-option-argument-command
    :option-derive-error-p)
   (:import-from
    :clingon.options
@@ -498,14 +499,15 @@
 	    (failed-cmd (missing-required-option-value-command condition)))
 	(format *error-output* "Required option ~A not set.~&See '~A --help' for more details.~&"
 		(string-trim #(#\Space) (option-usage-details :default option))
-		(command-full-name cmd))
+		(command-full-name failed-cmd))
 	(exit 64))) ;; EX_USAGE
     ;; Missing argument for an option
     (missing-option-argument (condition)
-      (let ((option (missing-option-argument-item condition)))
+      (let ((option (missing-option-argument-item condition))
+	    (failed-cmd (missing-option-argument-command condition)))
 	(format *error-output* "No value specified for ~A option.~&See '~A --help' for more details.~&"
 		(string-trim #(#\Space) (option-usage-details :default option))
-		(command-full-name cmd))
+		(command-full-name failed-cmd))
 	(exit 64))) ;; EX_USAGE
     (error (condition)
       (format *error-output* "~A~&" condition)
@@ -619,7 +621,8 @@
   (setf (command-options command)
 	(sort (command-options command)
 	      #'string<
-	      :key (lambda (x) (option-description-details :default x))))
+	      :key (lambda (x)
+		     (option-description-details :default x))))
   (let* ((opts (command-options command))
 	 (usages (mapcar (lambda (o) (option-usage-details :default o)) opts))
 	 (width (+ 4 (apply #'max (mapcar #'length usages)))))
@@ -666,7 +669,7 @@
 	     (command-full-name command)))
     ;; Default usage info
     (t
-     (format stream "  ~A [options] [arguments ...]~2~%" (command-full-name command))))
+     (format stream "  ~A [options] [arguments ...]~2%" (command-full-name command))))
 
   (when (command-long-description command)
     (let ((lines (split-sequence #\Newline

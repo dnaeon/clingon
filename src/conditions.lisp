@@ -16,6 +16,7 @@
    :unknown-option-p
    :missing-option-argument
    :missing-option-argument-item
+   :missing-option-argument-command
    :missing-option-argument-p
    :invalid-option
    :invalid-option-item
@@ -118,7 +119,11 @@
   ((item
     :initarg :item
     :initform (error "Must specify option item")
-    :reader missing-option-argument-item))
+    :reader missing-option-argument-item)
+   (command
+    :initarg :command
+    :initform (error "Must specify command")
+    :reader missing-option-argument-command))
   (:report (lambda (condition stream)
 	     (declare (ignore condition))
              (format stream "Missing argument for option")))
