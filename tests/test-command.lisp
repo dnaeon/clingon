@@ -106,7 +106,15 @@
                                             :description "top-level command"
                                             :sub-commands (list c1))))
       (let ((lineage (clingon:command-lineage c3)))
-        (ok (equal (list c3 c2 c1 top-level) lineage) "nodes match"))))
+        (ok (equal (list c3 c2 c1 top-level) lineage) "lineage matches")
+	(ok (equal t (clingon:command-is-top-level-p top-level))
+	    "top-level command matches")
+	(ok (equal nil (clingon:command-is-top-level-p c1))
+	    "c1 is not a top-level command")
+	(ok (equal nil (clingon:command-is-top-level-p c2))
+	    "c2 is not a top-level command")
+	(ok (equal nil (clingon:command-is-top-level-p c3))
+	    "c3 is not a top-level command"))))
 
   (testing "circular dependencies"
     (let* ((c3 (clingon:make-command :name "c3"
