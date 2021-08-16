@@ -646,7 +646,16 @@
 (defmethod print-bash-completions ((command command) stream)
   "Prints the bash completions for the given command"
   (dolist (sub (command-sub-commands command))
-    (format stream "~A~%" (command-name sub))))
+    (format stream "~A~%" (command-name sub)))
+
+  (dolist (opt (command-options command))
+    (cond
+      ((option-short-name opt)
+       (format stream "-~A~%" (option-short-name opt)))
+      ((and (option-long-name opt) (option-parameter opt))
+       (format stream "--~A=~%" (option-long-name opt)))
+      ((option-long-name opt)
+       (format stream "--~A~%" (option-long-name opt))))))
 
 (defmethod print-bash-completions-and-exit ((command command) stream)
   "Prints the bash completions for the given command and exits"
