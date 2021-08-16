@@ -631,7 +631,21 @@
 
   (when (command-sub-commands command)
     (format stream "COMMANDS:~%")
-    (print-sub-commands-usage command stream)))
+    (print-sub-commands-usage command stream))
+
+  (when (command-authors command)
+    (format stream "AUTHORS:~%")
+    (dolist (author (command-authors command))
+      (format stream "  ~A~%" author))
+    (terpri))
+
+  (when (command-license command)
+    (format stream "LICENSE:~%")
+    (let ((lines (split-sequence:split-sequence #\Newline
+						(bobbin:wrap (command-license command) 80))))
+      (dolist (line lines)
+	(format stream "  ~A~%" line)))
+    (terpri)))
 
 (defmethod print-usage-and-exit ((command command) stream)
   (print-usage command stream)
