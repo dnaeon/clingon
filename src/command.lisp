@@ -541,7 +541,7 @@
     :finally (finalize-command command))
   command)
 
-(defmethod getopt ((command command) opt-key)
+(defmethod getopt ((command command) opt-key &optional default)
   "Returns the value of the option with the given OPT-KEY,
    by traversing the lineage of the given COMMAND,
    starting from the most-specific to least-specific command.
@@ -581,8 +581,8 @@
     ;; Option is not set, but could be part of the current command.
     ;; If that's the case we don't descend into the parent commands.
     (when (member opt-key (command-options cmd) :key #'option-key :test #'equal)
-      (return-from getopt (values nil nil))))
-  (values nil nil))
+      (return-from getopt (values default nil))))
+  (values default nil))
 
 (defmethod opt-is-set-p ((command command) opt-key)
   "Returns T if the OPT-KEY is defined anywhere in the command's lineage"
