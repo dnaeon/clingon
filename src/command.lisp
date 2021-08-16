@@ -165,27 +165,32 @@
    (version
     :initarg :version
     :initform nil
-    :accessor command-version
+    :reader command-version
     :documentation "Version of the command")
    (authors
     :initarg :authors
     :initform nil
-    :accessor command-authors
+    :reader command-authors
     :documentation "Authors of the command")
    (license
     :initarg :license
     :initform nil
-    :accessor command-license
+    :reader command-license
     :documentation "License for the command")
    (description
     :initarg :description
     :initform nil
-    :accessor command-description
+    :reader command-description
     :documentation "Short description of what the command does")
+   (long-description
+    :initarg :long-description
+    :initform nil
+    :reader command-long-description
+    :documentation "Long description of what the command does")
    (usage
     :initarg :usage
     :initform nil
-    :accessor command-usage
+    :reader command-usage
     :documentation "Usage information for the command"))
   (:documentation "A class to represent a command to be handled"))
 
