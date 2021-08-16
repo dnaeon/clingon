@@ -713,6 +713,462 @@ You can find the code we've developed in this guide in the
 [[https://github.com/dnaeon/clingon/tree/master/examples][clingon/examples]] directory of the repo.
 
 
+* Options
+
+The =clingon= system supports various kinds of options, each of which
+is meant to serve a specific purpose.
+
+Each builtin option can be initialized via environment variables, and
+new mechanisms for initializing options can be developed, if needed.
+
+Options are created via the single =CLINGON:MAKE-OPTION= interface.
+
+The supported option kinds include:
+
+- =counter=
+- =integer=
+- =string=
+- =boolean=
+- =boolean/true=
+- =boolean/false=
+- =choice=
+- =enum=
+- =list=
+- etc.
+
+** Counters Options
+
+A =counter= is an option kind, which increments every time it is set
+on the command-line.
+
+A good example for =counter= options is to provide a flag, which
+increases the verbosity level, depending on the number of times the
+flag was provided, similar to the way =ssh(1)= does it, e.g.
+
+#+begin_src shell
+ssh -vvv user@host
+#+end_src
+
+Here's an example of creating a =counter= option.
+
+#+begin_src lisp
+(clingon:make-option
+ :counter
+ :short-name #\v
+ :long-name "verbose"
+ :description "how noisy we want to be"
+ :key :verbose)
+#+end_src
+
+The default =step= for counters is set to =1=, but you can change
+that, if needed.
+
+#+begin_src lisp
+(clingon:make-option
+ :counter
+ :short-name #\v
+ :long-name "verbose"
+ :description "how noisy we want to be"
+ :step 42
+ :key :verbose)
+#+end_src
+
+** Boolean Options
+
+The following boolean option kinds are supported by =clingon=.
+
+The =:boolean= kind is an option which expects an argument, which
+represents a boolean value. The option expects an argument.
+
+Arguments =true= and =1= map to =T= in Lisp, anything else is
+considered a falsey value and maps to =NIL=.
+
+#+begin_src lisp
+(clingon:make-option
+ :boolean
+ :description "my boolean"
+ :short-name #\b
+ :long-name "my-boolean"
+ :key :boolean)
+#+end_src
+
+This creates an option =-b, --my-boolean <VALUE>=, which can be
+provided on the command-line, where =<VALUE>= should be =true= or =1=
+for truthy values, and anything else maps to =NIL=.
+
+The =:boolean/true= option kind creates a flag, which always returns
+=T=.
+
+The =:boolean/false= option kind creates a flag, which always returns
+=NIL=.
+
+The =:flag= option kind is an alias for =:boolean/true=.
+
+** Integer Options
+
+Here's an example of creating an option, which expects an integer
+argument.
+
+#+begin_src lisp
+(clingon:make-option
+ :integer
+ :description "my integer opt"
+ :short-name #\i
+ :long-name "int"
+ :key :my-int
+ :initial-value 42)
+#+end_src
+
+** Choice Options
+
+=choice= options are useful when you have to limit the arguments
+provided on the command-line to a specific set of values.
+
+For example:
+
+#+begin_src lisp
+(clingon:make-option
+ :choice
+ :description "log level"
+ :short-name #\l
+ :long-name "log-level"
+ :key :choice
+ :items '("info" "warn" "error" "debug"))
+#+end_src
+
+With this option defined, you can now set the logging level only to
+=info=, =warn=, =error= or =debug=, e.g.
+
+#+begin_src shell
+-l, --log-level [info|warn|error|debug]
+#+end_src
+
+** Enum Options
+
+Enum options are similar to the =choice= options, but instead of
+returning the value itself they can be mapped with something else.
+
+For example:
+
+#+begin_src lisp
+(clingon:make-option
+ :enum
+ :description "enum option"
+ :short-name #\e
+ :long-name "my-enum"
+ :key :enum
+ :items '(("one" . 1)
+	  ("two" . 2)
+	  ("three" . 3)))
+#+end_src
+
+If a user specifies =--my-enum=one= on the command-line the option
+will be have the value =1= associated with it, when being looked up
+via =CLINGON:GETOPT=.
+
+The values you associate with the enum variant, can be any object.
+
+This is one of the options being used by the /clingon-demo/
+application, which maps user input to Lisp functions, in order to
+perform some basic math operations.
+
+#+begin_src lisp
+(clingon:make-option
+ :enum
+ :description "operation to perform"
+ :short-name #\o
+ :long-name "operation"
+ :required t
+ :items `(("add" . ,#'+)
+	  ("sub" . ,#'-)
+	  ("mul" . ,#'*)
+	  ("div" . ,#'/))
+ :key :math/operation)
+#+end_src
+
+** List / Accumulator Options
+
+The =:list= option kind accumulates each argument it is given on the
+command-line into a list.
+
+For example:
+
+#+begin_src lisp
+(clingon:make-option
+ :list
+ :description "files to process"
+ :short-name #\f
+ :long-name "file"
+ :key :files)
+#+end_src
+
+If you invoke an application, which uses a similar option like the one
+above using the following command-line arguments:
+
+#+begin_src shell
+$ my-app --file foo --file bar --file baz
+#+end_src
+
+If you retrieve the value associated with your option, you will get a
+list of all the files specified on the command-line, e.g.
+
+#+begin_src lisp
+(clingon:getopt cmd :files) ;; => '("foo" "bar" "baz")
+#+end_src
+
+A similar option exists for integer values using the =:list/integer=
+option, e.g.
+
+#+begin_src lisp
+(clingon:make-option
+ :list/integer
+ :description "list of integers"
+ :short-name #\l
+ :long-name "int"
+ :key :integers)
+#+end_src
+
+* Generic Functions Operating on Options
+
+If the existing options provided by =clingon= are not enough for you,
+and you need something a bit more specific for your use case, then you
+can always implement a new option kind.
+
+The following generic functions operate on options and are exported by
+the =clingon= system.
+
+- =CLINGON:INITILIAZE-OPTION=
+- =CLINGON:FINALIZE-OPTION=
+- =CLINGON:DERIVE-OPTION-VALUE=
+- =CLINGON:OPTION-USAGE-DETAILS=
+- =CLINGON:OPTION-DESCRIPTION-DETAILS=
+- =CLINGON:MAKE-OPTION=
+
+New option kinds should inherit from the =CLINGON:OPTION= class, which
+implements all of the above generic functions. If you need to
+customize the behaviour of your new option, you can still override the
+default implementations.
+
+** CLINGON:INITIALIZE-OPTION
+
+The =CLINGON:INITIALIZE-OPTION= as the name suggests is being used to
+initialize an option.
+
+The default implementation of this generic function supports
+initialization from environment variables, but implementors
+can choose to support other initialization methods, e.g.
+be able to initialize an option from a key/value store like
+/Redis/, /Consul/ or /etcd/ for example.
+
+See the section about developing new options for an example about
+implementing initialization for options from files.
+
+** CLINGON:FINALIZE-OPTION
+
+The =CLINGON:FINALIZE-OPTION= generic function is called after
+all command-line arguments have been processed and values for them
+have been derived already.
+
+=CLINGON:FINALIZE-OPTION= is meant to /finalize/ the option's value,
+e.g. transform it to another object, if needed.
+
+For example the =:BOOLEAN= option kind transforms user-provided input
+like =true=, =false=, =1= and =0= into their respective Lisp counterparts
+like =T= and =NIL=.
+
+Another example where you might want to customize the behaviour of
+=CLINGON:FINALIZE-OPTION= is to convert a string option provided on
+the command-line, which represents a database connection string into
+an actual session object for the database.
+
+The default implementation of this generic function simply returns the
+already set value, e.g. calls =#'IDENTITY= on the last derived value.
+
+** CLINGON:DERIVE-OPTION-VALUE
+
+The =CLINGON:DERIVE-OPTION-VALUE= is called whenever an option is
+provided on the command-line.
+
+If that option accepts an argument, it will be passed the respective
+value from the command-line, otherwise it will be called with a =NIL=
+argument.
+
+Responsibility of the option is to derive a value from the given input
+and return it to the caller. The returned value will be set by the
+parser and later on it will be used to produce a final value, by
+calling the =CLINGON:FINALIZE-OPTION= generic function.
+
+Different kinds of options implement this one different -- for example
+the =:LIST= option kind accumulates each given argument, while others
+ignore any previously derived values and return the last provided
+argument.
+
+The =:ENUM= option kind for example will derive a value from a
+pre-defined list of allowed values.
+
+If an option fails to derive a value (e.g. invalid value has been
+provided) the implementation of this generic function should signal a
+=CLINGON:OPTION-DERIVE-ERROR= condition, so that =clingon= can provide
+appropriate restarts.
+
+** CLINGON:OPTION-USAGE-DETAILS
+
+This generic function is used to provide a pretty-printed usage format
+for the given option. It will be used when printing usage information
+on the command-line for the respective commands.
+
+** CLINGON:OPTION-DESCRIPTION-DETAILS
+
+This generic function is meant to enrich the description of the option
+by providing as much details as possible for the given option, e.g.
+listing the available values that an option can accept.
+
+** CLINGON:MAKE-OPTION
+
+The =CLINGON:MAKE-OPTION= generic function is the primary way for
+creating new options. Implementors of new option kinds should simply
+provide an implementation of this generic function, along with the
+respective option kind.
+
+Additional option kinds may be implemented as separate sub-systems,
+but still follow the same principle by providing a single and
+consistent interface for option creation.
+
+* Developing New Options
+
+This section is a short guide explaining how to develop new option
+kinds for =clingon=. The new option, which we'll develop will be used
+for specifying email addresses.
+
+Start up your Lisp REPL session and do let's some work. Load the
+=:clingon= and =:cl-ppcre= systems, since we will need them.
+
+#+begin_src lisp
+CL-USER> (ql:quickload :clingon)
+CL-USER> (ql:quickload :cl-ppcre)
+#+end_src
+
+We will first create a new package for our extension and import the
+symbols we will need from the =:clingon= and =:cl-ppcre= systems.
+
+#+begin_src lisp
+(defpackage :clingon.extensions/option-email
+  (:use :cl)
+  (:import-from
+   :cl-ppcre
+   :scan)
+  (:import-from
+   :clingon
+   :option
+   :initialize-option
+   :derive-option-value
+   :make-option
+   :option-value
+   :option-derive-error))
+(in-package :clingon.extensions/option-email)
+#+end_src
+
+Then lets define the class, which will represent an email address
+option.
+
+#+begin_src lisp
+(defclass option-email (option)
+  ((pattern
+    :initarg :pattern
+    :initform "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+    :reader option-email-pattern
+    :documentation "Pattern used to match for valid email addresses"))
+  (:default-initargs
+   :parameter "EMAIL")
+  (:documentation "An option used to represent an email address"))
+#+end_src
+
+Now we will implement =CLINGON:INITIALIZE-OPTION= for our new
+option. We will keep the default initialization logic as-is, but also
+add additional step to valid the email address, if we have any initial
+value at all.
+
+#+begin_src lisp
+(defmethod initialize-option ((option option-email) &key)
+  "Initializes our new email address option"
+  ;; Make sure to invoke our parent initialization method first, so
+  ;; various things like setting up initial value from environment
+  ;; variables can still be applied.
+  (call-next-method)
+
+  ;; If we don't have any value set, there's nothing else to
+  ;; initialize further here.
+  (unless (option-value option)
+    (return-from initialize-option))
+
+  ;; If we get to this point, that means we've got some initial value,
+  ;; which is either set as a default, or via environment
+  ;; variables. Next thing we need to do is make sure we've got a good
+  ;; initial value, so let's derive a value from it.
+  (let ((current (option-value option)))
+    (setf (option-value option)
+	  (derive-option-value option current))))
+#+end_src
+
+Next we will implement =CLINGON:DERIVE-OPTION-VALUE= for our new
+option kind.
+
+#+begin_src lisp
+(defmethod derive-option-value ((option option-email) arg &key)
+  "Derives a new value based on the given argument.
+   If the given ARG represents a valid email address according to the
+   pattern we know of we consider this as a valid email address."
+  (unless (scan (option-email-pattern option) arg)
+    (error 'option-derive-error :reason (format nil "~A is not a valid email address" arg)))
+  arg)
+#+end_src
+
+Finally, lets register our new option as a valid kind by implemeting
+the =CLINGON:MAKE-OPTION= generic function.
+
+#+begin_src lisp
+(defmethod make-option ((kind (eql :email)) &rest rest)
+  (apply #'make-instance 'option-email rest))
+#+end_src
+
+We can test things out now. Go back to your REPL and try these
+expressions out. First we make a new instance of our new option.
+
+#+begin_src lisp
+(defparameter *opt*
+  (make-option :email :short-name #\e :description "email opt" :key :email))
+#+end_src
+
+And now, lets validate a couple of good email addresses.
+
+#+begin_src lisp
+EXTENSIONS/OPTION-EMAIL> (derive-option-value *opt* "test@example.com")
+"test@example.com"
+EXTENSIONS/OPTION-EMAIL> (derive-option-value *opt* "foo@bar.com")
+"foo@bar.com"
+#+end_src
+
+If we try deriving a value from a bad email address we will have a
+condition of type =CLINGON:OPTION-DERIVE-ERROR= signalled.
+
+#+begin_src lisp
+EXTENSIONS/OPTION-EMAIL> (derive-option-value opt "bad-email-address-here")
+; Debugger entered on #<OPTION-DERIVE-ERROR {1002946463}>
+...
+bad-email-address-here is not a valid email address
+   [Condition of type OPTION-DERIVE-ERROR]
+#+end_src
+
+Good, we can catch invalid email addresses as well. Whenever an option
+fails to derive a new value from a given argument, and we signal
+=CLINGON:OPTION-DERIVE-ERROR= condition we can recover by providing
+new values or discarding them completely, thanks to the Common Lisp
+Condition System.
+
+Last thing to do is actually package this up as an extension system
+and register it in Quicklisp. That way everyone else, can benefit from
+the newly developed option.
+
 * Contributing
 
 =clingon= is hosted on [[https://github.com/dnaeon/clingon][Github]]. Please contribute by reporting issues,
