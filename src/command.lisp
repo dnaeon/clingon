@@ -295,10 +295,15 @@
   "Returns the sub-command with the given name"
   (find name (command-sub-commands command) :key #'command-name :test #'string=))
 
-(defmethod command-full-path ((command command) &key)
+(defmethod command-full-path ((command command))
   "Returns the full path to the command"
   (let ((lineage (command-lineage command)))
     (nreverse (mapcar #'command-name lineage))))
+
+(defmethod command-full-name ((command command))
+  "Returns a string representing the full name of the command"
+  (let ((full-path (command-full-path command)))
+    (join-list full-path #\Space)))
 
 (defmacro with-commands-walk ((command top-level) &body body)
   "Walks over each command starting from TOP-LEVEL and evaluates BODY"
