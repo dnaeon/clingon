@@ -55,11 +55,14 @@
    :command-authors
    :command-version
    :command-description
+   :command-long-description
    :command-license
    :command-usage
    :command-args-to-parse
+   :command-examples
    :make-command
    :command-full-path
+   :command-full-name
    :find-sub-command
    :run
    :with-commands-walk
@@ -187,6 +190,11 @@
     :initform nil
     :reader command-long-description
     :documentation "Long description of what the command does")
+   (examples
+    :initarg :examples
+    :initform nil
+    :reader command-examples
+    :documentation "A list of examples describing how to use the command")
    (usage
     :initarg :usage
     :initform nil
@@ -603,7 +611,7 @@
   "A handler which can be used to invoke the `discard-option' restart"
   (invoke-restart (find-restart 'discard-option condition)))
 
-(defmethod print-options-usage ((command command) stream &key (wrap-at-width 65))
+(defmethod print-options-usage ((command command) stream &key (wrap-at-width 70))
   "Prints the usage information about the options for the given command"
   (let* ((opts (command-options command))
 	 (usages (mapcar (lambda (o) (option-usage-details :default o)) opts))
@@ -611,46 +619,54 @@
     (loop :for (opt usage) :in (mapcar #'list opts usages) :do
       (format stream "  ~A" usage)
       (let* ((desc (option-description-details :default opt))
-	     (lines (split-sequence:split-sequence #\Newline (bobbin:wrap desc wrap-at-width))))
+	     (lines (split-sequence #\Newline (bobbin:wrap desc wrap-at-width))))
 	(format stream "~vA~A~&" (- width (length usage) 2) #\Space (first lines))
 	(dolist (remaining (rest lines))
 	  (format stream "~vA~A~&" width #\Space remaining)))))
-  (terpri stream))
+  (format stream "~%"))
 
-(defmethod print-sub-commands-usage ((command command) stream &key (wrap-at-width 65))
+(defmethod print-sub-commands-usage ((command command) stream &key (wrap-at-width 70))
   "Prints a summary of the sub-commands available for the command"
   (let* ((sub-commands (command-sub-commands command))
 	 (names (mapcar #'command-name sub-commands))
 	 (descriptions (mapcar #'command-description sub-commands))
 	 (width (+ 4 (apply #'max (mapcar #'length names)))))
     (loop :for (name desc) :in (mapcar #'list names descriptions) :do
-      (let* ((lines (split-sequence:split-sequence #\Newline
-						  (bobbin:wrap desc wrap-at-width))))
+      (let ((lines (split-sequence #\Newline (bobbin:wrap desc wrap-at-width))))
 	(format stream "  ~A" name)
 	(format stream "~vA~A~&" (- width (length name) 2) #\Space (first lines))
 	(dolist (remaining (rest lines))
 	  (format stream "~vA~A~&" width #\Space remaining)))))
-  (terpri stream))
+  (format stream "~%"))
 
-(defmethod print-usage ((command command) stream &key)
+
+(defmethod print-usage ((command command) stream &key (wrap-at 70))
   (format stream "NAME:~%")
-  (format stream "  ~A - ~A~2%"
-	  (join-list (command-full-path command) " ")
-	  (command-description command))
+  (format stream "  ~A - ~A~2%" (command-full-name command) (command-description command))
 
   (format stream "USAGE:~%")
   (cond
     ;; The command provides it's own usage info
     ((command-usage command)
-     (format stream "  ~A ~A~2%" (command-name command) (command-usage command)))
+     (format stream "  ~A ~A~2%" (command-full-name command) (command-usage command)))
     ;; The command does not provide it's own usage info and has sub-commands
     ((command-sub-commands command)
      (format stream "  ~A [global-options] command [command-options] [arguments ...]~2%"
-	     (command-name command)))
+	     (command-full-name command)))
+    ;; Command has is a sub-command
+    ((command-parent command)
+     (format stream "  ~A [global options] [command-options] [arguments ...]~2%"
+	     (command-full-name command)))
     ;; Default usage info
     (t
-     (format stream "  ~A [global options] [command-options] [arguments ...]~2%"
-	     (command-name command))))
+     (format stream "  ~A [options] [arguments ...]~2~%" (command-full-name command))))
+
+  (when (command-long-description command)
+    (let ((lines (split-sequence #\Newline
+				 (bobbin:wrap (command-long-description command) wrap-at))))
+      (dolist (line lines)
+	(format stream "  ~A~%" line)))
+    (format stream "~%"))
 
   (when (command-options command)
     (format stream "OPTIONS:~%")
@@ -660,28 +676,37 @@
     (format stream "COMMANDS:~%")
     (print-sub-commands-usage command stream))
 
+  (when (command-examples command)
+    (format stream "EXAMPLES:~2%")
+    (dolist (example (command-examples command))
+      (let* ((description (car example))
+	     (code (cdr example))
+	     (lines (split-sequence #\Newline (bobbin:wrap description wrap-at))))
+	(dolist (line lines)
+	  (format stream "  ~A~%" line))
+	(format stream "~%")
+	(format stream "    ~A~%" code)
+	(format stream "~%"))))
+
   (when (command-authors command)
     (format stream "AUTHORS:~%")
     (dolist (author (command-authors command))
       (format stream "  ~A~%" author))
-    (terpri))
+    (format stream "~%"))
 
   (when (command-license command)
     (format stream "LICENSE:~%")
-    (let ((lines (split-sequence:split-sequence #\Newline
-						(bobbin:wrap (command-license command) 80))))
+    (let ((lines (split-sequence #\Newline (bobbin:wrap (command-license command) wrap-at))))
       (dolist (line lines)
 	(format stream "  ~A~%" line)))
-    (terpri)))
+    (format stream "~%")))
 
 (defmethod print-usage-and-exit ((command command) stream)
   (print-usage command stream)
   (exit 64)) ;; EX_USAGE
 
 (defmethod print-version-and-exit ((command command) stream)
-  (format stream "~A version ~A~&"
-	  (join-list (command-full-path command) " ")
-	  (command-version command))
+  (format stream "~A version ~A~&" (command-full-name command) (command-version command))
   (exit 0))
 
 (defmethod print-bash-completions ((command command) stream)

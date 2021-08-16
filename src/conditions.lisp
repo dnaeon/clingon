@@ -121,7 +121,7 @@
     :reader missing-option-argument-item))
   (:report (lambda (condition stream)
 	     (declare (ignore condition))
-             (format stream "Missing argument for option"))
+             (format stream "Missing argument for option")))
   (:documentation "A condition which is signalled when an option expects an argument, but none was provided"))
 
 (defun missing-option-argument-p (value)
