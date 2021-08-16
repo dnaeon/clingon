@@ -622,8 +622,18 @@
 	  (command-description command))
 
   (format stream "USAGE:~%")
-  (format stream "  ~A [global options] command [command-options] [arguments ...]~2%"
-	  (command-name command))
+  (cond
+    ;; The command provides it's own usage info
+    ((command-usage command)
+     (format stream "  ~A ~A~2%" (command-name command) (command-usage command)))
+    ;; The command does not provide it's own usage info and has sub-commands
+    ((command-sub-commands command)
+     (format stream "  ~A [global-options] command [command-options] [arguments ...]~2%"
+	     (command-name command)))
+    ;; Default usage info
+    (t
+     (format stream "  ~A [global options] [command-options] [arguments ...]~2%"
+	     (command-name command))))
 
   (when (command-options command)
     (format stream "OPTIONS:~%")
