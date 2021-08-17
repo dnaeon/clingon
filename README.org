@@ -933,6 +933,54 @@ option, e.g.
  :key :integers)
 #+end_src
 
+** Switch Options
+
+=:SWITCH= options are a variation of =:BOOLEAN= options with an
+associated list of known states that can turn a switch /on/ or
+/off/.
+
+Here is an example of a =:SWITCH= option.
+
+#+begin_src lisp
+(clingon:make-option
+ :switch
+ :description "my switch option"
+ :short-name #\s
+ :long-name "state"
+ :key :switch)
+#+end_src
+
+The default states for a switch to be considered as /on/ are:
+
+- /on/, /yes/, /true/, /enable/ and /1/
+
+The default states considered to turn the switch /off/ are:
+
+- /off/, /no/, /false/, /disable/ and /0/
+
+You can customize the list of /on/ and /off/ states by specifying them
+using the =:ON-STATES= and =:OFF-STATES= initargs, e.g.
+
+#+begin_src lisp
+(clingon:make-option
+ :switch
+ :description "engine switch option"
+ :short-name #\s
+ :long-name "state"
+ :on-states '("start")
+ :off-states '("stop")
+ :key :engine)
+#+end_src
+
+These sample command-line arguments will turn a switch on and off.
+
+#+begin_src shell
+my-app --engine=start --engine=stop
+#+end_src
+
+The final value of the =:engine= option will be =NIL= in the above
+example.
+
 * Generic Functions Operating on Options
 
 If the existing options provided by =clingon= are not enough for you,
