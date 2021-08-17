@@ -754,7 +754,7 @@
     (when (command-aliases sub)
       (format stream "~A~%" (join-list (command-aliases sub) #\Newline))))
 
-  (dolist (opt (command-options command))
+  (dolist (opt (visible-options command))
     (cond
       ((option-short-name opt)
        (format stream "-~A~%" (option-short-name opt)))
