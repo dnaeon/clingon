@@ -23,32 +23,30 @@
 ;; (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 ;; THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(defpackage :clingon-demo-system
-  (:use :cl :asdf))
-(in-package :clingon-demo-system)
+(in-package :clingon.demo)
 
-(defsystem "clingon.demo"
-  :name "clingon.demo"
-  :long-name "clingon.demo"
-  :description "Example demo of the Common Lisp clingon system"
-  :version "0.1.0"
-  :author "Marin Atanasov Nikolov <dnaeon@gmail.com>"
-  :maintainer "Marin Atanasov Nikolov <dnaeon@gmail.com>"
-  :license "BSD 2-Clause"
-  :homepage "https://github.com/dnaeon/clingon"
-  :bug-tracker "https://github.com/dnaeon/clingon"
-  :source-control "https://github.com/dnaeon/clingon"
-  :depends-on (:clingon)
-  :components ((:module "demo"
-		:serial t
-		:pathname #P"examples/demo/"
-		:components ((:file "package")
-			     (:file "greet")
-			     (:file "logging")
-			     (:file "math")
-			     (:file "echo")
-			     (:file "switch")
-			     (:file "main"))))
-  :build-operation "program-op"
-  :build-pathname "clingon-demo"
-  :entry-point "clingon.demo:main")
+(defun switch/options ()
+  "Returns the options for the `switch' command"
+  (list
+   (clingon:make-option :switch
+			:description "state of our engine"
+			:short-name #\s
+			:long-name "state"
+			:required t
+			:key :engine-state)))
+
+(defun switch/handler (cmd)
+  "Handler for the `switch' command"
+  (let ((state (clingon:getopt cmd :engine-state)))
+    (if state
+	(format t "Starting engine.~%")
+	(format t "Stopping engine.~%"))))
+
+(defun switch/command ()
+  "Creates a new command to switch a state"
+  (clingon:make-command
+   :name "switch"
+   :usage "-s <STATE>"
+   :description "start or stop the engine"
+   :options (switch/options)
+   :handler #'switch/handler))

@@ -40,7 +40,8 @@
    (greet/command)
    (logging/command)
    (math/command)
-   (echo/command)))
+   (echo/command)
+   (switch/command)))
 
 (defun top-level/command ()
   "Returns the top-level command"
