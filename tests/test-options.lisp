@@ -392,3 +392,41 @@
 				    :initial-value "foo")))
       (clingon:initialize-option opt)
       (ok (string= "foo" (clingon:finalize-option opt)) "finalized value matches"))))
+
+(deftest option-switch
+  (testing "test with no default value"
+    (let ((opt (clingon:make-option :switch
+				    :description "switch option"
+				    :short-name #\s
+				    :key :switch)))
+      (clingon:initialize-option opt)
+      (ok (equal :true (clingon:derive-option-value opt "on")) "derive value from \"on\"")
+      (ok (equal :true (clingon:derive-option-value opt "yes")) "derive value from \"yes\"")
+      (ok (equal :true (clingon:derive-option-value opt "enable")) "derive value from \"enable\"")
+      (ok (equal :true (clingon:derive-option-value opt "1")) "derive value from \"1\"")
+      (ok (equal :true (clingon:derive-option-value opt "true")) "derive value from \"true\"")
+      (ok (equal :false (clingon:derive-option-value opt "off")) "derive value from \"off\"")
+      (ok (equal :false (clingon:derive-option-value opt "no")) "derive value from \"no\"")
+      (ok (equal :false (clingon:derive-option-value opt "false")) "derive value from \"false\"")
+      (ok (equal :false (clingon:derive-option-value opt "disable")) "derive value from \"disable\"")
+      (ok (equal :false (clingon:derive-option-value opt "0")) "derive value from \"0\"")
+      (ok (signals (clingon:derive-option-value opt "INVALID") 'clingon:option-derive-error)
+	  "signals on invalid switch state")))
+
+  (testing "test with a default value"
+    (let ((opt (clingon:make-option :switch
+				    :description "switch with a default state"
+				    :short-name #\s
+				    :key :switch
+				    :initial-value "on")))
+      (clingon:initialize-option opt)
+      (ok (equal t (clingon:finalize-option opt)) "finalized value matches")))
+
+  (testing "test with invalid default value"
+    (let ((opt (clingon:make-option :switch
+				    :description "switch with invalid default"
+				    :short-name #\s
+				    :key :switch
+				    :initial-value "INVALID")))
+      (ok (signals (clingon:initialize-option opt) 'clingon:option-derive-error)
+	  "signals on invalid default value"))))
