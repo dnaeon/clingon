@@ -64,6 +64,7 @@
    :command-usage
    :command-args-to-parse
    :command-examples
+   :command-aliases
    :make-command
    :command-full-path
    :command-full-name
@@ -201,6 +202,11 @@
     :initform nil
     :reader command-examples
     :documentation "A list of examples describing how to use the command")
+   (aliases
+    :initarg :aliases
+    :initform nil
+    :reader command-aliases
+    :documentation "Aliases of the command")
    (usage
     :initarg :usage
     :initform nil
@@ -319,8 +325,11 @@
   (= 1 (length (command-lineage top-level))))
 
 (defmethod find-sub-command ((command command) name &key)
-  "Returns the sub-command with the given name"
-  (find name (command-sub-commands command) :key #'command-name :test #'string=))
+  "Returns the sub-command with the given name or alias"
+  (find-if (lambda (sub-command)
+	     (or (string= name (command-name sub-command))
+		 (member name (command-aliases sub-command) :test #'string=)))
+	   (command-sub-commands command)))
 
 (defmethod command-full-path ((command command))
   "Returns the full path to the command"
