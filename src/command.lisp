@@ -750,7 +750,9 @@
 (defmethod print-bash-completions ((command command) stream)
   "Prints the bash completions for the given command"
   (dolist (sub (command-sub-commands command))
-    (format stream "~A~%" (command-name sub)))
+    (format stream "~A~%" (command-name sub))
+    (when (command-aliases sub)
+      (format stream "~A~%" (join-list (command-aliases sub) #\Newline))))
 
   (dolist (opt (command-options command))
     (cond
