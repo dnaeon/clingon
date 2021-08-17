@@ -784,13 +784,12 @@
       (format stream "~A~%" (join-list (command-aliases sub) #\Newline))))
 
   (dolist (opt (visible-options command))
-    (cond
-      ((option-short-name opt)
-       (format stream "-~A~%" (option-short-name opt)))
-      ((and (option-long-name opt) (option-parameter opt))
-       (format stream "--~A=~%" (option-long-name opt)))
-      ((option-long-name opt)
-       (format stream "--~A~%" (option-long-name opt))))))
+    (when (option-short-name opt)
+      (format stream "-~A~%" (option-short-name opt)))
+    (when (and (option-long-name opt) (option-parameter opt))
+      (format stream "--~A=~%" (option-long-name opt)))
+    (when (and (not (option-parameter opt)) (option-long-name opt))
+      (format stream "--~A~%" (option-long-name opt)))))
 
 (defmethod print-bash-completions-and-exit ((command command) stream)
   "Prints the bash completions for the given command and exits"
