@@ -661,7 +661,10 @@
 (defmethod print-sub-commands-usage ((command command) stream &key (wrap-at-width 70))
   "Prints a summary of the sub-commands available for the command"
   (let* ((sub-commands (command-sub-commands command))
-	 (names (mapcar #'command-name sub-commands))
+	 (names-with-aliases (mapcar (lambda (x)
+				       (cons (command-name x) (command-aliases x)))
+				     sub-commands))
+	 (names (mapcar (lambda (x) (join-list x ", ")) names-with-aliases))
 	 (descriptions (mapcar #'command-description sub-commands))
 	 (width (+ 4 (apply #'max (mapcar #'length names)))))
     (loop :for (name desc) :in (mapcar #'list names descriptions) :do
