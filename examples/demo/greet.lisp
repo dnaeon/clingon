@@ -32,12 +32,13 @@
 			:description "Person to greet"
 			:short-name #\u
 			:long-name "user"
+			:initial-value "stranger"
 			:env-vars '("USER")
 			:key :user)))
 
 (defun greet/handler (cmd)
   "Handler for the `greet' command"
-  (let ((who (clingon:getopt cmd :user "Stranger")))
+  (let ((who (clingon:getopt cmd :user)))
     (format t "Hello, ~A!~%" who)))
 
 (defun greet/command ()

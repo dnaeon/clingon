@@ -13,7 +13,7 @@ A summary of the features supported by =clingon= is provided below.
 - Automatic generation of help/usage information for commands and
   sub-commands
 - Out of the box support for =--version= and =--help= flags
-- Support for various kinds of options like /string, /integer/,
+- Support for various kinds of options like /string/, /integer/,
   /boolean/, /switches/, /enums/, /list/, /counter/, etc.
 - Sub-commands can lookup global options and flags defined in parent
   commands
@@ -55,12 +55,13 @@ greets people.
     :description "Person to greet"
     :short-name #\u
     :long-name "user"
+    :initial-value "stranger"
     :env-vars '("USER")
     :key :user)))
 
 (defun greet/handler (cmd)
   "Handler for the `greet' command"
-  (let ((who (clingon:getopt cmd :user "stranger")))
+  (let ((who (clingon:getopt cmd :user)))
     (format t "Hello, ~A!~%" who)))
 
 (defun greet/command ()
@@ -129,8 +130,7 @@ sbcl --eval '(ql:quickload :clingon.demo)' \
 This will create a new binary located in the =clingon='s system
 directory called =clingon-demo=, which you can now execute.
 
-Optionally, you can also enable the basic shell completions support,
-which currently only support the Bash shell.
+Optionally, you can also enable the bash shell completions support.
 
 #+begin_src shell
 APP=clingon-demo source /path/to/clingon/extras/completions.bash
@@ -181,6 +181,9 @@ The code we develop as part of this section will reside in a file
 named =intro.lisp=. Anything we write will be sent to the Lisp REPL, so
 we can compile it and get quick feedback about the things we've done
 so far.
+
+You can find the complete code we'll develop in this section in the
+=clingon/examples/intro= directory.
 
 ** Start the REPL
 
@@ -250,8 +253,8 @@ notation.
 This makes things easier later on, when we introduce new sub-commands,
 and when we need to wire things up we can refer to our commands using
 the established naming convention. Of course, it's up to you to decide
-which approach to take, so free to adjust the layout of the code to
-your personal preferences. In this guide we will use the afore
+which approach to take, so feel free to adjust the layout of the code
+to your personal preferences. In this guide we will use the afore
 mentioned approach.
 
 Commands can be linked together in order to form a tree of commands
@@ -302,7 +305,7 @@ Another important thing we did is to specify a =:KEY= for our options.
 This is the key which we will later use in order to get the value
 associated with our option, when we use =CLINGON:GETOPT=.
 
-And we have also defined that our ==--user= option can be initialized
+And we have also defined that our =--user= option can be initialized
 via environment variables. We can specify multiple environment variables,
 if we need to, and the first one that resolves to something will be used
 as the initial value for the option.
@@ -336,8 +339,7 @@ command-line.
 A command may or may not specify a handler. Some commands may be used
 purely as /namespaces/ for other sub-commands, and it might make no
 sense to have a handler for such commands. In other situations you may
-still want to provide a handler for parent commands, provide usage
-information, etc.
+still want to provide a handler for the parent commands.
 
 Let's define the handler for our /top-level/ command.
 
@@ -713,7 +715,7 @@ HEY, stranger!
 WHY ARE YELLING AT ME?!
 #+end_src
 
-You can find the code we've developed in this guide in the
+You can find the full code we've developed in this guide in the
 [[https://github.com/dnaeon/clingon/tree/master/examples][clingon/examples]] directory of the repo.
 
 * Options
@@ -781,7 +783,7 @@ that, if needed.
 The following boolean option kinds are supported by =clingon=.
 
 The =:boolean= kind is an option which expects an argument, which
-represents a boolean value. The option expects an argument.
+represents a boolean value.
 
 Arguments =true= and =1= map to =T= in Lisp, anything else is
 considered a falsey value and maps to =NIL=.
@@ -849,7 +851,7 @@ With this option defined, you can now set the logging level only to
 ** Enum Options
 
 Enum options are similar to the =choice= options, but instead of
-returning the value itself they can be mapped with something else.
+returning the value itself they can be mapped to something else.
 
 For example:
 
@@ -912,7 +914,7 @@ above using the following command-line arguments:
 $ my-app --file foo --file bar --file baz
 #+end_src
 
-If you retrieve the value associated with your option, you will get a
+When you retrieve the value associated with your option, you will get a
 list of all the files specified on the command-line, e.g.
 
 #+begin_src lisp
@@ -962,9 +964,6 @@ initialization from environment variables, but implementors
 can choose to support other initialization methods, e.g.
 be able to initialize an option from a key/value store like
 /Redis/, /Consul/ or /etcd/ for example.
-
-See the section about developing new options for an example about
-implementing initialization for options from files.
 
 ** CLINGON:FINALIZE-OPTION
 
@@ -1175,7 +1174,7 @@ new values or discarding them completely, thanks to the Common Lisp
 Condition System.
 
 Last thing to do is actually package this up as an extension system
-and register it in Quicklisp. That way everyone else, can benefit from
+and register it in Quicklisp. That way everyone else can benefit from
 the newly developed option.
 
 * Shell Completions
@@ -1207,8 +1206,7 @@ avoid invoking the =clingon= app with the =--bash-completions=
 flag, which would speed things up a lot.
 
 A better approach would be to have =clingon= generate the full
-completions of each sub-command as one single completions script, in a
-single pass.
+completions of each sub-command as one single completions script.
 
 Possible approach for this would be to walk the tree of commands using
 =CLINGON:COMMAND-TREE= and/or =CLINGON:WITH-COMMAND-TREE= and then
