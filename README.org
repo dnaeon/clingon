@@ -5,7 +5,8 @@
 A summary of the features supported by =clingon= is provided below.
 
 - Native support for sub-commands
-- Short and long option names are supported
+- Support for command aliases
+- Short and long option names support
 - Short options may be collapsed as a single argument, e.g. =-xyz=
 - Long options support both notations - =--long-opt arg= and
   =--long-opt=arg=.
@@ -95,6 +96,9 @@ that will be invoked when users run our command-line app.
 This way of organizing command, options and handlers makes it easy to
 re-use common options, or even handlers, and wire up any sub-commands
 anyway you prefer.
+
+You can find additional examples included in the test suite for
+=clingon=.
 
 * Demo
 
