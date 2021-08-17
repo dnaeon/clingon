@@ -14,9 +14,14 @@
                         :description "option b"
                         :key :b)
    (clingon:make-option :boolean/true
-		       :long-name "lonely-long-option"
-		       :description "no short option defined here"
-		       :key :x)))
+			:long-name "lonely-long-option"
+			:description "no short option defined here"
+			:key :x)
+   (clingon:make-option :boolean/true
+			:hidden t
+			:long-name "hidden-option"
+			:description "a hidden option"
+			:key :hidden-flag)))
 
 (defun foo/command ()
   "A sample command with options"
@@ -202,6 +207,13 @@
       (setf result (nreverse result))
       (ok (equal '("top-level" "c1" "c2" "c3") (mapcar #'clingon:command-name result))
           "walked nodes match"))))
+
+(deftest hidden-options
+  (testing "test for hidden options"
+    (let* ((c (foo/command))
+	   (visible-opts (clingon:visible-options c)))
+      (ok (equal nil (find "hidden-option" visible-opts :key #'clingon:option-long-name :test #'string=))
+	  "hidden option is not present"))))
 
 (deftest parse-options
   (testing "consume all arguments"
