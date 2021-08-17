@@ -29,6 +29,7 @@
    :option-description
    :option-required-p
    :option-is-set-p
+   :option-hidden-p
    :option-key
    :option-value
    :option-parameter
@@ -83,7 +84,8 @@
    :print-usage-and-exit
    :print-version-and-exit
    :print-bash-completions
-   :print-bash-completions-and-exit))
+   :print-bash-completions-and-exit
+   :visible-options))
 (in-package :clingon.command)
 
 (defgeneric find-option (kind object name &key)
@@ -767,3 +769,7 @@
   "Prints the bash completions for the given command and exits"
   (print-bash-completions command stream)
   (exit 0))
+
+(defmethod visible-options ((command command))
+  "Returns the list of visible options for the given command"
+  (remove-if #'option-hidden-p (command-options command)))
