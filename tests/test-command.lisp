@@ -79,7 +79,7 @@
     (let ((c (clingon:make-command :name "foo"
                                    :description "command with duplicate options"
                                    :options (make-duplicate-options))))
-      (ok (signals (clingon:ensure-unique-options c) 'clingon:duplicate-options)
+      (ok (signals (clingon:validate-top-level-command c) 'clingon:duplicate-options)
           "signals on duplicate options"))))
 
 (deftest ensure-unique-sub-commands
@@ -89,8 +89,17 @@
            (top-level (clingon:make-command :name "top-level"
                                             :description "top-level command"
                                             :sub-commands (list foo bar))))
-      (ok (signals (clingon:ensure-unique-sub-commands top-level) 'clingon:duplicate-commands)
-          "signals on duplicate sub-commands"))))
+      (ok (signals (clingon:validate-top-level-command top-level) 'clingon:duplicate-commands)
+          "signals on duplicate sub-commands")))
+
+  (testing "ensure no duplicate sub commands with aliases"
+    (let* ((foo (clingon:make-command :name "foo" :description "foo command" :aliases '("foo-1")))
+	   (bar (clingon:make-command :name "bar" :description "bar command" :aliases '("bar-1" "foo-1"))) ;; <- duplicate alias
+           (top-level (clingon:make-command :name "top-level"
+                                            :description "top-level command"
+                                            :sub-commands (list foo bar))))
+      (ok (signals (clingon:validate-top-level-command top-level) 'clingon:duplicate-commands)
+          "signals on duplicate sub-commands aliases"))))
 
 (deftest command-relationships
   (testing "verify command lineage"
