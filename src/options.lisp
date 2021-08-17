@@ -73,7 +73,10 @@
    :option-choice
    :option-choice-items
    :option-enum
-   :option-enum-items))
+   :option-enum-items
+   :option-switch
+   :option-switch-on-states
+   :option-switch-off-states))
 (in-package :clingon.options)
 
 (defgeneric initialize-option (option &key)
@@ -545,3 +548,39 @@
       (error 'option-derive-error
              :reason (format nil "Invalid choice: must be one of ~A" (mapcar #'car items))))
     (cdr pair)))
+
+(defclass option-switch (option-boolean)
+  ((on-states
+    :initarg :on-states
+    :initform '("on" "yes" "true" "enable" "1")
+    :reader option-switch-on-states
+    :documentation "The list of states considered to `activate' the switch")
+   (off-states
+    :initarg :off-states
+    :initform '("off" "no" "false" "disable" "0")
+    :reader option-switch-off-states
+    :documentation "The list of states considered to `deactivate' the switch"))
+  (:default-initargs
+   :parameter "STATE")
+  (:documentation "An option which represents a switch with a state"))
+
+(defmethod initialize-option ((option option-switch) &key)
+  "Initializes the switch option kind"
+  (call-next-method)
+  (unless (option-value option)
+    (return-from initialize-option))
+
+  ;; Derive a new value if we have an initial value
+  (let ((current (option-value option)))
+    (setf (option-value option)
+          (derive-option-value option current))))
+
+(defmethod derive-option-value ((option option-switch) arg &key)
+  (cond
+    ((member arg (option-switch-on-states option) :test #'string=) :true)
+    ((member arg (option-switch-off-states option) :test #'string=) :false)
+    (t
+     (error 'option-derive-error :reason (format nil "Invalid switch state: ~A" arg)))))
+
+(defmethod make-option ((kind (eql :switch)) &rest rest)
+  (apply #'make-instance 'option-switch rest))
