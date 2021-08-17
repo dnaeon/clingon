@@ -76,10 +76,9 @@
    :parse-command-line
    :getopt
    :opt-is-set-p
-   :ensure-unique-options
-   :ensure-unique-sub-commands
    :treat-as-argument
    :discard-option
+   :validate-top-level-command
    :print-usage
    :print-usage-and-exit
    :print-version-and-exit
@@ -283,32 +282,35 @@
 (defmethod ensure-unique-options ((command command))
   "Ensures that the given COMMAND does not contain duplicate options"
   (loop :for (option . remaining) :on (command-options command) :while option :do
-    (let* ((short-name (option-short-name option))
-           (long-name (option-long-name option))
-           (short-items (and short-name (remove-if-not
-                                         (lambda (x)
-                                           (char= short-name (option-short-name x)))
-                                         remaining)))
-           (long-items (and long-name (remove-if-not
-                                       (lambda (x)
-                                         (string= long-name (option-long-name x)))
-                                       remaining))))
-      (when (> (length short-items) 0)
-        (error 'duplicate-options :kind :short :name short-name :items (cons option short-items)))
-      (when (> (length long-items) 0)
-        (error 'duplicate-options :kind :long :name long-name :items (cons option long-items)))))
+    (let* ((s-name (option-short-name option))
+           (l-name (option-long-name option))
+           (s-duplicates (and s-name (remove-if-not
+				      (lambda (x)
+					(char= s-name (option-short-name x)))
+				      remaining)))
+           (l-duplicates (and l-name (remove-if-not
+				      (lambda (x)
+					(string= l-name (option-long-name x)))
+				      remaining))))
+      (when (> (length s-duplicates) 0)
+        (error 'duplicate-options :kind :short :name s-name :items (cons option s-duplicates)))
+      (when (> (length l-duplicates) 0)
+        (error 'duplicate-options :kind :long :name l-name :items (cons option l-duplicates)))))
   t)
 
 (defmethod ensure-unique-sub-commands ((command command))
-  "Ensure that the given COMMAND does not contain duplicate sub-commands"
+  "Ensure that the given COMMAND does not contain duplicate sub-command names"
   (loop :for (sub-command . remaining) :on (command-sub-commands command) :while sub-command :do
-    (let* ((sub-command-name (command-name sub-command))
-           (sub-command-items (remove-if-not
-                               (lambda (item)
-                                 (string= sub-command-name (command-name item)))
-                               remaining)))
-      (when (> (length sub-command-items) 0)
-        (error 'duplicate-commands :items (cons sub-command sub-command-items)))))
+    (let* ((sub-names (cons (command-name sub-command)
+			    (command-aliases sub-command)))
+           (duplicates (remove-if-not
+			(lambda (other)
+			  (let ((other-names (cons (command-name other)
+						   (command-aliases other))))
+			    (intersection sub-names other-names :test #'string=)))
+			remaining)))
+      (when (> (length duplicates) 0)
+        (error 'duplicate-commands :items (cons sub-command duplicates)))))
   t)
 
 (defmethod command-lineage ((command command))

@@ -93,8 +93,13 @@
     :initform (error "Must specify duplicate items")
     :reader duplicate-command-items))
   (:report (lambda (condition stream)
-             (format stream "There are ~A duplicate commands found"
-		     (length (duplicate-command-items conditions)))))
+	     (let ((items (duplicate-command-items condition)))
+	       (format stream
+		       "Detected ~A duplicate command names/aliases.~2%~
+                       The following commands have been identified as ~
+                       providing duplicate names/aliases.~2%~
+                       ~A~%"
+		       (length items) items))))
    (:documentation "A condition which is signalled when a command provides duplicate sub-commands"))
 
 (define-condition unknown-option (error)
