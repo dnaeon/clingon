@@ -119,6 +119,7 @@
 
 (defparameter *default-bash-completions-flag*
   (make-option :flag
+	       :hidden t
 	       :description "generate bash completions"
 	       :long-name "bash-completions"
 	       :key :clingon.bash-completions.flag)
