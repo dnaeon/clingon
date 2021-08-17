@@ -769,7 +769,11 @@
   (exit 64)) ;; EX_USAGE
 
 (defmethod print-version-and-exit ((command command) stream)
-  (format stream "~A version ~A~&" (command-full-name command) (command-version command))
+  (when (command-version command)
+    (format stream
+	    "~A version ~A~&"
+	    (command-full-name command)
+	    (command-version command)))
   (exit 0))
 
 (defmethod print-bash-completions ((command command) stream)
