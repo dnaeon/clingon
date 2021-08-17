@@ -645,12 +645,9 @@
 
 (defmethod print-options-usage ((command command) stream &key (wrap-at-width 70))
   "Prints the usage information about the options for the given command"
-  (setf (command-options command)
-	(sort (command-options command)
-	      #'string<
-	      :key (lambda (x)
-		     (option-description-details :default x))))
-  (let* ((opts (command-options command))
+  (let* ((opts (sort (copy-list (visible-options command))
+		     #'string<
+		     :key (lambda (x) (option-description-details :default x))))
 	 (usages (mapcar (lambda (o) (option-usage-details :default o)) opts))
 	 (width (+ 4 (apply #'max (mapcar #'length usages)))))
     (loop :for (opt usage) :in (mapcar #'list opts usages) :do
