@@ -19,6 +19,7 @@
   "Creates a new command to perform basic math on integers"
   (clingon:make-command
    :name "greet"
+   :aliases '("hi" "hey")
    :description "greets people"
    :version "0.1.0"
    :options (greet/options)

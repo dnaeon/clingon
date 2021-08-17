@@ -51,6 +51,7 @@
   "Creates a new command to configure logging"
   (clingon:make-command
    :name "logging"
+   :aliases '("log")
    :usage "[-l <LEVEL>]"
    :description "configure the logging system"
    :options (logging/options)
