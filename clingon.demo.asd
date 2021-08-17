@@ -16,14 +16,13 @@
   :depends-on (:clingon)
   :components ((:module "demo"
 		:serial t
-		:pathname #P"demo/"
+		:pathname #P"examples/demo/"
 		:components ((:file "package")
 			     (:file "greet")
 			     (:file "logging")
 			     (:file "math")
 			     (:file "echo")
 			     (:file "main"))))
-
   :build-operation "program-op"
   :build-pathname "clingon-demo"
   :entry-point "clingon.demo:main")
