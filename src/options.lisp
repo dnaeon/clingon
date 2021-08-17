@@ -23,6 +23,7 @@
    :option-category
    :option-value
    :option-is-set-p
+   :option-hidden-p
    :initialize-option
    :finalize-option
    :derive-option-value
@@ -142,6 +143,11 @@
     :initform nil
     :accessor option-is-set-p
     :documentation "Predicate which returns T if the option was set")
+   (hidden
+    :initarg :hidden
+    :initform nil
+    :reader option-hidden-p
+    :documentation "Whether or not this option will be hidden on the usage pages")
    (value
     :initarg :value
     :initform nil
