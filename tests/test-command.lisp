@@ -152,16 +152,26 @@
 
   (testing "find sub-commands"
     (let* ((foo (clingon:make-command :name "foo"
+				      :aliases '("foo-1" "foo-2")
                                       :description "foo command"))
            (bar (clingon:make-command :name "bar"
+				      :aliases '("bar-1" "bar-2")
                                       :description "bar command"))
            (top-level (clingon:make-command :name "top-level"
                                             :description "top-level command"
                                             :sub-commands (list foo bar))))
       (ok (equal foo (clingon:find-sub-command top-level "foo"))
           "find existing command \"foo\"")
+      (ok (equal foo (clingon:find-sub-command top-level "foo-1"))
+          "find foo-1 alias")
+      (ok (equal foo (clingon:find-sub-command top-level "foo-2"))
+          "find foo-2 alias")
       (ok (equal bar (clingon:find-sub-command top-level "bar"))
           "find existing command \"bar\"")
+      (ok (equal bar (clingon:find-sub-command top-level "bar-1"))
+	  "find bar-1 alias")
+      (ok (equal bar (clingon:find-sub-command top-level "bar-2"))
+	  "find bar-2 alias")
       (ok (equal nil (clingon:find-sub-command top-level "INVALID"))
           "returns nil on missing command")))
 
