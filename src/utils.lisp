@@ -29,7 +29,8 @@
   (:export
    :walk
    :join-list
-   :exit))
+   :exit
+   :git-rev-parse))
 (in-package :clingon.utils)
 
 (defun walk (root neighbors-func &key (order :dfs))
@@ -71,3 +72,10 @@
 (defun exit (&optional (code 0))
   "Exit the program returning the given status code"
   (uiop:quit code))
+
+(defun git-rev-parse (&key short (rev "HEAD") (path "."))
+  "Returns the git revision with the given REV"
+  (let ((args (if short
+		  (list "git" "-C" path "rev-parse" "--short" rev)
+		  (list "git" "-C" path "rev-parse" rev))))
+    (uiop:run-program args :output '(:string :stripped t))))
