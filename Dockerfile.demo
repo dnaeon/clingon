@@ -12,6 +12,7 @@ RUN /usr/local/bin/install-quicklisp && \
 
 FROM debian:bullseye-slim
 WORKDIR /app
+RUN apt-get update && apt-get install -y bash-completion
 COPY --from=builder /root/quicklisp/local-projects/clingon/clingon-demo .
 COPY --from=builder /root/quicklisp/local-projects/clingon/extras/completions.bash .
 ENTRYPOINT ["./clingon-demo"]
