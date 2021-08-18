@@ -1,0 +1,7 @@
+FROM clfoundation/sbcl:2.1.7
+
+ENV QUICKLISP_ADD_TO_INIT_FILE=true
+WORKDIR /root/quicklisp/local-projects/clingon
+COPY . .
+RUN /usr/local/bin/install-quicklisp
+ENTRYPOINT ["./run-tests.sh"]
