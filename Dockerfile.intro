@@ -1,0 +1,17 @@
+FROM clfoundation/sbcl:2.1.7 as builder
+
+ENV QUICKLISP_ADD_TO_INIT_FILE=true
+
+WORKDIR /root/quicklisp/local-projects/clingon
+COPY . .
+RUN /usr/local/bin/install-quicklisp && \
+    sbcl \
+      --eval '(ql:quickload :clingon.intro)' \
+      --eval '(asdf:make :clingon.intro)' \
+      --eval '(quit)'
+
+FROM debian:bullseye-slim
+WORKDIR /app
+COPY --from=builder /root/quicklisp/local-projects/clingon/clingon-intro .
+COPY --from=builder /root/quicklisp/local-projects/clingon/extras/completions.bash .
+ENTRYPOINT ["./clingon-intro"]

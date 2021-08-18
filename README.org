@@ -1285,11 +1285,29 @@ CL-USER> (ql:quickload :clingon.test)
 CL-USER> (asdf:test-system :clingon.test)
 #+end_src
 
-You can also run the tests in a Docker container instead.
+* Docker Images
+
+A few Docker images are available.
+
+Build and run the tests in a container.
 
 #+begin_src shell
-docker build -t clingon:latest .
-docker run --rm clingon:latest
+docker build -t clingon.test:latest -f Dockerfile.tests .
+docker run --rm clingon.test:latest
+#+end_src
+
+Build and run the =clingon-intro= application.
+
+#+begin_src shell
+docker build -t clingon.intro:latest -f Dockerfile.intro .
+docker run --rm clingon.intro:latest
+#+end_src
+
+Build and run the =clingon.demo= application.
+
+#+begin_src lisp
+docker build -t clingon.demo:latest -f Dockerfile.demo
+docker run --rm clingon.demo:latest
 #+end_src
 
 * Contributing
