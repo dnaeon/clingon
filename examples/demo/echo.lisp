@@ -36,4 +36,5 @@
    :name "echo"
    :usage "[ARGUMENT ...]"
    :description "echoes back each argument on a newline"
-   :handler #'echo/handler))
+   :handler #'echo/handler
+   :examples '(("Echo back each argument on a new line:" . "clingon-demo echo foo bar baz"))))

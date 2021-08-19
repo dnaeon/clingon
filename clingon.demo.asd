@@ -47,7 +47,7 @@
 			     (:file "logging")
 			     (:file "math")
 			     (:file "echo")
-			     (:file "switch")
+			     (:file "engine")
 			     (:file "main"))))
   :build-operation "program-op"
   :build-pathname "clingon-demo"

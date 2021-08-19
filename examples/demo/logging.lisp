@@ -28,7 +28,6 @@
 (defun logging/enable/command ()
   "Returns the `logging enable' command"
   (clingon:make-command :name "enable"
-			:usage ""
 			:description "enables logging"
 			:handler (lambda (cmd)
 				   (declare (ignore cmd))
@@ -81,4 +80,7 @@
    :description "configure the logging system"
    :options (logging/options)
    :sub-commands (logging/sub-commands)
-   :handler #'logging/handler))
+   :handler #'logging/handler
+   :examples '(("Configure logging level:" . "clingon-demo -vvv logging --level=debug")
+	       ("Enable logging:" . "clingon-demo logging enable")
+	       ("Disable logging:" . "clingon-demo logging disable"))))

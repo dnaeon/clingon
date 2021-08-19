@@ -41,7 +41,7 @@
    (logging/command)
    (math/command)
    (echo/command)
-   (switch/command)))
+   (engine/command)))
 
 (defun top-level/command ()
   "Returns the top-level command"
@@ -55,14 +55,7 @@
                         :authors '("Marin Atanasov Nikolov <dnaeon@gmail.com>")
                         :license "BSD 2-Clause"
                         :options (top-level/options)
-                        :sub-commands (top-level/sub-commands)
-                        :examples '(("Echo back each argument on a newline:" . "clingon-demo echo foo bar baz")
-                                    ("Sum some numbers:" . "clingon-demo math -o add -i 1 -i 42 -i 84")
-                                    ("Multiply some numbers:" . "clingon-demo math -o mul -i 2 -i 3 -i 4")
-                                    ("Configure logging level:" . "clingon-demo -vvv logging --level=debug")
-                                    ("Enable logging:" . "clingon-demo logging enable")
-                                    ("Disable logging:" . "clingon-demo logging disable")
-                                    ("Greet someone:" . "clingon-demo greet --user Lisper"))))
+                        :sub-commands (top-level/sub-commands)))
 
 (defun main ()
   "The main entrypoint of our demo app"

@@ -25,8 +25,8 @@
 
 (in-package :clingon.demo)
 
-(defun switch/options ()
-  "Returns the options for the `switch' command"
+(defun engine/options ()
+  "Returns the options for the `engine' command"
   (list
    (clingon:make-option :switch
 			:description "state of our engine"
@@ -35,18 +35,20 @@
 			:required t
 			:key :engine-state)))
 
-(defun switch/handler (cmd)
-  "Handler for the `switch' command"
+(defun engine/handler (cmd)
+  "Handler for the `engine' command"
   (let ((state (clingon:getopt cmd :engine-state)))
     (if state
 	(format t "Starting engine.~%")
 	(format t "Stopping engine.~%"))))
 
-(defun switch/command ()
-  "Creates a new command to switch a state"
+(defun engine/command ()
+  "Creates a new command to switch the state of our engine"
   (clingon:make-command
-   :name "switch"
+   :name "engine"
    :usage "-s <STATE>"
-   :description "start or stop the engine"
-   :options (switch/options)
-   :handler #'switch/handler))
+   :description "start or stop an imaginary engine"
+   :options (engine/options)
+   :handler #'engine/handler
+   :examples '(("Start engine:" . "clingon-demo engine --state=on")
+	       ("Stop engine:" . "clingon-demo engine --state=off"))))

@@ -49,4 +49,5 @@
    :description "greets people"
    :version "0.1.0"
    :options (greet/options)
-   :handler #'greet/handler))
+   :handler #'greet/handler
+   :examples '(("Greet someone:" . "clingon-demo greet --user Lisper"))))

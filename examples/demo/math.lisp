@@ -58,4 +58,6 @@
    :usage "-o <OPERATION> -i <INT> ..."
    :description "perform basic math on integers"
    :options (math/options)
-   :handler #'math/handler))
+   :handler #'math/handler
+   :examples '(("Sum some numbers:" . "clingon-demo math -o add -i 1 -i 42 -i 84")
+	       ("Multiply some numbers:" . "clingon-demo math -o mul -i 2 -i 3 -i 4"))))
