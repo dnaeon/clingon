@@ -41,7 +41,8 @@
    (logging/command)
    (math/command)
    (echo/command)
-   (engine/command)))
+   (engine/command)
+   (print-doc/command)))
 
 (defun top-level/command ()
   "Returns the top-level command"
