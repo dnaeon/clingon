@@ -764,6 +764,9 @@ Make sure to also check the =clingon-demo= app, which provides a
 =print-doc= sub-command, which operates on the /top-level/ command and
 generates the documentation for all sub-commands.
 
+You can also find the generated documentation for the =clingon-demo=
+app in the =docs/= directory of the =clingon= repo.
+
 * Options
 
 The =clingon= system supports various kinds of options, each of which
