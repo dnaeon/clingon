@@ -683,8 +683,8 @@
 (defmethod print-options-usage ((command command) stream &key (wrap-at-width 70))
   "Prints the usage information about the options for the given command"
   (let* ((opts (sort (copy-list (visible-options command))
-                     #'string<
-                     :key (lambda (x) (option-description-details :default x))))
+		     #'string<
+		     :key (lambda (x) (option-usage-details :default x))))
          (usages (mapcar (lambda (o) (option-usage-details :default o)) opts))
          (width (+ 4 (apply #'max (mapcar #'length usages)))))
     (loop :for (opt usage) :in (mapcar #'list opts usages) :do
@@ -715,21 +715,31 @@
 
 (defmethod command-usage-string ((command command))
   "Returns the usage string for the given command"
-  (cond
-    ;; The command provides it's own usage info
-    ((command-usage command)
-     (format nil "~A ~A" (command-full-name command) (command-usage command)))
-    ;; The command does not provide it's own usage info and has sub-commands
-    ((command-sub-commands command)
-     (format nil "~A [global-options] command [command-options] [arguments ...]"
-             (command-full-name command)))
-    ;; The command is a sub-command of another command
-    ((command-parent command)
-     (format nil "~A [global options] [command-options] [arguments ...]"
-             (command-full-name command)))
-    ;; Default usage info
-    (t
-     (format nil "~A [options] [arguments ...]" (command-full-name command)))))
+  (let ((prev-cmd-name (join-list
+			(reverse (rest (mapcar #'command-name (command-lineage command))))
+			" ")))
+    (cond
+      ;; The command provides it's own usage info
+      ((command-usage command)
+       (format nil "~A ~A" (command-full-name command) (command-usage command)))
+      ;; The command provides sub-commands and has a parent
+      ((and (command-sub-commands command) (command-parent command))
+       (format nil "~A [global-options] ~A [<command>] [command-options] [arguments ...]"
+	       prev-cmd-name
+	       (command-name command)))
+      ;; The command provides sub-commands and is a top-level command
+      ((and (command-sub-commands command) (command-is-top-level-p command))
+       (format nil "~A [global-options] [<command>] [command-options] [arguments ...]"
+	       (command-full-name command)))
+      ;; The command is a sub-command of another command
+      ((command-parent command)
+       (format nil "~A [global-options] ~A [options] [arguments ...]"
+	       ;; Print the path leading up to the command itself
+	       prev-cmd-name
+	       (command-name command)))
+      ;; Default usage info
+      (t
+       (format nil "~A [options] [arguments ...]" (command-full-name command))))))
 
 (defmethod print-usage ((command command) stream &key (wrap-at 70))
   (format stream "NAME:~%")

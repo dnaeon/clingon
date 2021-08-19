@@ -36,7 +36,6 @@
 (defun logging/disable/command ()
   "Returns the `logging disable' command"
   (clingon:make-command :name "disable"
-			:usage ""
 			:description "disables logging"
 			:handler (lambda (cmd)
 				   (declare (ignore cmd))
@@ -76,7 +75,6 @@
   (clingon:make-command
    :name "logging"
    :aliases '("log")
-   :usage "[-l <LEVEL>]"
    :description "configure the logging system"
    :options (logging/options)
    :sub-commands (logging/sub-commands)
