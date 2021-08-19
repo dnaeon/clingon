@@ -20,6 +20,7 @@ A summary of the features supported by =clingon= is provided below.
 - Support for options, which may be required
 - Options can be initialized via environment variables
 - Single interface for creating options using =CLINGON:MAKE-OPTION=
+- Generate documentation for your command-line app
 - Basic support for shell completions
 - =clingon= is extensible, so if you don't find something you need you
   can extend it by developing a new option kind, or even new mechanism
@@ -575,8 +576,6 @@ meant to be used within the REPL, and not called directly by handlers.
 
 ** Adding a sub-command
 
-Before we wrap up, let's add one sub-command to our application.
-
 Sub-commands are no different than regular commands, and in fact are
 created exactly the way we did it for our /top-level/ command.
 
@@ -717,6 +716,53 @@ WHY ARE YELLING AT ME?!
 
 You can find the full code we've developed in this guide in the
 [[https://github.com/dnaeon/clingon/tree/master/examples][clingon/examples]] directory of the repo.
+
+* Exiting
+
+When a command needs to exit with a given status code you can use the
+=CLINGON:EXIT= function.
+
+* Generating Documentation
+
+=clingon= can generate documentation for your application by using the
+=CLINGON:PRINT-DOCUMENTATION= generic function.
+
+Currently the documentation generator supports only the /Markdown/
+format, but other formats can be developed as separate extensions to
+=clingon=.
+
+Here's how you can generate the Markdown documentation for the
+=clingon-demo= application from the REPL.
+
+#+begin_src lisp
+CL-USER> (ql:quickload :clingon.demo)
+CL-USER> (in-package :clingon.demo)
+DEMO> (with-open-file (out #P"clingon-demo.md" :direction :output)
+        (clingon:print-documentation :markdown (top-level/command) out))
+#+end_src
+
+You can also create a simple command, which can be added to your
+=clingon= apps and have it generate the documentation for you, e.g.
+
+#+begin_src lisp
+(defun print-doc/command ()
+  "Returns a command which will print the app's documentation"
+  (clingon:make-command
+   :name "print-doc"
+   :description "print the documentation"
+   :usage ""
+   :handler (lambda (cmd)
+	      ;; Print the documentation starting from the parent
+	      ;; command, so we can traverse all sub-commands in the
+	      ;; tree.
+	      (clingon:print-documentation :markdown (clingon:command-parent cmd) t))))
+#+end_src
+
+Above command can be wired up anywhere in your application.
+
+Make sure to also check the =clingon-demo= app, which provides a
+=print-doc= sub-command, which operates on the /top-level/ command and
+generates the documentation for all sub-commands.
 
 * Options
 
@@ -1246,6 +1292,8 @@ for the sub-commands and the available flags.
 
 * Ideas For Future Improvements
 
+** Improve Shell Completions Support
+
 While the current bash completions work, there's plenty of room for
 improvement there.
 
@@ -1270,9 +1318,13 @@ Some pseudo-code of how this would look like.
   ...)
 #+end_src
 
-A similar approach can be taken for documentation generating, e.g.
-we can have =clingon= extensions, which generate documentation in
-/Markdown/, /man/, /HTML/ or some other format.
+** Additional Documentation Generators
+
+As of now =clingon= supports generating documentation only in /Markdown/
+format.
+
+Would be nice to have additional documentation generators, e.g.
+/man pages/, /HTML/, etc.
 
 * Tests
 
