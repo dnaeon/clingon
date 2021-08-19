@@ -10,6 +10,9 @@ demo:
 		--eval '(asdf:make :clingon.demo)' \
                 --eval '(quit)'
 
+demo-doc: demo
+	./clingon-demo print-doc > docs/clingon-demo.md
+
 test:
 	${LISP} --eval '(ql:quickload :clingon.test)' \
 		--eval '(setf rove:*enable-colors* nil)' \
