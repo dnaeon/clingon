@@ -110,6 +110,7 @@
    :print-version-and-exit
    :print-bash-completions
    :print-bash-completions-and-exit
+   :print-documentation
    :visible-options))
 (in-package :clingon.command)
 
@@ -127,6 +128,9 @@
 
 (defgeneric print-usage (command stream &key)
   (:documentation "Prints the usage information of the command"))
+
+(defgeneric print-documentation (kind command stream &key)
+  (:documentation "Prints the documentation of the given top-level command"))
 
 (defparameter *default-help-flag*
   (make-option :flag
