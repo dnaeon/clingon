@@ -1340,6 +1340,12 @@ CL-USER> (ql:quickload :clingon.test)
 CL-USER> (asdf:test-system :clingon.test)
 #+end_src
 
+Or you can run the tests using the =run-tests.sh= script instead, e.g.
+
+#+begin_src shell
+LISP=sbcl ./run-tests.sh
+#+end_src
+
 * Docker Images
 
 A few Docker images are available.
