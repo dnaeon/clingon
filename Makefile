@@ -19,4 +19,4 @@ test:
 		--eval '(asdf:test-system :clingon.test)' \
                 --eval '(quit)'
 
-.PHONY: intro demo test
+.PHONY: intro demo demo-doc test
