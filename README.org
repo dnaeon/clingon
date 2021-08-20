@@ -21,7 +21,7 @@ A summary of the features supported by =clingon= is provided below.
 - Options can be initialized via environment variables
 - Single interface for creating options using =CLINGON:MAKE-OPTION=
 - Generate documentation for your command-line app
-- Basic support for shell completions
+- Support for shell completions
 - =clingon= is extensible, so if you don't find something you need you
   can extend it by developing a new option kind, or even new mechanism
   for initializing options, e.g. by looking up an external key/value
@@ -1282,7 +1282,7 @@ the newly developed option.
 
 * Shell Completions
 
-=clingon= provides basic support for shell completions. Currently only
+=clingon= provides support for shell completions. Currently only
 Bash completions are supported.
 
 In order to enable the Bash completions for your =clingon= app,
@@ -1334,6 +1334,131 @@ format.
 
 Would be nice to have additional documentation generators, e.g.
 /man pages/, /HTML/, etc.
+
+** Performance Notes
+
+=clingon= has been developed and tested on a GNU/Linux system using
+SBCL.
+
+Performance of the resulting binaries with SBCL seem to be good,
+although I have noticed better performance when the binaries have been
+produced with Clozure CL. And by better I mean better in terms of
+binary size and speed (startup + run time).
+
+Although you can enable compression on the image when using SBCL you
+have to pay the extra price for the startup time.
+
+Here are some additional details. Build the =clingon-demo= app with
+SBCL.
+
+#+begin_src shell
+$ LISP=sbcl make demo
+sbcl --eval '(ql:quickload :clingon.demo)' \
+        --eval '(asdf:make :clingon.demo)' \
+                --eval '(quit)'
+This is SBCL 2.1.7, an implementation of ANSI Common Lisp.
+More information about SBCL is available at <http://www.sbcl.org/>.
+
+SBCL is free software, provided as is, with absolutely no warranty.
+It is mostly in the public domain; some portions are provided under
+BSD-style licenses.  See the CREDITS and COPYING files in the
+distribution for more information.
+To load "clingon.demo":
+  Load 1 ASDF system:
+    clingon.demo
+; Loading "clingon.demo"
+[package clingon.utils]...........................
+[package clingon.conditions]......................
+[package clingon.options].........................
+[package clingon.command].........................
+[package clingon].................................
+[package clingon.demo]
+[undoing binding stack and other enclosing state... done]
+[performing final GC... done]
+[defragmenting immobile space... (fin,inst,fdefn,code,sym)=1118+969+19070+19610+26536... done]
+[saving current Lisp image into /home/dnaeon/Projects/lisp/clingon/clingon-demo:
+writing 0 bytes from the read-only space at 0x50000000
+writing 736 bytes from the static space at 0x50100000
+writing 31391744 bytes from the dynamic space at 0x1000000000
+writing 2072576 bytes from the immobile space at 0x50200000
+writing 12341248 bytes from the immobile space at 0x52a00000
+done]
+#+end_src
+
+Now, build it using Clozure CL.
+
+#+begin_src shell
+$ LISP=ccl make demo
+ccl --eval '(ql:quickload :clingon.demo)' \
+        --eval '(asdf:make :clingon.demo)' \
+                --eval '(quit)'
+To load "clingon.demo":
+  Load 1 ASDF system:
+    clingon.demo
+; Loading "clingon.demo"
+[package clingon.utils]...........................
+[package clingon.conditions]......................
+[package clingon.options].........................
+[package clingon.command].........................
+[package clingon].................................
+[package clingon.demo].
+#+end_src
+
+In terms of file size the binaries produced by Clozure CL are smaller.
+
+#+begin_src shell
+$ ls -lh clingon-demo*
+-rwxr-xr-x 1 dnaeon dnaeon 33M Aug 20 12:56 clingon-demo.ccl
+-rwxr-xr-x 1 dnaeon dnaeon 45M Aug 20 12:55 clingon-demo.sbcl
+#+end_src
+
+Generating the Markdown documentation for the demo app when using the
+SBCL executable looks like this.
+
+#+begin_src shell
+$ time ./clingon-demo.sbcl print-doc > /dev/null
+
+real    0m0.098s
+user    0m0.071s
+sys     0m0.027s
+#+end_src
+
+And when doing the same thing with the executable produced by Clozure
+CL we see these results.
+
+#+begin_src shell
+$ time ./clingon-demo.ccl print-doc > /dev/null
+
+real    0m0.017s
+user    0m0.010s
+sys     0m0.007s
+#+end_src
+
+Now, this may not seem like a big issue, but it does have a big
+difference when using the bash completions, as faster execution times
+result in faster shell completions.
+
+#+begin_src shell
+$ time ./clingon-demo.sbcl --bash-completions > /dev/null
+
+real    0m0.088s
+user    0m0.068s
+sys     0m0.020s
+#+end_src
+
+When generating the shell completions using the Clozure CL executable
+we see these results instead.
+
+#+begin_src shell
+$ time ./clingon-demo.ccl --bash-completions > /dev/null
+
+real    0m0.013s
+user    0m0.012s
+sys     0m0.001s
+#+end_src
+
+The performance difference here, provides much better user experience
+when using the shell completions with a binary produced by Clozure CL.
 
 * Tests
 
