@@ -1477,6 +1477,16 @@ Or you can run the tests using the =run-tests.sh= script instead, e.g.
 LISP=sbcl ./run-tests.sh
 #+end_src
 
+Here's how to run the tests against SBCL, CCL, ECL and ABCL for
+example.
+
+#+begin_src shell
+for lisp in sbcl ccl ecl abcl; do
+    echo "Running tests using ${lisp} ..."
+    LISP=${lisp} ./run-tests.sh > ${lisp}-tests.out
+done
+#+end_src
+
 * Docker Images
 
 A few Docker images are available.
