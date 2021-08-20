@@ -27,6 +27,9 @@ A summary of the features supported by =clingon= is provided below.
   for initializing options, e.g. by looking up an external key/value
   store.
 
+Scroll to the demo section in order to see some examples of =clingon=
+in action.
+
 Other Common Lisp option parser systems, which you might consider
 checking out.
 
@@ -66,7 +69,7 @@ greets people.
     (format t "Hello, ~A!~%" who)))
 
 (defun greet/command ()
-  "Creates a new command to perform basic math on integers"
+  "A command to greet someone"
   (clingon:make-command
    :name "greet"
    :description "greets people"
@@ -107,6 +110,8 @@ You can find additional examples included in the test suite for
 You can also build and run the =clingon= demo application, which
 includes the =greet= command introduced in the previous section, along
 with other examples.
+
+[[./clingon-demo.gif]]
 
 Clone the [[https://github.com/dnaeon/clingon][clingon]] repo in your [[https://www.quicklisp.org/beta/faq.html][Quicklisp local-projects]] directory.
 
@@ -544,7 +549,7 @@ precedence list for options is:
 
 - The value provided by the =:INITIAL-VALUE= initarg
 - The value of the first environment variable, which successfully resolved,
-  provided by the =:ENV-VARS= init arg
+  provided by the =:ENV-VARS= initarg
 - The value provided on the command-line when invoking the application.
 
 Play with it using different command-line arguments. If you specify
@@ -1196,8 +1201,8 @@ option.
 
 Now we will implement =CLINGON:INITIALIZE-OPTION= for our new
 option. We will keep the default initialization logic as-is, but also
-add additional step to valid the email address, if we have any initial
-value at all.
+add an additional step to validate the email address, if we have any
+initial value at all.
 
 #+begin_src lisp
 (defmethod initialize-option ((option option-email) &key)
