@@ -114,27 +114,33 @@ Clone the [[https://github.com/dnaeon/clingon][clingon]] repo in your [[https://
 git clone https://github.com/dnaeon/clingon
 #+end_src
 
-Register your local Quicklisp projects.
+Register it to your local Quicklisp projects.
 
 #+begin_src lisp
 CL-USER> (ql:register-local-projects)
 #+end_src
 
-Build the demo application.
+** Building the Demo App
+
+You can build the demo app using SBCL with the following command.
 
 #+begin_src shell
-sbcl --eval '(ql:quickload :clingon.demo)' \
-     --eval '(asdf:make :clingon.demo)' \
-     --eval '(quit)'
+LISP=sbcl make demo
 #+end_src
 
-This will create a new binary located in the =clingon='s system
-directory called =clingon-demo=, which you can now execute.
-
-Optionally, you can also enable the bash shell completions support.
+Build the demo app using Clozure CL:
 
 #+begin_src shell
-APP=clingon-demo source /path/to/clingon/extras/completions.bash
+LISP=ccl make demo
+#+end_src
+
+This will create a new executable =clingon-demo=, which you can now
+execute.
+
+Optionally, you can also enable the bash completions support.
+
+#+begin_src shell
+APP=clingon-demo source extras/completions.bash
 #+end_src
 
 Use the =--help= flag to see some usage information about the demo
