@@ -1513,7 +1513,7 @@ docker run --rm clingon.intro:latest
 Build and run the =clingon.demo= application.
 
 #+begin_src lisp
-docker build -t clingon.demo:latest -f Dockerfile.demo
+docker build -t clingon.demo:latest -f Dockerfile.demo .
 docker run --rm clingon.demo:latest
 #+end_src
 
