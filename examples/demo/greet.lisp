@@ -42,7 +42,7 @@
     (format t "Hello, ~A!~%" who)))
 
 (defun greet/command ()
-  "Creates a new command to perform basic math on integers"
+  "Creates a new command which greets people"
   (clingon:make-command
    :name "greet"
    :aliases '("hi" "hey")
