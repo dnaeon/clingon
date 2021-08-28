@@ -42,7 +42,12 @@
    (math/command)
    (echo/command)
    (engine/command)
-   (print-doc/command)))
+   (print-doc/command)
+   (sleep/command)))
+
+(defun top-level/handler (cmd)
+  "The handler for the top-level command. Will print the usage of the app"
+  (clingon:print-usage-and-exit cmd t))
 
 (defun top-level/command ()
   "Returns the top-level command"
@@ -55,6 +60,7 @@
                                                        command-line arguments -- clingon.")
                         :authors '("Marin Atanasov Nikolov <dnaeon@gmail.com>")
                         :license "BSD 2-Clause"
+			:handler #'top-level/handler
                         :options (top-level/options)
                         :sub-commands (top-level/sub-commands)))
 
@@ -62,3 +68,4 @@
   "The main entrypoint of our demo app"
   (let ((app (top-level/command)))
     (clingon:run app)))
+
