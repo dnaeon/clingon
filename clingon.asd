@@ -42,7 +42,8 @@
   :source-control "https://github.com/dnaeon/clingon"
   :depends-on (:bobbin
 	       :cl-reexport
-	       :split-sequence)
+	       :split-sequence
+	       :with-user-abort)
   :components ((:module "utils"
 		:pathname #P"src/"
 		:components ((:file "utils")))
