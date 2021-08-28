@@ -27,6 +27,10 @@
 (defpackage :clingon.command
   (:use :cl)
   (:import-from
+   :with-user-abort
+   :with-user-abort
+   :user-abort)
+  (:import-from
    :split-sequence
    :split-sequence)
   (:import-from
@@ -551,7 +555,7 @@
              (cmd (parse-command-line top-level arguments)))
         (unless (command-handler cmd)
           (error "No handler registered for command '~A'~%" (command-full-name cmd)))
-        (funcall (command-handler cmd) cmd)
+        (with-user-abort (funcall (command-handler cmd) cmd))
         (exit 0))
     ;; Missing required options
     (missing-required-option-value (condition)
@@ -569,6 +573,10 @@
                 (string-trim #(#\Space) (option-usage-details :default option))
                 (command-full-name failed-cmd))
         (exit 64))) ;; EX_USAGE
+    ;; SIGINT detected
+    (user-abort ()
+      (format *error-output* "~%Received SIGINT, exiting.~%")
+      (exit 130))
     (error (condition)
       (format *error-output* "~A~&" condition)
       (exit 1))))
