@@ -14,9 +14,6 @@ demo-doc: demo
 	./clingon-demo print-doc > docs/clingon-demo.md
 
 test:
-	${LISP} --eval '(ql:quickload :clingon.test)' \
-		--eval '(setf rove:*enable-colors* nil)' \
-		--eval '(asdf:test-system :clingon.test)' \
-                --eval '(quit)'
+	./run-tests.sh
 
 .PHONY: intro demo demo-doc test
