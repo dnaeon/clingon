@@ -23,34 +23,30 @@
 ;; (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 ;; THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(defpackage :clingon-demo-system
-  (:use :cl :asdf))
-(in-package :clingon-demo-system)
+(in-package :clingon.demo)
 
-(defsystem "clingon.demo"
-  :name "clingon.demo"
-  :long-name "clingon.demo"
-  :description "Example demo of the Common Lisp clingon system"
-  :version "0.1.0"
-  :author "Marin Atanasov Nikolov <dnaeon@gmail.com>"
-  :maintainer "Marin Atanasov Nikolov <dnaeon@gmail.com>"
-  :license "BSD 2-Clause"
-  :homepage "https://github.com/dnaeon/clingon"
-  :bug-tracker "https://github.com/dnaeon/clingon"
-  :source-control "https://github.com/dnaeon/clingon"
-  :depends-on (:clingon)
-  :components ((:module "demo"
-		:serial t
-		:pathname #P"examples/demo/"
-		:components ((:file "package")
-			     (:file "greet")
-			     (:file "logging")
-			     (:file "math")
-			     (:file "echo")
-			     (:file "engine")
-			     (:file "print-doc")
-			     (:file "sleep")
-			     (:file "main"))))
-  :build-operation "program-op"
-  :build-pathname "clingon-demo"
-  :entry-point "clingon.demo:main")
+(defun sleep/options ()
+  "Returns the options for the `sleep' command"
+  (list
+   (clingon:make-option
+    :integer
+    :short-name #\s
+    :long-name "seconds"
+    :description "number of seconds to sleep"
+    :initial-value 60
+    :key :seconds)))
+
+(defun sleep/handler (cmd)
+  "Handler for the `sleep' command"
+  (let ((seconds (clingon:getopt cmd :seconds)))
+    (format t "Sleeping for ~d seconds. Press CTRL-C to interrupt.~%" seconds)
+    (sleep (clingon:getopt cmd :seconds))))
+
+(defun sleep/command ()
+  "Creates a new command which sleeps for a given period of time"
+  (clingon:make-command
+   :name "sleep"
+   :description "sleeps for the given period of time"
+   :options (sleep/options)
+   :handler #'sleep/handler
+   :examples '(("Sleep for 60 seconds. Send SIGINT via CTRL-C to catch the signal" . "clingon-demo sleep --seconds 60"))))
