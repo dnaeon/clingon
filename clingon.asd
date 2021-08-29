@@ -40,7 +40,8 @@
   :homepage "https://github.com/dnaeon/clingon"
   :bug-tracker "https://github.com/dnaeon/clingon"
   :source-control "https://github.com/dnaeon/clingon"
-  :depends-on (:bobbin
+  :depends-on (:uiop
+	       :bobbin
 	       :cl-reexport
 	       :split-sequence
 	       :with-user-abort)
