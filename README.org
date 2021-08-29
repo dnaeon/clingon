@@ -1509,11 +1509,10 @@ Or you can run the tests using the =run-tests.sh= script instead, e.g.
 LISP=sbcl ./run-tests.sh
 #+end_src
 
-Here's how to run the tests against SBCL, CCL, ECL and ABCL for
-example.
+Here's how to run the tests against SBCL, CCL and ECL for example.
 
 #+begin_src shell
-for lisp in sbcl ccl ecl abcl; do
+for lisp in sbcl ccl ecl; do
     echo "Running tests using ${lisp} ..."
     LISP=${lisp} make test > ${lisp}-tests.out
 done
