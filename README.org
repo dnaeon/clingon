@@ -139,6 +139,23 @@ Build the demo app using Clozure CL:
 LISP=ccl make demo
 #+end_src
 
+In order to build the demo app using ECL you need to follow these
+instructions, which are ECL-specific. See [[https://common-lisp.net/project/ecl/static/manual/System-building.html#Compiling-with-ASDF][Compiling with ASDF from the
+ECL manual]] for more details. First, load the =:clingon.demo= system.
+
+#+begin_src lisp
+(ql:quickload :clingon.demo)
+#+end_src
+
+And now build the binary with ECL:
+
+#+begin_src lisp
+(asdf:make-build :clingon.demo
+                 :type :program
+                 :move-here #P"./"
+                 :epilogue-code '(clingon.demo:main))
+#+end_src
+
 This will create a new executable =clingon-demo=, which you can now
 execute.
 
