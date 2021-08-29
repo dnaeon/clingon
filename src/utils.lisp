@@ -59,6 +59,9 @@
 
 (defun argv ()
   "Returns the list of command-line arguments"
+  #+ecl
+  (rest (uiop:raw-command-line-arguments))
+  #-ecl
   (uiop:command-line-arguments))
 
 (defun join-list (list separator)
