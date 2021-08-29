@@ -1515,7 +1515,7 @@ example.
 #+begin_src shell
 for lisp in sbcl ccl ecl abcl; do
     echo "Running tests using ${lisp} ..."
-    LISP=${lisp} ./run-tests.sh > ${lisp}-tests.out
+    LISP=${lisp} make test > ${lisp}-tests.out
 done
 #+end_src
 
