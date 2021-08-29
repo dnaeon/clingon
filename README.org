@@ -733,6 +733,33 @@ You can find the full code we've developed in this guide in the
 When a command needs to exit with a given status code you can use the
 =CLINGON:EXIT= function.
 
+* Handling SIGINT (CTRL-C) signals
+
+=clingon= by default will provide a handler for =SIGINT= signals,
+which when detected will cause the application to immediately exit
+with status code =130=.
+
+If your commands need to provide some cleanup logic as part of their
+job, e.g. close out all open files, TCP session, etc., you could wrap
+your =clingon= command handlers in [[http://www.lispworks.com/documentation/HyperSpec/Body/s_unwind.htm][UNWIND-PROTECT]] to make sure that
+your cleanup tasks are always executed.
+
+However, using [[http://www.lispworks.com/documentation/HyperSpec/Body/s_unwind.htm][UNWIND-PROTECT]] may not be appropriate in all cases,
+since the cleanup forms will always be executed, which may or may not
+be what you need.
+
+For example if you are developing a =clingon= application, which
+populates a database in a transaction you would want to use
+[[http://www.lispworks.com/documentation/HyperSpec/Body/s_unwind.htm][UNWIND-PROTECT]], but only for releasing the database connection itself.
+
+If the application is interrupted while it inserts or updates records,
+what you want to do is to rollback the transaction as well, so your
+database is left in a consistent state.
+
+In those situations you would want to use the [[https://github.com/compufox/with-user-abort][WITH-USER-ABORT]] system,
+so that your =clingon= command can detect the =SIGINT= signal and act
+upon it, e.g. taking care of rolling back the transaction.
+
 * Generating Documentation
 
 =clingon= can generate documentation for your application by using the
