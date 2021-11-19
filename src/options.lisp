@@ -45,7 +45,6 @@
    :option-env-vars
    :option-initial-value
    :option-key
-   :option-category
    :option-value
    :option-is-set-p
    :option-hidden-p
@@ -161,11 +160,6 @@
     :initform (error "Must specify option key")
     :reader option-key
     :documentation "Key used to associate the option with it's value")
-   (category
-    :initarg :category
-    :initform nil
-    :reader option-category
-    :documentation "Option category name")
    (is-set-p
     :initarg :is-set-p
     :initform nil
@@ -212,6 +206,25 @@
     (when (option-env-vars option)
       (let ((vars (mapcar (lambda (var) (format nil "$~A" var)) (option-env-vars option))))
 	(format s " [env: ~A]" (join-list vars ", "))))))
+
+(defmethod option-usage-details ((kind (eql :zsh-option-spec)) (option option) &key)
+  (with-output-to-string (s)
+    (cond
+      ;; Short and long names are defined
+      ((and (option-short-name option) (option-long-name option))
+       (format s "{-~A,--~A}" (option-short-name option) (option-long-name option)))
+      ;; Short name only
+      ((option-short-name option)
+       (format s "-~A" (option-short-name option)))
+      (t
+       ;; Long name only
+       (format s "--~A" (option-long-name option))))))
+
+(defmethod option-description-details ((kind (eql :zsh-option-spec)) (option option) &key)
+  (with-output-to-string (s)
+    (format s "'[~A]'" (option-description option))
+    (when (option-parameter option)
+      (format s ":~A" (option-parameter option)))))
 
 ;;;;
 ;;;; Generic options
@@ -493,6 +506,12 @@
     (let ((choices (option-choice-items option)))
       (format s " [choices: ~A]" (join-list choices ", ")))))
 
+(defmethod option-description-details ((kind (eql :zsh-option-spec)) (option option-choice) &key)
+  (with-output-to-string (s)
+    (write-string (call-next-method) s)
+    (let ((choices (option-choice-items option)))
+      (format s ":'(~A)'" (join-list choices #\Space)))))
+
 (defmethod make-option ((kind (eql :choice)) &rest rest)
   (apply #'make-instance 'option-choice rest))
 
@@ -530,6 +549,12 @@
     (let ((choices (mapcar #'car (option-enum-items option))))
       (format s " [choices: ~A]" (join-list choices ", ")))))
 
+(defmethod option-description-details ((kind (eql :zsh-option-spec)) (option option-enum) &key)
+  (with-output-to-string (s)
+    (write-string (call-next-method) s)
+    (let ((choices (mapcar #'car (option-enum-items option))))
+      (format s ":'(~A)'" (join-list choices #\Space)))))
+
 (defmethod make-option ((kind (eql :enum)) &rest rest)
   (apply #'make-instance 'option-enum rest))
 
@@ -563,6 +588,13 @@
   (:default-initargs
    :parameter "STATE")
   (:documentation "An option which represents a switch with a state"))
+
+(defmethod option-description-details ((kind (eql :zsh-option-spec)) (option option-switch) &key)
+  (with-output-to-string (s)
+    (write-string (call-next-method) s)
+    (let ((on-states (option-switch-on-states option))
+	  (off-states (option-switch-off-states option)))
+      (format s ":'(~A)'" (join-list (append on-states off-states) #\Space)))))
 
 (defmethod initialize-option ((option option-switch) &key)
   "Initializes the switch option kind"
