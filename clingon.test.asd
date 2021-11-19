@@ -31,7 +31,7 @@
   :name "clingon.test"
   :long-name "clingon.test"
   :description "Test suite for the :clingon system"
-  :version "0.1.0"
+  :version "0.3.0"
   :author "Marin Atanasov Nikolov <dnaeon@gmail.com>"
   :maintainer "Marin Atanasov Nikolov <dnaeon@gmail.com>"
   :license "BSD 2-Clause"
