@@ -29,7 +29,7 @@
   "Returns a command for generating Zsh completion script"
   (clingon:make-command
    :name "zsh-completion"
-   :description "generate Zsh completion script"
+   :description "generate the Zsh completion script"
    :usage ""
    :handler (lambda (cmd)
 	      ;; Use the parent command when generating the completions,

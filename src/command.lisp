@@ -592,15 +592,15 @@ _~~A() {
   (handler-case
       (let* ((arguments (or arguments (argv)))
              (cmd (parse-command-line top-level arguments)))
-        (unless (command-handler cmd)
-          (error "~&No handler registered for command '~A'~%" (command-full-name cmd)))
+	(unless (command-handler cmd)
+          (error "No handler registered for command '~A'" (command-full-name cmd)))
         (with-user-abort (funcall (command-handler cmd) cmd))
         (exit 0))
     ;; Missing required options
     (missing-required-option-value (condition)
       (let ((option (missing-required-option-value-item condition))
             (failed-cmd (missing-required-option-value-command condition)))
-        (format *error-output* "~&Required option ~A not set.~%See '~A --help' for more details.~%"
+        (format *error-output* "~&Required option ~A not set.~%See '~A --help' for more details.~&"
                 (string-trim #(#\Space) (option-usage-details :default option))
                 (command-full-name failed-cmd))
         (exit 64))) ;; EX_USAGE
@@ -608,16 +608,16 @@ _~~A() {
     (missing-option-argument (condition)
       (let ((option (missing-option-argument-item condition))
             (failed-cmd (missing-option-argument-command condition)))
-        (format *error-output* "~&No value specified for ~A option.~%See '~A --help' for more details.~%"
+        (format *error-output* "~&No value specified for ~A option.~%See '~A --help' for more details.~&"
                 (string-trim #(#\Space) (option-usage-details :default option))
                 (command-full-name failed-cmd))
         (exit 64))) ;; EX_USAGE
     ;; SIGINT detected
     (user-abort ()
-      (format *error-output* "~%Received SIGINT, exiting.~%")
+      (format *error-output* "~&Received SIGINT, exiting.~&")
       (exit 130))
     (error (condition)
-      (format *error-output* "~&~A~%" condition)
+      (format *error-output* "~&~A~&" condition)
       (exit 1))))
 
 (defmethod parse-command-line ((top-level command) arguments)
