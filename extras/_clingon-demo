@@ -1,0 +1,207 @@
+#compdef _clingon-demo clingon-demo
+#
+# Install this file to ~/.zsh-completions and edit your ~/.zshrc file
+# in order to include the following lines.
+#
+# fpath=(~/.zsh-completions $fpath)
+#
+# autoload -U compinit
+# compinit
+
+_clingon-demo_zsh-completion() {
+    local -a curr_cmd_options=(
+        --version'[display version and exit]'
+        --help'[display usage information and exit]'
+    )
+
+    _arguments -C -S -s \
+               $curr_cmd_options
+}
+
+_clingon-demo_sleep() {
+    local -a curr_cmd_options=(
+        --version'[display version and exit]'
+        --help'[display usage information and exit]'
+        {-s,--seconds}'[number of seconds to sleep]':INT
+    )
+
+    _arguments -C -S -s \
+               $curr_cmd_options
+}
+
+_clingon-demo_print-doc() {
+    local -a curr_cmd_options=(
+        --version'[display version and exit]'
+        --help'[display usage information and exit]'
+    )
+
+    _arguments -C -S -s \
+               $curr_cmd_options
+}
+
+_clingon-demo_engine() {
+    local -a curr_cmd_options=(
+        --version'[display version and exit]'
+        --help'[display usage information and exit]'
+        {-s,--state}'[state of our engine]':STATE:'(on yes true enable 1 off no false disable 0)'
+    )
+
+    _arguments -C -S -s \
+               $curr_cmd_options
+}
+
+_clingon-demo_echo() {
+    local -a curr_cmd_options=(
+        --version'[display version and exit]'
+        --help'[display usage information and exit]'
+    )
+
+    _arguments -C -S -s \
+               $curr_cmd_options
+}
+
+_clingon-demo_math() {
+    local -a curr_cmd_options=(
+        --version'[display version and exit]'
+        --help'[display usage information and exit]'
+        {-o,--operation}'[operation to perform]':VARIANT:'(add sub mul div)'
+        {-i,--int}'[integers to work on]':ITEM
+    )
+
+    _arguments -C -S -s \
+               $curr_cmd_options
+}
+
+_clingon-demo_logging_disable() {
+    local -a curr_cmd_options=(
+        --version'[display version and exit]'
+        --help'[display usage information and exit]'
+    )
+
+    _arguments -C -S -s \
+               $curr_cmd_options
+}
+
+_clingon-demo_logging_enable() {
+    local -a curr_cmd_options=(
+        --version'[display version and exit]'
+        --help'[display usage information and exit]'
+    )
+
+    _arguments -C -S -s \
+               $curr_cmd_options
+}
+
+_clingon-demo_logging() {
+    local line state
+    local -a curr_cmd_options=(
+        --version'[display version and exit]'
+        --help'[display usage information and exit]'
+        {-l,--level}'[level to configure]':LEVEL:'(info warn error debug)'
+    )
+
+    _arguments -C -S -s \
+               $curr_cmd_options \
+               "1: :->cmds" \
+               "*::arg:->args"
+
+    case "$state" in
+        cmds)
+            _values \
+                "clingon-demo logging command" \
+                "enable[enables logging]" \
+                "disable[disables logging]"
+            ;;
+        args)
+            case $line[1] in
+                enable)
+                    _clingon-demo_logging_enable
+                    ;;
+                disable)
+                    _clingon-demo_logging_disable
+                    ;;
+            esac
+            ;;
+    esac
+}
+
+_clingon-demo_greet() {
+    local -a curr_cmd_options=(
+        --version'[display version and exit]'
+        --help'[display usage information and exit]'
+        {-u,--user}'[Person to greet]':VALUE
+    )
+
+    _arguments -C -S -s \
+               $curr_cmd_options
+}
+
+_clingon-demo() {
+    local line state
+    local -a curr_cmd_options=(
+        --version'[display version and exit]'
+        --help'[display usage information and exit]'
+        {-v,--verbose}'[how noisy we want to be]'
+    )
+
+    _arguments -C -S -s \
+               $curr_cmd_options \
+               "1: :->cmds" \
+               "*::arg:->args"
+
+    case "$state" in
+        cmds)
+            _values \
+                "clingon-demo command" \
+                "greet[greets people]" \
+                "hi[alias for 'greet']" \
+                "hey[alias for 'greet']" \
+                "logging[configure the logging system]" \
+                "log[alias for 'logging']" \
+                "math[perform basic math on integers]" \
+                "echo[echoes back each argument on a newline]" \
+                "engine[start or stop an imaginary engine]" \
+                "print-doc[print the documentation]" \
+                "sleep[sleeps for the given period of time]" \
+                "zsh-completion[generate the Zsh completion script]"
+            ;;
+        args)
+            case $line[1] in
+                greet)
+                    _clingon-demo_greet
+                    ;;
+                hi)
+                    _clingon-demo_greet
+                    ;;
+                hey)
+                    _clingon-demo_greet
+                    ;;
+                logging)
+                    _clingon-demo_logging
+                    ;;
+                log)
+                    _clingon-demo_logging
+                    ;;
+                math)
+                    _clingon-demo_math
+                    ;;
+                echo)
+                    _clingon-demo_echo
+                    ;;
+                engine)
+                    _clingon-demo_engine
+                    ;;
+                print-doc)
+                    _clingon-demo_print-doc
+                    ;;
+                sleep)
+                    _clingon-demo_sleep
+                    ;;
+                zsh-completion)
+                    _clingon-demo_zsh-completion
+                    ;;
+            esac
+            ;;
+    esac
+}
+
