@@ -23,35 +23,16 @@
 ;; (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 ;; THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(defpackage :clingon-demo-system
-  (:use :cl :asdf))
-(in-package :clingon-demo-system)
+(in-package :clingon.demo)
 
-(defsystem "clingon.demo"
-  :name "clingon.demo"
-  :long-name "clingon.demo"
-  :description "Example demo of the Common Lisp clingon system"
-  :version "0.1.0"
-  :author "Marin Atanasov Nikolov <dnaeon@gmail.com>"
-  :maintainer "Marin Atanasov Nikolov <dnaeon@gmail.com>"
-  :license "BSD 2-Clause"
-  :homepage "https://github.com/dnaeon/clingon"
-  :bug-tracker "https://github.com/dnaeon/clingon"
-  :source-control "https://github.com/dnaeon/clingon"
-  :depends-on (:clingon)
-  :components ((:module "demo"
-		:serial t
-		:pathname #P"examples/demo/"
-		:components ((:file "package")
-			     (:file "greet")
-			     (:file "logging")
-			     (:file "math")
-			     (:file "echo")
-			     (:file "engine")
-			     (:file "print-doc")
-			     (:file "sleep")
-			     (:file "zsh-completion")
-			     (:file "main"))))
-  :build-operation "program-op"
-  :build-pathname "clingon-demo"
-  :entry-point "clingon.demo:main")
+(defun zsh-completion/command ()
+  "Returns a command for generating Zsh completion script"
+  (clingon:make-command
+   :name "zsh-completion"
+   :description "generate Zsh completion script"
+   :usage ""
+   :handler (lambda (cmd)
+	      ;; Use the parent command when generating the completions,
+	      ;; so that we can traverse all sub-commands in the tree.
+	      (let ((parent (clingon:command-parent cmd)))
+		(clingon:print-documentation :zsh-completions parent t)))))

@@ -43,7 +43,8 @@
    (echo/command)
    (engine/command)
    (print-doc/command)
-   (sleep/command)))
+   (sleep/command)
+   (zsh-completion/command)))
 
 (defun top-level/handler (cmd)
   "The handler for the top-level command. Will print the usage of the app"
