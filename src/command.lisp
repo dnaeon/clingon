@@ -176,9 +176,9 @@ _~~A() {
     )
 
     _arguments -C -S -s \\
-            $curr_cmd_options \\
-            \"1: :->cmds\" \\
-            \"*::arg:->args\"
+               $curr_cmd_options \\
+               \"1: :->cmds\" \\
+               \"*::arg:->args\"
 
     case \"$state\" in
         cmds)
@@ -202,7 +202,7 @@ _~~A() {
     )
 
     _arguments -C -S -s \\
-        $curr_cmd_options
+               $curr_cmd_options
 }~2&")
   "Template for a Zsh completion function without sub-commands")
 
@@ -931,3 +931,67 @@ _~~A() {
         (dolist (line lines)
           (format stream "~A~%" line)))
       (format stream "~%"))))
+
+(defmethod zsh-sub-command-items ((command command))
+  "Returns the sub-command items, which will be populated in the Zsh completion function"
+  (unless (command-sub-commands command)
+    (return-from zsh-sub-command-items nil))
+  (let ((items nil))
+    ;; The command itself
+    (push (format nil "\"~A command\"" (command-full-name command)) items)
+    ;; The sub-commands
+    (dolist (sub (command-sub-commands command))
+      (push (format nil "\"~A[~A]\"" (command-name sub) (command-description sub)) items)
+      ;; Aliases of each sub-command
+      (dolist (alias (command-aliases sub))
+	(push (format nil "\"~A[~A]\"" alias (format nil "alias for '~A'" (command-name sub))) items)))
+    (nreverse items)))
+
+(defmethod zsh-sub-command-dispatch-items ((command command))
+  "Returns a list of of command-name -> function-name dispatch strings,
+   which will be used for populating into the Zsh completion function."
+  (let ((items nil))
+    (dolist (sub (command-sub-commands command))
+      ;; The sub-command itself
+      (let* ((name (command-name sub))
+	     (full-path (command-full-path sub))
+	     (func-name (join-list full-path "_")))
+	(push
+	 (format nil "~16A~A)~&~20A_~A~&~20A;;" #\Space name #\Space func-name #\Space)
+	 items)
+	;; Each alias of the sub-command
+	(dolist (alias (command-aliases sub))
+	  (push
+	   (format nil "~16A~A)~&~20A_~A~&~20A;;" #\Space alias #\Space func-name #\Space)
+	   items))))
+    (nreverse items)))
+
+(defmethod print-documentation ((kind (eql :zsh-completions)) (top-level command) stream &key)
+  "Prints the Zsh completion script for the given top-level command"
+  (format stream "#compdef _~A ~A~&#~&"
+	  (join-list (command-full-path top-level) "_")
+	  (command-name top-level))
+  (format stream "# Install this file to ~~/.zsh-completions and edit your ~~/.zshrc file~&")
+  (format stream "# in order to include the following lines.~&#~&")
+  (format stream "# fpath=(~~/.zsh-completions $fpath)~&#~&")
+  (format stream "# autoload -U compinit~&")
+  (format stream "# compinit~2&")
+  (dolist (node (reverse (command-tree top-level)))
+    (let* ((full-path (command-full-path node))
+	   (func-name (join-list full-path "_"))
+	   (opt-specs (mapcar (lambda (opt)
+				(format nil "~8A~A~A" #\Space
+					(option-usage-details :zsh-option-spec opt)
+					(option-description-details :zsh-option-spec opt)))
+			      (visible-options node)))
+	   (sub-command-items (mapcar (lambda (sub)
+					(format nil "~16A~A" #\Space sub))
+				      (zsh-sub-command-items node)))
+	   (sub-dispatch-items (zsh-sub-command-dispatch-items node)))
+      (if sub-command-items
+	  (format stream *zsh-compfunc-with-sub-commands*
+		  func-name
+		  (join-list opt-specs #\Newline)
+		  (join-list sub-command-items (format nil " \\~&"))
+		  (join-list sub-dispatch-items #\Newline))
+	  (format stream *zsh-compfunc-without-sub-commands* func-name (join-list opt-specs #\Newline))))))
