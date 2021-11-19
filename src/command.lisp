@@ -167,6 +167,45 @@
         *default-bash-completions-flag*)
   "A list of default options to add to each sub-command")
 
+(defparameter *zsh-compfunc-with-sub-commands*
+  (format nil "~
+_~~A() {
+    local line state
+    local -a curr_cmd_options=(
+~~A
+    )
+
+    _arguments -C -S -s \\
+            $curr_cmd_options \\
+            \"1: :->cmds\" \\
+            \"*::arg:->args\"
+
+    case \"$state\" in
+        cmds)
+            _values \\
+~~A
+            ;;
+        args)
+            case $line[1] in
+~~A
+            esac
+            ;;
+    esac
+}~2&")
+  "Template for a Zsh completion function which contains sub-commands")
+
+(defparameter *zsh-compfunc-without-sub-commands*
+  (format nil "~
+_~~A() {
+    local -a curr_cmd_options=(
+~~A
+    )
+
+    _arguments -C -S -s \\
+        $curr_cmd_options
+}~2&")
+  "Template for a Zsh completion function without sub-commands")
+
 (defclass command ()
   ((name
     :initarg :name
