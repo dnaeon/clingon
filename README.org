@@ -21,7 +21,7 @@ A summary of the features supported by =clingon= is provided below.
 - Options can be initialized via environment variables
 - Single interface for creating options using =CLINGON:MAKE-OPTION=
 - Generate documentation for your command-line app
-- Support for shell completions
+- Support for Bash and Zsh shell completions
 - =clingon= is extensible, so if you don't find something you need you
   can extend it by developing a new option kind, or even new mechanism
   for initializing options, e.g. by looking up an external key/value
@@ -163,6 +163,25 @@ Optionally, you can also enable the bash completions support.
 
 #+begin_src shell
 APP=clingon-demo source extras/completions.bash
+#+end_src
+
+In order to activate the Zsh completions, install the completions
+script in your =~/.zsh-completions= directory (or anywhere else you
+prefer) and update your =~/.zshrc= file, so that the completions are
+loaded.
+
+Make sure that you have these lines in your =~/.zshrc= file.
+
+#+begin_src shell
+  fpath=(~/.zsh-completions $fpath)
+  autoload -U compinit
+  compinit
+#+end_src
+
+The following command will generate the Zsh completions script.
+
+#+begin_src shell
+  ./clingon-demo zsh-completion > ~/.zsh-completions/_clingon-demo
 #+end_src
 
 Use the =--help= flag to see some usage information about the demo
@@ -1331,8 +1350,9 @@ the newly developed option.
 
 * Shell Completions
 
-=clingon= provides support for shell completions. Currently only
-Bash completions are supported.
+=clingon= provides support for Bash and Zsh shell completions.
+
+** Bash Completions
 
 In order to enable the Bash completions for your =clingon= app,
 follow these instructions.
@@ -1348,33 +1368,33 @@ invoking the =clingon= app with the =--bash-completions= flag. This
 builtin flag when provided on the command-line will return completions
 for the sub-commands and the available flags.
 
-* Ideas For Future Improvements
+** Zsh Completions
 
-** Improve Shell Completions Support
+When developing your CLI app with =clingon= you can provide an
+additional command, which will take care of generating the Zsh
+completion script for your users.
 
-While the current bash completions work, there's plenty of room for
-improvement there.
-
-One area which can be improved in terms of shell completions is to
-avoid invoking the =clingon= app with the =--bash-completions=
-flag, which would speed things up a lot.
-
-A better approach would be to have =clingon= generate the full
-completions of each sub-command as one single completions script.
-
-Possible approach for this would be to walk the tree of commands using
-=CLINGON:COMMAND-TREE= and/or =CLINGON:WITH-COMMAND-TREE= and then
-generate a completion function for each visited node in the tree.
-
-Some pseudo-code of how this would look like.
+The following code can be used in your app and added as a sub-command
+to your top-level command.
 
 #+begin_src lisp
-(clingon:with-command-tree (node top-level)
-  ;; node will be bound to each command we visit starting from top-level
-  ...
-  (generate-shell-completions node stream)
-  ...)
+  (defun zsh-completion/command ()
+    "Returns a command for generating the Zsh completion script"
+    (clingon:make-command
+     :name "zsh-completion"
+     :description "generate the Zsh completion script"
+     :usage ""
+     :handler (lambda (cmd)
+		;; Use the parent command when generating the completions,
+		;; so that we can traverse all sub-commands in the tree.
+		(let ((parent (clingon:command-parent cmd)))
+		  (clingon:print-documentation :zsh-completions parent t)))))
 #+end_src
+
+You can also check out the =clingon-demo= app for a fully working CLI
+app with Zsh completions support.
+
+* Ideas For Future Improvements
 
 ** Additional Documentation Generators
 
@@ -1482,32 +1502,6 @@ real    0m0.017s
 user    0m0.010s
 sys     0m0.007s
 #+end_src
-
-Now, this may not seem like a big issue, but it does have a big
-difference when using the bash completions, as faster execution times
-result in faster shell completions.
-
-#+begin_src shell
-$ time ./clingon-demo.sbcl --bash-completions > /dev/null
-
-real    0m0.088s
-user    0m0.068s
-sys     0m0.020s
-#+end_src
-
-When generating the shell completions using the Clozure CL executable
-we see these results instead.
-
-#+begin_src shell
-$ time ./clingon-demo.ccl --bash-completions > /dev/null
-
-real    0m0.013s
-user    0m0.012s
-sys     0m0.001s
-#+end_src
-
-The performance difference here, provides much better user experience
-when using the shell completions with a binary produced by Clozure CL.
 
 * Tests
 
