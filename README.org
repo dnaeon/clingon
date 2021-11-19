@@ -111,7 +111,7 @@ You can also build and run the =clingon= demo application, which
 includes the =greet= command introduced in the previous section, along
 with other examples.
 
-[[./clingon-demo.gif]]
+[[./images/clingon-demo.gif]]
 
 Clone the [[https://github.com/dnaeon/clingon][clingon]] repo in your [[https://www.quicklisp.org/beta/faq.html][Quicklisp local-projects]] directory.
 
@@ -1393,6 +1393,8 @@ to your top-level command.
 
 You can also check out the =clingon-demo= app for a fully working CLI
 app with Zsh completions support.
+
+[[./images/clingon-zsh-completions.gif]]
 
 * Ideas For Future Improvements
 
