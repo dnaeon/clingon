@@ -285,6 +285,7 @@
 ;;;;
 ;;;; String options
 ;;;;
+
 (defclass option-string (option)
   ()
   (:default-initargs
@@ -293,6 +294,21 @@
 
 (defmethod make-option ((kind (eql :string)) &rest rest)
   (apply #'make-instance 'option-string rest))
+
+(defclass option-filepath (option)
+  ()
+  (:default-initargs
+   :parameter "PATH")
+  (:documentation "An option which represents a filepath"))
+
+(defmethod make-option ((kind (eql :filepath)) &rest rest)
+  (apply #'make-instance 'option-filepath rest))
+
+(defmethod option-description-details ((kind (eql :zsh-option-spec)) (option option-filepath) &key)
+  ;; Use the `_files' function for completing file paths
+  (with-output-to-string (s)
+    (write-string (call-next-method) s)
+    (format s ":_files")))
 
 ;;;;
 ;;;; Boolean options
