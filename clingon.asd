@@ -31,7 +31,7 @@
   :name "clingon"
   :long-name "clingon"
   :description "Command-line options parser system for Common Lisp"
-  :version "0.3.0"
+  :version "0.3.1"
   :author "Marin Atanasov Nikolov <dnaeon@gmail.com>"
   :maintainer "Marin Atanasov Nikolov <dnaeon@gmail.com>"
   :license "BSD 2-Clause"
