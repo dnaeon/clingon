@@ -364,7 +364,7 @@ _~~A() {
            (l-name (option-long-name option))
            (s-duplicates (and s-name (remove-if-not
                                       (lambda (x)
-                                        (char= s-name (option-short-name x)))
+                                        (and (option-short-name x) (char= s-name (option-short-name x))))
                                       remaining)))
            (l-duplicates (and l-name (remove-if-not
                                       (lambda (x)
