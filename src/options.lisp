@@ -75,7 +75,8 @@
    :option-enum-items
    :option-switch
    :option-switch-on-states
-   :option-switch-off-states))
+   :option-switch-off-states
+   :option-filepath))
 (in-package :clingon.options)
 
 (defgeneric initialize-option (option &key)
