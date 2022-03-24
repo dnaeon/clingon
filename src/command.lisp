@@ -56,6 +56,7 @@
    :option-short-name
    :option-long-name
    :option-description
+   :option-category
    :option-required-p
    :option-is-set-p
    :option-hidden-p
@@ -72,7 +73,9 @@
    :argv
    :walk
    :join-list
-   :exit)
+   :exit
+   :group-by
+   :hashtable-keys)
   (:export
    :find-option
    :parse-option
@@ -592,7 +595,7 @@ _~~A() {
   (handler-case
       (let* ((arguments (or arguments (argv)))
              (cmd (parse-command-line top-level arguments)))
-	(unless (command-handler cmd)
+        (unless (command-handler cmd)
           (error "No handler registered for command '~A'" (command-full-name cmd)))
         (with-user-abort (funcall (command-handler cmd) cmd))
         (exit 0))
@@ -729,18 +732,28 @@ _~~A() {
 
 (defmethod print-options-usage ((command command) stream &key (wrap-at-width 70))
   "Prints the usage information about the options for the given command"
-  (let* ((opts (sort (copy-list (visible-options command))
-		     #'string<
-		     :key (lambda (x) (option-usage-details :default x))))
+  (let* ((opts (visible-options command))
          (usages (mapcar (lambda (o) (option-usage-details :default o)) opts))
-         (width (+ 4 (apply #'max (mapcar #'length usages)))))
-    (loop :for (opt usage) :in (mapcar #'list opts usages) :do
-      (format stream "  ~A" usage)
-      (let* ((desc (option-description-details :default opt))
-             (lines (split-sequence #\Newline (bobbin:wrap desc wrap-at-width))))
-        (format stream "~vA~A~&" (- width (length usage) 2) #\Space (first lines))
-        (dolist (remaining (rest lines))
-          (format stream "~vA~A~&" width #\Space remaining)))))
+         (width (+ 4 (apply #'max (mapcar #'length usages))))
+         (opt-groups (group-by opts #'option-category))
+         (group-names (sort (hashtable-keys opt-groups) #'string<)))
+    (loop :for group-name :in group-names
+          :for group-opts = (gethash group-name opt-groups)
+          :for sorted-opts = (sort group-opts
+                                   #'string<
+                                   :key (lambda (o) (option-usage-details :default o)))
+          :do
+             ;; Special case for the default option category/group
+             (when (string/= group-name "")
+               (format stream "~%~A:~&" group-name))
+             (loop :for opt :in sorted-opts :do
+               (let* ((usage (option-usage-details :default opt))
+                      (desc (option-description-details :default opt))
+                      (lines (split-sequence #\Newline (bobbin:wrap desc wrap-at-width))))
+                 (format stream "  ~A" (option-usage-details :default opt))
+                 (format stream "~vA~A~&" (- width (length usage) 2) #\Space (first lines))
+                 (dolist (remaining (rest lines))
+                   (format stream "~vA~A~&" width #\Space remaining))))))
   (format stream "~%"))
 
 (defmethod print-sub-commands-info ((command command) stream &key (wrap-at-width 70))
@@ -762,9 +775,8 @@ _~~A() {
 
 (defmethod command-usage-string ((command command))
   "Returns the usage string for the given command"
-  (let ((prev-cmd-name (join-list
-			(reverse (rest (mapcar #'command-name (command-lineage command))))
-			" ")))
+  (let ((prev-cmd-name (and (command-parent command)
+                            (command-full-name (second (command-lineage command))))))
     (cond
       ;; The command provides it's own usage info
       ((command-usage command)
@@ -772,18 +784,18 @@ _~~A() {
       ;; The command provides sub-commands and has a parent
       ((and (command-sub-commands command) (command-parent command))
        (format nil "~A [global-options] ~A [<command>] [command-options] [arguments ...]"
-	       prev-cmd-name
-	       (command-name command)))
+               prev-cmd-name
+               (command-name command)))
       ;; The command provides sub-commands and is a top-level command
       ((and (command-sub-commands command) (command-is-top-level-p command))
        (format nil "~A [global-options] [<command>] [command-options] [arguments ...]"
-	       (command-full-name command)))
+               (command-full-name command)))
       ;; The command is a sub-command of another command
       ((command-parent command)
        (format nil "~A [global-options] ~A [options] [arguments ...]"
-	       ;; Print the path leading up to the command itself
-	       prev-cmd-name
-	       (command-name command)))
+               ;; Print the path leading up to the command itself
+               prev-cmd-name
+               (command-name command)))
       ;; Default usage info
       (t
        (format nil "~A [options] [arguments ...]" (command-full-name command))))))
@@ -944,7 +956,7 @@ _~~A() {
       (push (format nil "\"~A[~A]\"" (command-name sub) (command-description sub)) items)
       ;; Aliases of each sub-command
       (dolist (alias (command-aliases sub))
-	(push (format nil "\"~A[~A]\"" alias (format nil "alias for '~A'" (command-name sub))) items)))
+        (push (format nil "\"~A[~A]\"" alias (format nil "alias for '~A'" (command-name sub))) items)))
     (nreverse items)))
 
 (defmethod zsh-sub-command-dispatch-items ((command command))
@@ -954,23 +966,23 @@ _~~A() {
     (dolist (sub (command-sub-commands command))
       ;; The sub-command itself
       (let* ((name (command-name sub))
-	     (full-path (command-full-path sub))
-	     (func-name (join-list full-path "_")))
-	(push
-	 (format nil "~16A~A)~&~20A_~A~&~20A;;" #\Space name #\Space func-name #\Space)
-	 items)
-	;; Each alias of the sub-command
-	(dolist (alias (command-aliases sub))
-	  (push
-	   (format nil "~16A~A)~&~20A_~A~&~20A;;" #\Space alias #\Space func-name #\Space)
-	   items))))
+             (full-path (command-full-path sub))
+             (func-name (join-list full-path "_")))
+        (push
+         (format nil "~16A~A)~&~20A_~A~&~20A;;" #\Space name #\Space func-name #\Space)
+         items)
+        ;; Each alias of the sub-command
+        (dolist (alias (command-aliases sub))
+          (push
+           (format nil "~16A~A)~&~20A_~A~&~20A;;" #\Space alias #\Space func-name #\Space)
+           items))))
     (nreverse items)))
 
 (defmethod print-documentation ((kind (eql :zsh-completions)) (top-level command) stream &key)
   "Prints the Zsh completion script for the given top-level command"
   (format stream "#compdef _~A ~A~&#~&"
-	  (join-list (command-full-path top-level) "_")
-	  (command-name top-level))
+          (join-list (command-full-path top-level) "_")
+          (command-name top-level))
   (format stream "# Install this file to ~~/.zsh-completions and edit your ~~/.zshrc file~&")
   (format stream "# in order to include the following lines.~&#~&")
   (format stream "# fpath=(~~/.zsh-completions $fpath)~&#~&")
@@ -978,20 +990,20 @@ _~~A() {
   (format stream "# compinit~2&")
   (dolist (node (reverse (command-tree top-level)))
     (let* ((full-path (command-full-path node))
-	   (func-name (join-list full-path "_"))
-	   (opt-specs (mapcar (lambda (opt)
-				(format nil "~8A~A~A" #\Space
-					(option-usage-details :zsh-option-spec opt)
-					(option-description-details :zsh-option-spec opt)))
-			      (visible-options node)))
-	   (sub-command-items (mapcar (lambda (sub)
-					(format nil "~16A~A" #\Space sub))
-				      (zsh-sub-command-items node)))
-	   (sub-dispatch-items (zsh-sub-command-dispatch-items node)))
+           (func-name (join-list full-path "_"))
+           (opt-specs (mapcar (lambda (opt)
+                                (format nil "~8A~A~A" #\Space
+                                        (option-usage-details :zsh-option-spec opt)
+                                        (option-description-details :zsh-option-spec opt)))
+                              (visible-options node)))
+           (sub-command-items (mapcar (lambda (sub)
+                                        (format nil "~16A~A" #\Space sub))
+                                      (zsh-sub-command-items node)))
+           (sub-dispatch-items (zsh-sub-command-dispatch-items node)))
       (if sub-command-items
-	  (format stream *zsh-compfunc-with-sub-commands*
-		  func-name
-		  (join-list opt-specs #\Newline)
-		  (join-list sub-command-items (format nil " \\~&"))
-		  (join-list sub-dispatch-items #\Newline))
-	  (format stream *zsh-compfunc-without-sub-commands* func-name (join-list opt-specs #\Newline))))))
+          (format stream *zsh-compfunc-with-sub-commands*
+                  func-name
+                  (join-list opt-specs #\Newline)
+                  (join-list sub-command-items (format nil " \\~&"))
+                  (join-list sub-dispatch-items #\Newline))
+          (format stream *zsh-compfunc-without-sub-commands* func-name (join-list opt-specs #\Newline))))))
