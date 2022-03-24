@@ -77,7 +77,8 @@
    :option-switch
    :option-switch-on-states
    :option-switch-off-states
-   :option-filepath))
+   :option-filepath
+   :option-list-filepath))
 (in-package :clingon.options)
 
 (defgeneric initialize-option (option &key)
@@ -450,6 +451,15 @@
   (with-output-to-string (s)
     (format s "\\*")
     (write-string (call-next-method) s)))
+
+(defclass option-list-filepath (option-filepath option-list)
+  ()
+  (:default-initargs
+   :parameter "PATH")
+  (:documentation "An option which represents a list of filepaths"))
+
+(defmethod make-option ((kind (eql :list/filepath)) &rest rest)
+  (apply #'make-instance 'option-list-filepath rest))
 
 ;;;;
 ;;;; Integer options
