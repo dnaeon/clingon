@@ -31,6 +31,8 @@ clingon-demo [global-options] [<command>] [command-options] [arguments ...]
   echo            echoes back each argument on a newline
   engine          start or stop an imaginary engine
   print-doc       print the documentation
+  sleep           sleeps for the given period of time
+  zsh-completion  generate the Zsh completion script
 
 ```
 
@@ -275,6 +277,55 @@ clingon-demo print-doc
 ## Options
 
 `clingon-demo print-doc` accepts the following options:
+
+``` shell
+      --help     display usage information and exit
+      --version  display version and exit
+
+```
+
+# clingon-demo sleep
+
+`clingon-demo sleep` -- sleeps for the given period of time
+
+## Usage
+
+``` shell
+clingon-demo [global-options] sleep [options] [arguments ...]
+```
+
+## Options
+
+`clingon-demo sleep` accepts the following options:
+
+``` shell
+      --help           display usage information and exit
+      --version        display version and exit
+  -s, --seconds <INT>  number of seconds to sleep [default: 60]
+
+```
+
+## Examples
+
+Sleep for 60 seconds. Send SIGINT via CTRL-C to catch the signal
+
+``` shell
+clingon-demo sleep --seconds 60
+```
+
+# clingon-demo zsh-completion
+
+`clingon-demo zsh-completion` -- generate the Zsh completion script
+
+## Usage
+
+``` shell
+clingon-demo zsh-completion 
+```
+
+## Options
+
+`clingon-demo zsh-completion` accepts the following options:
 
 ``` shell
       --help     display usage information and exit
