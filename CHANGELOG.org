@@ -1,0 +1,32 @@
+* 2022-03-24
+
+Add support for grouping related options into categories.
+
+The =:category= initarg for =CLINGON:OPTION= is used for specifying
+the option's category.
+
+New option kind has been added - =:list/filepath=.
+
+The =clingon-demo= and =clingon-intro= binaries are now installed into
+the =bin/= directory.
+
+Additional utility functions have been implemented as part of the
+=CLINGON.UTILS= package.
+
+=clingon= system updated to version 0.3.3.
+
+* 2021-12-26
+
+=clingon= system updated to version v0.3.1.
+
+Added support for =FILEPATH= option kinds.
+
+* 2021-11-19
+
+Added support for Zsh completions.
+
+=clingon= system version bumped to v0.3.0.
+
+* 2021-07-26
+
+Initial release of =clingon= version v0.1.0.
