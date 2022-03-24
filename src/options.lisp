@@ -42,6 +42,7 @@
    :option-required-p
    :option-parameter
    :option-description
+   :option-category
    :option-env-vars
    :option-initial-value
    :option-key
@@ -146,6 +147,11 @@
     :initform (error "Must specify description")
     :reader option-description
     :documentation "Short description of the option")
+   (category
+    :initarg :category
+    :initform ""
+    :reader option-category
+    :documentation "Category for the option. Options with the same category will be grouped together")
    (env-vars
     :initarg :env-vars
     :initform nil
@@ -206,7 +212,7 @@
       (format s " [default: ~A]" (option-initial-value option)))
     (when (option-env-vars option)
       (let ((vars (mapcar (lambda (var) (format nil "$~A" var)) (option-env-vars option))))
-	(format s " [env: ~A]" (join-list vars ", "))))))
+        (format s " [env: ~A]" (join-list vars ", "))))))
 
 (defmethod option-usage-details ((kind (eql :zsh-option-spec)) (option option) &key)
   (with-output-to-string (s)
@@ -622,7 +628,7 @@
   (with-output-to-string (s)
     (write-string (call-next-method) s)
     (let ((on-states (option-switch-on-states option))
-	  (off-states (option-switch-off-states option)))
+          (off-states (option-switch-off-states option)))
       (format s ":'(~A)'" (join-list (append on-states off-states) #\Space)))))
 
 (defmethod initialize-option ((option option-switch) &key)
