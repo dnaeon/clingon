@@ -40,18 +40,18 @@
   :source-control "https://github.com/dnaeon/clingon"
   :depends-on (:clingon)
   :components ((:module "demo"
-		:serial t
-		:pathname #P"examples/demo/"
-		:components ((:file "package")
-			     (:file "greet")
-			     (:file "logging")
-			     (:file "math")
-			     (:file "echo")
-			     (:file "engine")
-			     (:file "print-doc")
-			     (:file "sleep")
-			     (:file "zsh-completion")
-			     (:file "main"))))
+                :serial t
+                :pathname #P"examples/demo/"
+                :components ((:file "package")
+                             (:file "greet")
+                             (:file "logging")
+                             (:file "math")
+                             (:file "echo")
+                             (:file "engine")
+                             (:file "print-doc")
+                             (:file "sleep")
+                             (:file "zsh-completion")
+                             (:file "main"))))
   :build-operation "program-op"
-  :build-pathname "clingon-demo"
+  :build-pathname "bin/clingon-demo"
   :entry-point "clingon.demo:main")

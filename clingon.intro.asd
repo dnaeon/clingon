@@ -36,8 +36,8 @@
   :license "BSD 2-Clause"
   :depends-on (:clingon)
   :components ((:module "intro"
-		:pathname #P"examples/intro/"
-		:components ((:file "intro"))))
+                :pathname #P"examples/intro/"
+                :components ((:file "intro"))))
   :build-operation "program-op"
-  :build-pathname "clingon-intro"
+  :build-pathname "bin/clingon-intro"
   :entry-point "clingon.intro:main")

@@ -11,7 +11,7 @@ demo:
                 --eval '(quit)'
 
 demo-doc: demo
-	./clingon-demo print-doc > docs/clingon-demo.md
+	./bin/clingon-demo print-doc > docs/clingon-demo.md
 
 test:
 	./run-tests.sh
