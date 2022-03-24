@@ -30,7 +30,10 @@
    :walk
    :join-list
    :exit
-   :git-rev-parse))
+   :git-rev-parse
+   :group-by
+   :hashtable-keys
+   :hashtable-values))
 (in-package :clingon.utils)
 
 (defun walk (root neighbors-func &key (order :dfs))
@@ -69,8 +72,8 @@
   (with-output-to-string (s)
     (loop :for (item . remaining) :on list :while item :do
       (if remaining
-	  (format s "~A~A" item separator)
-	  (format s "~A" item)))))
+          (format s "~A~A" item separator)
+          (format s "~A" item)))))
 
 (defun exit (&optional (code 0))
   "Exit the program returning the given status code"
@@ -79,6 +82,34 @@
 (defun git-rev-parse (&key short (rev "HEAD") (path "."))
   "Returns the git revision with the given REV"
   (let ((args (if short
-		  (list "git" "-C" path "rev-parse" "--short" rev)
-		  (list "git" "-C" path "rev-parse" rev))))
+                  (list "git" "-C" path "rev-parse" "--short" rev)
+                  (list "git" "-C" path "rev-parse" rev))))
     (uiop:run-program args :output '(:string :stripped t))))
+
+(defun group-by (sequence predicate)
+  "Groups the items from SEQUENCE based on the result from PREDICATE"
+  (reduce (lambda (acc item)
+            (let* ((key (funcall predicate item))
+                   (group (gethash key acc nil)))
+              (setf (gethash key acc) (cons item group))
+              acc))
+          sequence
+          :initial-value (make-hash-table :test #'equal)))
+
+(defun hashtable-keys (htable)
+  "Returns the keys from the given hashtable"
+  (let ((result nil))
+    (maphash (lambda (k v)
+               (declare (ignore v))
+               (push k result))
+             htable)
+    result))
+
+(defun hashtable-values (htable)
+  "Returns the values from the given hashtable"
+  (let ((result nil))
+    (maphash (lambda (k v)
+               (declare (ignore k))
+               (push v result))
+             htable)
+    result))
