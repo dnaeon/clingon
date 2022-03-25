@@ -7,6 +7,7 @@ A summary of the features supported by =clingon= is provided below.
 - Native support for sub-commands
 - Support for command aliases
 - Short and long option names support
+- Related options may be grouped into categories
 - Short options may be collapsed as a single argument, e.g. =-xyz=
 - Long options support both notations - =--long-opt arg= and
   =--long-opt=arg=.
@@ -14,13 +15,16 @@ A summary of the features supported by =clingon= is provided below.
   sub-commands
 - Out of the box support for =--version= and =--help= flags
 - Support for various kinds of options like /string/, /integer/,
-  /boolean/, /switches/, /enums/, /list/, /counter/, etc.
+  /boolean/, /switches/, /enums/, /list/, /counter/, /filepath/, etc.
 - Sub-commands can lookup global options and flags defined in parent
   commands
 - Support for options, which may be required
 - Options can be initialized via environment variables
 - Single interface for creating options using =CLINGON:MAKE-OPTION=
 - Generate documentation for your command-line app
+- Support for =pre-hook= and =post-hook= actions for commands, which
+  allows invoking functions before and after the respective handler of
+  the command is executed
 - Support for Bash and Zsh shell completions
 - =clingon= is extensible, so if you don't find something you need you
   can extend it by developing a new option kind, or even new mechanism
@@ -395,8 +399,8 @@ Let's define the handler for our /top-level/ command.
 (defun top-level/handler (cmd)
   "The top-level handler"
   (let ((args (clingon:command-arguments cmd))
-	(user (clingon:getopt cmd :user))
-	(verbose (clingon:getopt cmd :verbose)))
+        (user (clingon:getopt cmd :user))
+        (verbose (clingon:getopt cmd :verbose)))
     (format t "Hello, ~A!~%" user)
     (format t "The current verbosity level is set to ~A~%" verbose)
     (format t "You have provided ~A arguments~%" (length args))
@@ -556,7 +560,7 @@ Let's see what we've got for our options.
 
 #+begin_src lisp
 INTRO> (let ((c (clingon:parse-command-line *app* nil)))
-	 (clingon:getopt c :user))
+         (clingon:getopt c :user))
 "dnaeon"
 T
 #+end_src
@@ -574,7 +578,7 @@ Let's try it out with a different input.
 
 #+begin_src lisp
 INTRO> (let ((c (clingon:parse-command-line *app* (list "-vvv" "--user" "foo"))))
-	 (format t "Verbose is ~A~%" (clingon:getopt c :verbose))
+         (format t "Verbose is ~A~%" (clingon:getopt c :verbose))
          (format t "User is ~A~%" (clingon:getopt c :user)))
 Verbose is 3
 User is foo
@@ -630,7 +634,7 @@ created exactly the way we did it for our /top-level/ command.
 (defun shout/handler (cmd)
   "The handler for the `shout' command"
   (let ((args (mapcar #'string-upcase (clingon:command-arguments cmd)))
-	(user (clingon:getopt cmd :user))) ;; <- a global option
+        (user (clingon:getopt cmd :user))) ;; <- a global option
     (format t "HEY, ~A!~%" user)
     (format t "~A!~%" (clingon:join-list args #\Space))))
 
@@ -696,8 +700,8 @@ developed so far.
   :license "BSD 2-Clause"
   :depends-on (:clingon)
   :components ((:module "intro"
-		:pathname #P"examples/intro/"
-		:components ((:file "intro"))))
+                :pathname #P"examples/intro/"
+                :components ((:file "intro"))))
   :build-operation "program-op"
   :build-pathname "clingon-intro"
   :entry-point "clingon.intro:main")
@@ -826,10 +830,10 @@ You can also create a simple command, which can be added to your
    :description "print the documentation"
    :usage ""
    :handler (lambda (cmd)
-	      ;; Print the documentation starting from the parent
-	      ;; command, so we can traverse all sub-commands in the
-	      ;; tree.
-	      (clingon:print-documentation :markdown (clingon:command-parent cmd) t))))
+              ;; Print the documentation starting from the parent
+              ;; command, so we can traverse all sub-commands in the
+              ;; tree.
+              (clingon:print-documentation :markdown (clingon:command-parent cmd) t))))
 #+end_src
 
 Above command can be wired up anywhere in your application.
@@ -840,6 +844,104 @@ generates the documentation for all sub-commands.
 
 You can also find the generated documentation for the =clingon-demo=
 app in the =docs/= directory of the =clingon= repo.
+
+* Command Hooks
+
+=clingon= allows you to associate =pre= and =post= hooks with a
+command.
+
+The =pre= and =post= hooks are functions which will be invoked before
+and after the respective command handler is executed. They are useful
+in cases when you need to set up or tear things down before executing
+the command's handler.
+
+An example of a =pre-hook= might be to configure the logging level of
+your application based on the value of a global flag. A =post-hook=
+might be responsible for shutting down any active connections, etc.
+
+The =pre-hook= and =post-hook= functions accept a single argument,
+which is an instance of =CLINGON:COMMAND=. That way the hooks can
+examine the command's context and lookup any flags or options.
+
+Hooks are also hierachical in the sense that they will be executed
+based on the command's lineage.
+
+Consider the following example, where we have a CLI app with three
+commands.
+
+#+begin_src text
+  main -> foo -> bar
+#+end_src
+
+In above example the =bar= command is a sub-command of =foo=, which in
+turn is a sub-command of =main=. Also, consider that we have added
+pre- and post-hooks to each command.
+
+If a user executed the following on the command-line:
+
+#+begin_src shell
+  $ main foo bar
+#+end_src
+
+Based on the above command-line =clingon= would do the following:
+
+- Execute any =pre-hook= functions starting from the least-specific up to the
+  most-specific node from the commands' lineage
+- Execute the command's handler
+- Execute any =post-hook= functions starting from the most-specific down to the
+  least-specific node from the command's lineage
+
+In above example that would be:
+
+#+begin_src text
+  > main (pre-hook)
+  >> foo (pre-hook)
+  >>> bar (pre-hook)
+  >>>> bar (handler)
+  >>> bar (post-hook)
+  >> foo (post-hook)
+  > main (post-hook)
+#+end_src
+
+Associating hooks with commands is done during instantiation of a
+command. The following example creates a new command with a =pre-hook=
+and =post-hook=.
+
+#+begin_src lisp
+  (defun foo/pre-hook (cmd)
+    "The pre-hook for `foo' command"
+    (declare (ignore cmd))
+    (format t "foo pre-hook has been invoked~&"))
+
+  (defun foo/post-hook (cmd)
+    "The post-hook for `foo' command"
+    (declare (ignore cmd))
+    (format t "foo post-hook has been invoked~&"))
+
+  (defun foo/handler (cmd)
+    (declare (ignore cmd))
+    (format t "foo handler has been invoked~&"))
+
+  (defun foo/command ()
+    "Returns the `foo' command"
+    (clingon:make-command
+     :name "foo"
+     :description "the foo command"
+     :authors '("John Doe <john.doe@example.org>")
+     :handler #'foo/handler
+     :pre-hook #'foo/pre-hook
+     :post-hook #'foo/post-hook
+     :options nil
+     :sub-commands nil))
+#+end_src
+
+If we have executed above command we would see the following output.
+
+#+begin_src shell
+  foo pre-hook has been invoked
+  foo handler has been invoked
+  foo post-hook has been invoked
+#+end_src
 
 * Options
 
@@ -862,6 +964,9 @@ The supported option kinds include:
 - =choice=
 - =enum=
 - =list=
+- =list/integer=
+- =filepath=
+- =list/filepath=
 - etc.
 
 ** Counters Options
@@ -986,8 +1091,8 @@ For example:
  :long-name "my-enum"
  :key :enum
  :items '(("one" . 1)
-	  ("two" . 2)
-	  ("three" . 3)))
+          ("two" . 2)
+          ("three" . 3)))
 #+end_src
 
 If a user specifies =--my-enum=one= on the command-line the option
@@ -1008,9 +1113,9 @@ perform some basic math operations.
  :long-name "operation"
  :required t
  :items `(("add" . ,#'+)
-	  ("sub" . ,#'-)
-	  ("mul" . ,#'*)
-	  ("div" . ,#'/))
+          ("sub" . ,#'-)
+          ("mul" . ,#'*)
+          ("div" . ,#'/))
  :key :math/operation)
 #+end_src
 
@@ -1286,7 +1391,7 @@ initial value at all.
   ;; initial value, so let's derive a value from it.
   (let ((current (option-value option)))
     (setf (option-value option)
-	  (derive-option-value option current))))
+          (derive-option-value option current))))
 #+end_src
 
 Next we will implement =CLINGON:DERIVE-OPTION-VALUE= for our new
@@ -1385,10 +1490,10 @@ to your top-level command.
      :description "generate the Zsh completion script"
      :usage ""
      :handler (lambda (cmd)
-		;; Use the parent command when generating the completions,
-		;; so that we can traverse all sub-commands in the tree.
-		(let ((parent (clingon:command-parent cmd)))
-		  (clingon:print-documentation :zsh-completions parent t)))))
+                ;; Use the parent command when generating the completions,
+                ;; so that we can traverse all sub-commands in the tree.
+                (let ((parent (clingon:command-parent cmd)))
+                  (clingon:print-documentation :zsh-completions parent t)))))
 #+end_src
 
 You can also check out the =clingon-demo= app for a fully working CLI
