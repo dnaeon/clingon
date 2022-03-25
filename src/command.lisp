@@ -85,6 +85,8 @@
    :command-name
    :command-options
    :command-handler
+   :command-pre-hook
+   :command-post-hook
    :command-sub-commands
    :command-parent
    :command-lineage
@@ -121,7 +123,8 @@
    :print-options-usage
    :print-sub-commands-info
    :command-usage-string
-   :visible-options))
+   :visible-options
+   :apply-hooks))
 (in-package :clingon.command)
 
 (defgeneric find-option (kind object name &key)
@@ -141,6 +144,9 @@
 
 (defgeneric print-documentation (kind command stream &key)
   (:documentation "Prints the documentation of the given top-level command"))
+
+(defgeneric apply-hooks (kind command &key)
+  (:documentation "Applies any hooks associated with the given COMMAND"))
 
 (defparameter *default-help-flag*
   (make-option :flag
@@ -227,6 +233,20 @@ _~~A() {
     :documentation "A function which accepts a single argument. The
      argument is an instance of the COMMAND class, which provides the
      context and environment for options.")
+   (pre-hook
+    :initarg :pre-hook
+    :initform nil
+    :reader command-pre-hook
+    :documentation "A pre-hook is a function which will be invoked
+    before the command handler is executed. The function must accept a
+    single argument, which is an instance of the COMMAND class.")
+   (post-hook
+    :initarg :post-hook
+    :initform nil
+    :reader command-post-hook
+    :documentation "A post-hook is a function which will be invoked
+    after the command handler is executed. The function must accept a
+    single argument, which is an instance of the COMMAND class.")
    (sub-commands
     :initarg :sub-commands
     :initform nil
@@ -590,6 +610,20 @@ _~~A() {
 
     (derive-option-with-restarts command option optarg)))
 
+(defmethod apply-hooks ((kind (eql :pre)) (command command) &key)
+  "Applies any pre-hooks associated with the command's lineage
+  starting from the least-specific node up to the most-specific one."
+  (dolist (cmd (reverse (command-lineage command)))
+    (when (command-pre-hook cmd)
+      (funcall (command-pre-hook cmd) cmd))))
+
+(defmethod apply-hooks ((kind (eql :post)) (command command) &key)
+  "Applies the post-hooks associated with command's lineage
+   starting from the most-specific node down to the least-specific one"
+  (dolist (cmd (command-lineage command))
+    (when (command-post-hook cmd)
+      (funcall (command-post-hook cmd) cmd))))
+
 (defmethod run ((top-level command) &optional arguments)
   "Runs the specified top-level command"
   (handler-case
@@ -597,7 +631,9 @@ _~~A() {
              (cmd (parse-command-line top-level arguments)))
         (unless (command-handler cmd)
           (error "No handler registered for command '~A'" (command-full-name cmd)))
+        (apply-hooks :pre cmd)
         (with-user-abort (funcall (command-handler cmd) cmd))
+        (apply-hooks :post cmd)
         (exit 0))
     ;; Missing required options
     (missing-required-option-value (condition)
