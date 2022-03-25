@@ -1,3 +1,17 @@
+* 2022-03-25
+
+Added support for =pre-hook= and =post-hook= actions for commands.
+
+The =CLIGON:COMMAND= class now accepts the =:pre-hook= and
+=:post-hook= initargs, which allows specifying a function to be
+invoked before and after the respective handler of the command is
+executed.
+
+The generic function =CLINGON:APPLY-HOOKS= have been added, which
+takes care of applying the =pre-hook= and =post-hook= hooks.
+
+Version of =clingon= system has been bumped to 0.3.5.
+
 * 2022-03-24
 
 Add support for grouping related options into categories.
