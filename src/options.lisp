@@ -78,7 +78,8 @@
    :option-switch-on-states
    :option-switch-off-states
    :option-filepath
-   :option-list-filepath))
+   :option-list-filepath
+   :parse-integer-or-lose))
 (in-package :clingon.options)
 
 (defgeneric initialize-option (option &key)
