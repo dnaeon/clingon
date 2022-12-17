@@ -1,0 +1,35 @@
+# .github/workflows/test.yaml
+name: test
+on: [ push, pull_request ]
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        implementation:
+          - sbcl
+          - ecl
+          - ccl
+        include:
+          - implementation: sbcl
+            image: clfoundation/sbcl:2.2.4
+            command: sbcl
+          - implementation: ecl
+            image: clfoundation/ecl:21.2.1
+            command: ecl
+          - implementation: ccl
+            image: clfoundation/ccl:1.12
+            command: ccl
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.image }}
+      env:
+        CI_SYSTEM: github
+        QUICKLISP_ADD_TO_INIT_FILE: true
+        QUICKLISP_DIST_VERSION: latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Run tests
+        run: |
+          env LISP=${{ matrix.command }} ./scripts/run-ci-tests.sh

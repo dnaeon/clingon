@@ -14,6 +14,6 @@ demo-doc: demo
 	./bin/clingon-demo print-doc > docs/clingon-demo.md
 
 test:
-	./run-tests.sh
+	./scripts/run-tests.sh
 
 .PHONY: intro demo demo-doc test
