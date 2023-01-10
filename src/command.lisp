@@ -124,7 +124,11 @@
    :print-sub-commands-info
    :command-usage-string
    :visible-options
-   :apply-hooks))
+   :apply-hooks
+   :*default-help-flag*
+   :*default-version-flag*
+   :*default-bash-completions-flag*
+   :*default-options*))
 (in-package :clingon.command)
 
 (defgeneric find-option (kind object name &key)
