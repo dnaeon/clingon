@@ -61,7 +61,7 @@
                                                        command-line arguments -- clingon.")
                         :authors '("Marin Atanasov Nikolov <dnaeon@gmail.com>")
                         :license "BSD 2-Clause"
-			:handler #'top-level/handler
+                        :handler #'top-level/handler
                         :options (top-level/options)
                         :sub-commands (top-level/sub-commands)))
 
