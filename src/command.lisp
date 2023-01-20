@@ -205,7 +205,7 @@
   (:documentation "Prints the usage information about options to the
   given stream"))
 
-(defgeneric print-sub-commands-info (command stream)
+(defgeneric print-sub-commands-info (command stream &key)
   (:documentation "Prints a summary of the sub-commands available for
   the command"))
 
@@ -434,15 +434,19 @@ _~~A() {
       (unless (option-is-set-p option)
         (error 'missing-required-option-value :item option :command command)))))
 
-(defmethod find-option ((kind (eql :short)) (command command) name &key)
+(defmethod find-option ((kind (eql :short)) (command command) name)
   "Finds the option with the given short name"
   (find name (command-options command)
         :key (lambda (item) (or (option-short-name item) #\Nul))
         :test #'char=))
 
-(defmethod find-option ((kind (eql :long)) (command command) name &key)
+(defmethod find-option ((kind (eql :long)) (command command) name)
   "Finds the option with the given long name"
   (find name (command-options command) :key #'option-long-name :test #'string=))
+
+(defmethod find-option ((kind (eql :by-key)) (command command) opt-key)
+  "Finds the option identified by OPT-KEY"
+  (find opt-key (command-options command) :key #'option-key :test #'equal))
 
 (defmethod ensure-unique-options ((command command))
   "Ensures that the given COMMAND does not contain duplicate options"
