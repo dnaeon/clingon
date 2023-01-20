@@ -189,10 +189,10 @@
   (:documentation "Parses the arguments given to the command and
   returns the most-specific sub-command which matched"))
 
-(defgeneric getopt (command opt-key &optional default keep-looking)
+(defgeneric getopt (command opt-key &key default keep-looking)
   (:documentation "Returns the value of the option identified by OPT-KEY"))
 
-(defgeneric opt-is-set-p (command opt-key)
+(defgeneric opt-is-set-p (command opt-key &key keep-looking)
   (:documentation "Returns T, if the option identified by OPT-KEY is defined for the
   command, NIL otherwise."))
 
@@ -206,9 +206,6 @@
 (defgeneric print-sub-commands-info (command stream &key)
   (:documentation "Prints a summary of the sub-commands available for
   the command"))
-
-(defgeneric print-usage (command stream &key)
-  (:documentation "Prints the usage of the command to the given stream"))
 
 (defparameter *default-help-flag*
   (make-option :flag
@@ -772,7 +769,7 @@ _~~A() {
     :finally (finalize-command command))
   command)
 
-(defmethod getopt ((command command) opt-key &optional default keep-looking)
+(defmethod getopt ((command command) opt-key &key default keep-looking)
   "Returns the value of the option identified by OPT-KEY by traversing
    the lineage of the given COMMAND, starting from the most-specific
    to least-specific command.
@@ -800,12 +797,18 @@ _~~A() {
    traversing the command's lineage, if an option with the given
    OPT-KEY is found, but it has not been set. In such cases GETOPT
    will continue traversing the nodes, until it finds a parent command
-   for which the option is defined and is set."
+   for which the option is defined and is set.
+
+   GETOPT returns three values:
+
+   0: the value of the option, if set
+   1: T if the option was set, NIL otherwise
+   2: the command which provided the option value"
   (dolist (cmd (command-lineage command))
     ;; Option is defined for the command, and is set.
     (multiple-value-bind (value exists-p) (gethash opt-key (command-context cmd))
       (when exists-p
-        (return-from getopt (values value exists-p))))
+        (return-from getopt (values value exists-p cmd))))
     ;; Option is defined for the command, but is not set.
     ;;
     ;; The default behaviour of GETOPT in such cases is to return
@@ -819,13 +822,13 @@ _~~A() {
     ;; you only care about the value of any of them.
     (when (and (find-option :by-key cmd opt-key)
                (not keep-looking))
-      (return-from getopt (values default nil))))
-  (values default nil))
+      (return-from getopt (values default nil nil))))
+  (values default nil nil))
 
-(defmethod opt-is-set-p ((command command) opt-key &optional keep-looking)
+(defmethod opt-is-set-p ((command command) opt-key &key keep-looking)
   "Returns T if the OPT-KEY is defined anywhere in the command's lineage"
-  (multiple-value-bind (value is-set-p) (getopt command opt-key keep-looking)
-    (declare (ignore value))
+  (multiple-value-bind (value is-set-p cmd) (getopt command opt-key :keep-looking keep-looking)
+    (declare (ignore value cmd))
     is-set-p))
 
 (defmethod visible-options ((command command))
@@ -969,7 +972,7 @@ _~~A() {
             (command-version command)))
   (exit 0))
 
-(defmethod print-documentation ((kind (:eql :bash-completions)) (command command) stream &key)
+(defmethod print-documentation ((kind (eql :bash-completions)) (command command) stream &key)
   "Prints the bash completions for the given command"
   (dolist (sub (command-sub-commands command))
     (format stream "~A~%" (command-name sub))
