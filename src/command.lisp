@@ -117,8 +117,6 @@
    :print-usage
    :print-usage-and-exit
    :print-version-and-exit
-   :print-bash-completions
-   :print-bash-completions-and-exit
    :print-documentation
    :print-options-usage
    :print-sub-commands-info
@@ -422,7 +420,8 @@ _~~A() {
   ;; Special cases for some options/flags
   (cond
     ((getopt command :clingon.bash-completions.flag)
-     (print-bash-completions-and-exit command t))
+     (print-documentation :bash-completions command t)
+     (exit 0))
     ((getopt command :clingon.version.flag)
      (print-version-and-exit command t))
     ((getopt command :clingon.help.flag)
@@ -970,7 +969,7 @@ _~~A() {
             (command-version command)))
   (exit 0))
 
-(defmethod print-bash-completions ((command command) stream)
+(defmethod print-documentation ((kind (:eql :bash-completions)) (command command) stream &key)
   "Prints the bash completions for the given command"
   (dolist (sub (command-sub-commands command))
     (format stream "~A~%" (command-name sub))
@@ -984,11 +983,6 @@ _~~A() {
       (format stream "--~A=~%" (option-long-name opt)))
     (when (and (not (option-parameter opt)) (option-long-name opt))
       (format stream "--~A~%" (option-long-name opt)))))
-
-(defmethod print-bash-completions-and-exit ((command command) stream)
-  "Prints the bash completions for the given command and exits"
-  (print-bash-completions command stream)
-  (exit 0))
 
 (defmethod print-documentation ((kind (eql :markdown)) (top-level command) stream &key (wrap-at 80))
   "Prints the documentation for the given TOP-LEVEL command in Markdown format"
