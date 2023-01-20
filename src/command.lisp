@@ -420,7 +420,15 @@ _~~A() {
      (print-documentation :bash-completions command t)
      (exit 0))
     ((getopt command :clingon.version.flag)
-     (print-version-and-exit command t))
+     ;; If this is a sub-command and we don't have a version string,
+     ;; then try to find a version string from some of the parent
+     ;; commands.
+     (let ((cmd-with-version (some (lambda (item)
+                                     (and (command-version item) item))
+                                   (command-lineage command))))
+       (if cmd-with-version
+           (print-version-and-exit cmd-with-version t) ;; Found a parent command with version
+           (exit 0))))                                 ;; Version is not set at all
     ((getopt command :clingon.help.flag)
      (print-usage-and-exit command t)))
 
