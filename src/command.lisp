@@ -131,16 +131,16 @@
    :*default-options*))
 (in-package :clingon.command)
 
-(defgeneric find-option (kind object name &key)
+(defgeneric find-option (kind object name)
   (:documentation "Returns the option of the given KIND and NAME, or NIL otherwise"))
 
-(defgeneric parse-option (kind object &key)
+(defgeneric parse-option (kind object)
   (:documentation "Parses an option of the given KIND"))
 
-(defgeneric initialize-command (command &key)
+(defgeneric initialize-command (command)
   (:documentation "Initializes a command"))
 
-(defgeneric finalize-command (command &key)
+(defgeneric finalize-command (command)
   (:documentation "Finalizes a command and derives the set of reduced options"))
 
 (defgeneric print-usage (command stream &key)
@@ -149,8 +149,68 @@
 (defgeneric print-documentation (kind command stream &key)
   (:documentation "Prints the documentation of the given top-level command"))
 
-(defgeneric apply-hooks (kind command &key)
+(defgeneric apply-hooks (kind command)
   (:documentation "Applies any hooks associated with the given COMMAND"))
+
+(defgeneric ensure-unique-options (command)
+  (:documentation "Ensures that the given COMMAND does not contain
+  duplicate options. Signals a condition on error"))
+
+(defgeneric ensure-unique-sub-commands (command)
+  (:documentation "Ensures that the given COMMAND does not contain
+  duplicate sub-command names. Signals a condition on error"))
+
+(defgeneric command-lineage (command)
+  (:documentation "Returns the lineage of the command up to the root"))
+
+(defgeneric command-is-top-level-p (command)
+  (:documentation "Returns T, if the command is a top-level command,
+  NIL otherwise"))
+
+(defgeneric find-sub-command (command name)
+  (:documentation "Returns the sub-command with the given name or
+  alias"))
+
+(defgeneric command-full-path (command)
+  (:documentation "Returns the full path to the command as a list"))
+
+(defgeneric command-full-name (command)
+  (:documentation "Returns a string representing the full name of the
+  command"))
+
+(defgeneric command-tree (command)
+  (:documentation "Returns the nodes representing the command's tree"))
+
+(defgeneric validate-top-level-command (command)
+  (:documentation "Validates the top-level command and it's sub-commands"))
+
+(defgeneric run (command &optional arguments)
+  (:documentation "Runs the specific command"))
+
+(defgeneric parse-command-line (command arguments)
+  (:documentation "Parses the arguments given to the command and
+  returns the most-specific sub-command which matched"))
+
+(defgeneric getopt (command opt-key &optional default keep-looking)
+  (:documentation "Returns the value of the option identified by OPT-KEY"))
+
+(defgeneric opt-is-set-p (command opt-key)
+  (:documentation "Returns T, if the option identified by OPT-KEY is defined for the
+  command, NIL otherwise."))
+
+(defgeneric visible-options (command)
+  (:documentation "Returns the list of visible options"))
+
+(defgeneric print-options-usage (command stream &key)
+  (:documentation "Prints the usage information about options to the
+  given stream"))
+
+(defgeneric print-sub-commands-info (command stream)
+  (:documentation "Prints a summary of the sub-commands available for
+  the command"))
+
+(defgeneric print-usage (command stream &key)
+  (:documentation "Prints the usage of the command to the given stream"))
 
 (defparameter *default-help-flag*
   (make-option :flag
@@ -338,14 +398,14 @@ _~~A() {
   (dolist (default-opt *default-options*)
     (push default-opt (command-options command))))
 
-(defmethod initialize-command ((command command) &key)
+(defmethod initialize-command ((command command))
   "Initializes the command and the options associated with it."
   (setf (command-context command) (make-hash-table :test #'equal))
   (setf (command-arguments command) nil)
   (dolist (option (command-options command))
     (initialize-option option)))
 
-(defmethod finalize-command ((command command) &key)
+(defmethod finalize-command ((command command))
   "Finalizes the command and derives the reduced set of option values"
   (setf (command-args-to-parse command) nil)
   (let ((context (command-context command)))
@@ -431,7 +491,7 @@ _~~A() {
   "Returns T if the command is a top-level command, NIL otherwise"
   (= 1 (length (command-lineage top-level))))
 
-(defmethod find-sub-command ((command command) name &key)
+(defmethod find-sub-command ((command command) name)
   "Returns the sub-command with the given name or alias"
   (find-if (lambda (sub-command)
              (or (string= name (command-name sub-command))
@@ -466,13 +526,13 @@ _~~A() {
     (ensure-unique-options node))
   t)
 
-(defmethod parse-option ((kind (eql :consume-all-arguments)) (command command) &key)
+(defmethod parse-option ((kind (eql :consume-all-arguments)) (command command))
   "Consumes all arguments after the end-of-options flag"
   (pop (command-args-to-parse command)) ;; Drop the end-of-options (`--') argument
   (loop :for arg = (pop (command-args-to-parse command)) :while arg :do
     (push arg (command-arguments command))))
 
-(defmethod parse-option ((kind (eql :free-argument)) (command command) &key)
+(defmethod parse-option ((kind (eql :free-argument)) (command command))
   "Consume the option and treat it as a free argument"
   (let ((arg (pop (command-args-to-parse command))))
     (push arg (command-arguments command))))
@@ -539,7 +599,7 @@ _~~A() {
                        (list (read-line *query-io*)))
         value))))
 
-(defmethod parse-option ((kind (eql :short)) (command command) &key)
+(defmethod parse-option ((kind (eql :short)) (command command))
   "Parses a short option"
   (let* ((arg (pop (command-args-to-parse command)))
          (short-name (aref arg 1))
@@ -582,7 +642,7 @@ _~~A() {
 
     (derive-option-with-restarts command option optarg)))
 
-(defmethod parse-option ((kind (eql :long)) (command command) &key)
+(defmethod parse-option ((kind (eql :long)) (command command))
   "Parses a long option"
   (let* ((arg (pop (command-args-to-parse command)))
          (equals-position (position #\= arg))
@@ -614,14 +674,14 @@ _~~A() {
 
     (derive-option-with-restarts command option optarg)))
 
-(defmethod apply-hooks ((kind (eql :pre)) (command command) &key)
+(defmethod apply-hooks ((kind (eql :pre)) (command command))
   "Applies any pre-hooks associated with the command's lineage
   starting from the least-specific node up to the most-specific one."
   (dolist (cmd (reverse (command-lineage command)))
     (when (command-pre-hook cmd)
       (funcall (command-pre-hook cmd) cmd))))
 
-(defmethod apply-hooks ((kind (eql :post)) (command command) &key)
+(defmethod apply-hooks ((kind (eql :post)) (command command))
   "Applies the post-hooks associated with command's lineage
    starting from the most-specific node down to the least-specific one"
   (dolist (cmd (command-lineage command))
