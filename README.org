@@ -566,9 +566,10 @@ T
 #+end_src
 
 The =CLINGON:GETOPT= function returns multiple values -- first one
-specifies the value of the option, if it had any. And the second one
+specifies the value of the option, if it had any, the second one
 indicates whether or not that option has been set at all on the
-command-line.
+command-line, and the third value is the command which provided the
+value for the option, if set.
 
 If you need to simply test things out and tell whether an option has
 been set at all you can use the =CLINGON:OPT-IS-SET-P= function
