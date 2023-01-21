@@ -110,7 +110,9 @@
    :run
    :parse-command-line
    :getopt
+   :getopt*
    :opt-is-set-p
+   :opt-is-set-p*
    :treat-as-argument
    :discard-option
    :validate-top-level-command
@@ -189,12 +191,22 @@
   (:documentation "Parses the arguments given to the command and
   returns the most-specific sub-command which matched"))
 
-(defgeneric getopt (command opt-key &key default keep-looking)
-  (:documentation "Returns the value of the option identified by OPT-KEY"))
+(defgeneric getopt (command opt-key &optional default)
+  (:documentation "Returns the value of the option identified by OPT-KEY, or DEFAULT if
+not found, or not set."))
 
-(defgeneric opt-is-set-p (command opt-key &key keep-looking)
-  (:documentation "Returns T, if the option identified by OPT-KEY is defined for the
-  command, NIL otherwise."))
+(defgeneric getopt* (command opt-key &optional default)
+  (:documentation "Returns the value of the option identified by OPT-KEY from the first
+  command in the lineage, for which the option is defined and is set,
+  or DEFAULT if none of the commands in the lineage provides the
+  option, and is set."))
+
+(defgeneric opt-is-set-p (command opt-key)
+  (:documentation "Returns T, if the option identified by OPT-KEY is set, NIL otherwise."))
+
+(defgeneric opt-is-set-p* (command opt-key)
+  (:documentation "Returns T, if the option identified by OPT-KEY is
+  set in any command from the lineage, NIL otherwise."))
 
 (defgeneric visible-options (command)
   (:documentation "Returns the list of visible options"))
@@ -777,40 +789,69 @@ _~~A() {
     :finally (finalize-command command))
   command)
 
-(defmethod getopt ((command command) opt-key &key default keep-looking)
+(defmethod getopt ((command command) opt-key &optional default)
   "Returns the value of the option identified by OPT-KEY by traversing
    the lineage of the given COMMAND, starting from the most-specific
-   to least-specific command.
+   to least-specific command. If the option is not found, or not set,
+   then GETOPT will return the DEFAULT value.
 
-   Make sure to call GETOPT on a command, which has been finalized.
+   GETOPT should be called for commands, which have been finalized.
 
-   For example, if we have the following command line arguments:
+   GETOPT always returns results for the requested OPT-KEY from the
+   most-specific command.
 
-   $ my-app --verbose --some-opt=value-a <FOO-CMD> --foo-flag <BAR-CMD> --bar-flag --some-opt=value-b
+   If multiple commands from the lineage provide the same option,
+   which is identified by the same OPT-KEY, then the result from
+   GETOPT is always the one from the most-specific command.
 
-   When COMMAND is bound to the command named <BAR-CMD> then the
-   result of the following expression will be T, as `--verbose' is a
-   flag, associated with the top-level `my-app' command.
+   Consider this example command-line:
 
-   (clingon:getopt cmd :verbose)
+   $ app --my-opt=global-val FOO-CMD --my-opt=foo-val BAR-CMD --my-opt=bar-value
 
-   However, if we request the value of the `--some-opt' option, which
-   is defined on both -- `my-app' and <BAR-CMD> then the following
-   expression will return `value-b' as a result, since this is the
-   value associated with the most-specific command.
+   In above example `--my-opt' option is defined for the top-level
+   command, and for the two sub-commands -- `FOO-CMD' and `BAR-CMD'
+   respectively.
 
-   (clingon:getopt cmd :some-opt)
+   If `--my-opt' uses the same OPT-KEY to identify the option in all
+   three commands, e.g. `:my-opt', then the result from GETOPT will
+   always be for the most-specific command, which in above example is
+   `BAR-CMD'. In that case the result from GETOPT will be `bar-value'.
 
-   The KEEP-LOOKING optional argument specifies whether to continue
-   traversing the command's lineage, if an option with the given
-   OPT-KEY is found, but it has not been set. In such cases GETOPT
-   will continue traversing the nodes, until it finds a parent command
-   for which the option is defined and is set.
+   Consider this additional example, in which case we still have the
+   same option defined on all three commands, but this time we don't
+   specify explicitely a value when invoking the `BAR-CMD'.
 
-   GETOPT returns three values:
+   $ app --my-opt=global-val FOO-CMD --my-opt=foo-val BAR-CMD
 
-   0: the value of the option, if set
-   1: T if the option was set, NIL otherwise
+   The result in this case would be DEFAULT, because `:my-opt' is defined
+   for `BAR-CMD', but is not set.
+
+   If you need to be able to lookup options defined in global
+   commands, it is considered a good practice that you always
+   namespace your option keys. Using the same example as before, that
+   would mean that you will use different keys for each option in the
+   different commands, e.g. `:global-cmd/my-opt', `:foo-cmd/my-opt'
+   and `:bar-cmd/my-opt' might be used as the keys for `--my-opt' in
+   the different commands.
+
+   If you really need to use the same OPT-KEY in multiple commands,
+   and you only care about getting the value for an option from any of
+   them then you might want to use GETOPT*. GETOPT* will return the
+   value of OPT-KEY from the first command in the lineage, for which
+   the option is defined, and is set.
+
+   Using the last command-line as an example again.
+
+   $ app --my-opt=global-val FOO-CMD --my-opt=foo-val BAR-CMD
+
+   If we use GETOPT* in above example, then the result from it would
+   be `:foo-val', as this is the first command in the lineage, for
+   which the option is defined, and is set.
+
+   GETOPT and GETOPT* return three values:
+
+   0: the value of the option, if the option is defined and set, DEFAULT otherwise.
+   1: T if the option was set, or NIL otherwise
    2: the command which provided the option value"
   (dolist (cmd (command-lineage command))
     ;; Option is defined for the command, and is set.
@@ -818,24 +859,32 @@ _~~A() {
       (when exists-p
         (return-from getopt (values value exists-p cmd))))
     ;; Option is defined for the command, but is not set.
-    ;;
-    ;; The default behaviour of GETOPT in such cases is to return
-    ;; (VALUES DEFAULT NIL), which indicates that the option is
-    ;; defined for the command, but has no value associated with it.
-    ;;
-    ;; However, if TRAVERSE-IF-NOT-SET is T, then GETOPT will continue
-    ;; traversing the command lineage until it finds a parent command,
-    ;; for which OPT-KEY is defined and is set. This behaviour is
-    ;; useful in cases when sub-commands share the same options, and
-    ;; you only care about the value of any of them.
-    (when (and (find-option :by-key cmd opt-key)
-               (not keep-looking))
-      (return-from getopt (values default nil nil))))
+    (when (find-option :by-key cmd opt-key)
+      (return-from getopt (values default nil cmd))))
+  ;; Option not found.
   (values default nil nil))
 
-(defmethod opt-is-set-p ((command command) opt-key &key keep-looking)
-  "Returns T if the OPT-KEY is defined anywhere in the command's lineage"
-  (multiple-value-bind (value is-set-p cmd) (getopt command opt-key :keep-looking keep-looking)
+(defmethod getopt* ((command command) opt-key &optional default)
+  "GETOPT* works similarly to GETOPT, but traverses the lineage until it
+   finds a command for which OPT-KEY is defined, and is set."
+  (dolist (cmd (command-lineage command))
+    ;; Option is defined for the command, and is set.
+    (multiple-value-bind (opt-value exists-p) (gethash opt-key (command-context cmd))
+      (when exists-p
+        (return-from getopt* (values opt-value exists-p cmd)))))
+  (values default nil nil))
+
+(defmethod opt-is-set-p ((command command) opt-key)
+  "Returns T, if the option identified by OPT-KEY is defined for the
+  command, NIL otherwise."
+  (multiple-value-bind (value is-set-p cmd) (getopt command opt-key)
+    (declare (ignore value cmd))
+    is-set-p))
+
+(defmethod opt-is-set-p* ((command command) opt-key)
+  "Returns T, if the option identified by OPT-KEY is defined for any
+  of commands in the lineage, or NIL otherwise"
+  (multiple-value-bind (value is-set-p cmd) (getopt* command opt-key)
     (declare (ignore value cmd))
     is-set-p))
 
