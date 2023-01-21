@@ -428,6 +428,32 @@
       (ok (string= "top-level" (clingon:command-name c)) "matches the top-level command")
       (ok (= 0 (clingon:getopt c :verbose)) "verbose is 0")))
 
+  (testing "test GETOPT with default values"
+    (let* ((top-level (top-level/command))
+           (c (clingon:parse-command-line top-level nil)))
+      (ok (string= "default-value" (clingon:getopt c :unknown-opt "default-value"))
+          "default value matches")))
+
+  (testing "test GETOPT for most-specific command (opt is defined and is set)"
+    (let* ((top-level (top-level/command))
+           (c (clingon:parse-command-line top-level '("--same-opt=global-val" "display" "--same-opt=display-val" "status" "--real-time=false" "--same-opt=status-val"))))
+      (ok (string= "status-val" (clingon:getopt c :same-opt))
+          "most-specific option value matches")))
+
+  (testing "test GETOPT for most-specific command (opt is defined, but is not set)"
+    (let* ((top-level (top-level/command))
+           (c (clingon:parse-command-line top-level '("--same-opt=global-val" "display" "--same-opt=display-val" "status" "--real-time=false"))))
+      (ok (equal nil (clingon:getopt c :same-opt))
+          "most-specific option value matches")
+      (ok (string= "default-val" (clingon:getopt c :same-opt "default-val"))
+          "most-specific option returns default value")))
+
+  (testing "test GETOPT* (most-specific command option is defined, but is not set)"
+    (let* ((top-level (top-level/command))
+           (c (clingon:parse-command-line top-level '("--same-opt=global-val" "display" "--same-opt=display-val" "status" "--real-time=false"))))
+      (ok (string="display-val" (clingon:getopt* c :same-opt))
+          "matches first parent command for which the option is defined and is set")))
+
   (testing "top-level command with global flag"
     (let* ((top-level (top-level/command))
            (c (clingon:parse-command-line top-level '("-vvv" "--verbose"))))
