@@ -117,7 +117,7 @@
 
       ;; Set option and test finalized value
       (setf (clingon:option-value foo)
-	    (clingon:derive-option-value foo "false"))
+            (clingon:derive-option-value foo "false"))
       (ok (equal nil (clingon:finalize-option foo)) "finalized value matches")))
 
   (testing "boolean-always-true"
@@ -136,7 +136,7 @@
 
       ;; Set option and test finalized value
       (setf (clingon:option-value foo)
-	    (clingon:derive-option-value foo nil))
+            (clingon:derive-option-value foo nil))
       (ok (equal t (clingon:finalize-option foo)) "finalized value matches")))
 
   (testing "boolean-always-false"
@@ -155,7 +155,7 @@
 
       ;; Set option and test finalized value
       (setf (clingon:option-value foo)
-	    (clingon:derive-option-value foo "true"))
+            (clingon:derive-option-value foo "true"))
       (ok (equal nil (clingon:finalize-option foo)) "finalized value matches"))))
 
 (deftest option-counter
@@ -320,7 +320,7 @@
                                     :short-name #\c
                                     :key :choice
                                     :items '("foo" "bar" "baz")
-				    :initial-value "foo")))
+                                    :initial-value "foo")))
       (clingon:initialize-option opt)
       (ok (string= "foo" (clingon:finalize-option opt)) "finalized value matches")))
 
@@ -330,48 +330,48 @@
                                     :short-name #\c
                                     :key :choice
                                     :items '("foo" "bar" "baz")
-				    :initial-value "INVALID")))
+                                    :initial-value "INVALID")))
       (ok (signals (clingon:initialize-option opt) 'clingon:option-derive-error) "signals on invalid default choice"))))
 
 (deftest option-enum
   (testing "test with no default value"
     (let ((opt (clingon:make-option :enum
-				    :description "enum option"
-				    :short-name #\e
-				    :key :enum
-				    :items '(("one" . 1)
-					     ("two" . 2)
-					     ("three" . 3)))))
+                                    :description "enum option"
+                                    :short-name #\e
+                                    :key :enum
+                                    :items '(("one" . 1)
+                                             ("two" . 2)
+                                             ("three" . 3)))))
       (clingon:initialize-option opt)
       (ok (= 1 (clingon:derive-option-value opt "one")) "derive value from \"one\"")
       (ok (= 2 (clingon:derive-option-value opt "two")) "derive value from \"two\"")
       (ok (= 3 (clingon:derive-option-value opt "three")) "derive value from \"three\"")
       (ok (signals (clingon:derive-option-value opt "INVALID") 'clingon:option-derive-error)
-	  "signals on invalid enum variant")))
+          "signals on invalid enum variant")))
 
   (testing "test with default value"
     (let ((opt (clingon:make-option :enum
-				    :description "enum option"
-				    :short-name #\e
-				    :key :enum
-				    :items '(("one" . 1)
-					     ("two" . 2)
-					     ("three" . 3))
-				    :initial-value "one")))
+                                    :description "enum option"
+                                    :short-name #\e
+                                    :key :enum
+                                    :items '(("one" . 1)
+                                             ("two" . 2)
+                                             ("three" . 3))
+                                    :initial-value "one")))
       (clingon:initialize-option opt)
       (ok (= 1 (clingon:finalize-option opt)) "finalized value matches")))
 
   (testing "test with invalid default value"
     (let ((opt (clingon:make-option :enum
-				    :description "enum option"
-				    :short-name #\e
-				    :key :enum
-				    :items '(("one" . 1)
-					     ("two" . 2)
-					     ("three" . 3))
-				    :initial-value "INVALID")))
+                                    :description "enum option"
+                                    :short-name #\e
+                                    :key :enum
+                                    :items '(("one" . 1)
+                                             ("two" . 2)
+                                             ("three" . 3))
+                                    :initial-value "INVALID")))
       (ok (signals (clingon:initialize-option opt) 'clingon:option-derive-error)
-	  "signals on invalid default value"))))
+          "signals on invalid default value"))))
 
 (deftest option-string
   (testing "test with no default"
@@ -389,16 +389,16 @@
                                     :description "string with default value"
                                     :short-name #\c
                                     :key :string
-				    :initial-value "foo")))
+                                    :initial-value "foo")))
       (clingon:initialize-option opt)
       (ok (string= "foo" (clingon:finalize-option opt)) "finalized value matches"))))
 
 (deftest option-switch
   (testing "test with no default value"
     (let ((opt (clingon:make-option :switch
-				    :description "switch option"
-				    :short-name #\s
-				    :key :switch)))
+                                    :description "switch option"
+                                    :short-name #\s
+                                    :key :switch)))
       (clingon:initialize-option opt)
       (ok (equal :true (clingon:derive-option-value opt "on")) "derive value from \"on\"")
       (ok (equal :true (clingon:derive-option-value opt "yes")) "derive value from \"yes\"")
@@ -411,22 +411,22 @@
       (ok (equal :false (clingon:derive-option-value opt "disable")) "derive value from \"disable\"")
       (ok (equal :false (clingon:derive-option-value opt "0")) "derive value from \"0\"")
       (ok (signals (clingon:derive-option-value opt "INVALID") 'clingon:option-derive-error)
-	  "signals on invalid switch state")))
+          "signals on invalid switch state")))
 
   (testing "test with a default value"
     (let ((opt (clingon:make-option :switch
-				    :description "switch with a default state"
-				    :short-name #\s
-				    :key :switch
-				    :initial-value "on")))
+                                    :description "switch with a default state"
+                                    :short-name #\s
+                                    :key :switch
+                                    :initial-value "on")))
       (clingon:initialize-option opt)
       (ok (equal t (clingon:finalize-option opt)) "finalized value matches")))
 
   (testing "test with invalid default value"
     (let ((opt (clingon:make-option :switch
-				    :description "switch with invalid default"
-				    :short-name #\s
-				    :key :switch
-				    :initial-value "INVALID")))
+                                    :description "switch with invalid default"
+                                    :short-name #\s
+                                    :key :switch
+                                    :initial-value "INVALID")))
       (ok (signals (clingon:initialize-option opt) 'clingon:option-derive-error)
-	  "signals on invalid default value"))))
+          "signals on invalid default value"))))
