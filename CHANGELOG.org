@@ -1,3 +1,32 @@
+* 2023-01-24
+
+=clingon= version =0.4.0= has been tagged.
+
+- Added Github Actions to automatically test the =clingon= system.
+- Exported =CLINGON:PARSE-INTEGER-OR-LOSE=
+- Export symbols to control the default list of options for newly
+  created commands. See [[https://github.com/dnaeon/clingon/issues/4][issue #4]]
+- =CLINGON:FIND-OPTION= can now search for options by their keys
+- =CLINGON:GETOPT= returns three values -- the option value, a boolean
+  indicating whether the option was set, and the command which
+  provided the option.
+- If =--version= is specified for any command, then =clingon= will try
+  to find a parent command with an associated version string, if the
+  sub-command does not provide it's own version string.
+- Added =CLINGON:GETOPT*= which will return the first value from the
+  command's lineage, for which the option was defined and set.
+- Added =CLINGON:IS-OPT-SET-P*= predicate
+- Additional tests related to =CLINGON:GETOPT= and =CLINGON:GETOPT*=
+- Added support for /persistent/ options. A /persistent/ option is an
+  option which is propagated from parent to all sub-commands. Please
+  refer to the documentation for more details and examples.
+- =CLINGON:PRINT-DOCUMENTATION= can generate the tree representation
+  for commands in [[https://en.wikipedia.org/wiki/DOT_(graph_description_language)][Dot]] format.
+
+This is how the generated tree for the =clingon-demo= app looks like.
+
+[[./images/clingon-demo-tree.png]]
+
 * 2022-03-25
 
 Added support for =pre-hook= and =post-hook= actions for commands.
