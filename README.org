@@ -962,12 +962,14 @@ The supported option kinds include:
 - =boolean=
 - =boolean/true=
 - =boolean/false=
+- =flag=
 - =choice=
 - =enum=
 - =list=
 - =list/integer=
 - =filepath=
 - =list/filepath=
+- =switch=
 - etc.
 
 ** Counters Options
@@ -1209,6 +1211,72 @@ my-app --engine=start --engine=stop
 
 The final value of the =:engine= option will be =NIL= in the above
 example.
+
+** Persistent Options
+
+An option may be marked as /persistent/. A /persistent/ option is such
+an option, which will be propagated from a parent command to all
+sub-commands associated with it.
+
+This is useful when you need to provide the same option across
+sub-commands.
+
+The following example creates one top-level command (=demo= in the
+example), which has two sub-commands (=foo= and =bar= commands). The
+=foo= command has a single sub-command, =qux= in the following
+example.
+
+The =top-level= command has a single option (=persistent-opt= in the
+example), which is marked as /persistent/.
+
+#+begin_src shell
+  (defun qux/command ()
+    "Returns the `qux' command"
+    (clingon:make-command
+     :name "qux"
+     :description "the qux command"
+     :handler (lambda (cmd)
+                (declare (ignore cmd))
+                (format t "qux has been invoked"))))
+
+  (defun foo/command ()
+    "Returns the `foo' command"
+    (clingon:make-command
+     :name "foo"
+     :description "the foo command"
+     :sub-commands (list (qux/command))
+     :handler (lambda (cmd)
+                (declare (ignore cmd))
+                (format t "foo has been invoked"))))
+
+  (defun bar/command ()
+    "Returns the `bar' command"
+    (clingon:make-command
+     :name "bar"
+     :description "the bar command"
+     :handler (lambda (cmd)
+                (declare (ignore cmd))
+                (format t "bar has been invoked"))))
+
+  (defun top-level/command ()
+    "Returns the top-level command"
+    (clingon:make-command
+     :name "demo"
+     :description "the demo app"
+     :options (list
+               (clingon:make-option
+                :string
+                :long-name "persistent-opt"
+                :description "an example persistent option"
+                :persistent t
+                :key :persistent-opt))
+     :sub-commands (list
+                    (foo/command)
+                    (bar/command))))
+#+end_src
+
+Since the option is marked as persistent and is associated with the
+top-level command, it will be inherited by all sub-commands.
 
 * Generic Functions Operating on Options
 
