@@ -28,6 +28,11 @@
 (defun top-level/options ()
   "Returns the options for the top-level command"
   (list
+   (clingon:make-option :string
+                        :long-name "persistent-opt"
+                        :description "example persistent option"
+                        :persistent t
+                        :key :persistent-opt)
    (clingon:make-option :counter
                         :description "how noisy we want to be"
                         :short-name #\v
