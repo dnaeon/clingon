@@ -1,3 +1,17 @@
+;; TODO: add PRINT-DOCUMENTATION for :DOT to represent the command tree
+;; TODO: Specialize this method on keyword, string (for long options)
+;; and character (for short options) to allow for more flexibility
+;; TODO: Add getopt method which can get the option by long or short option name
+;; TODO: Add this one
+;; (defmethod getopt-or-lose ())
+;; TODO: Alternating options, e.g. `chmod +x` and `chmod -x`, option: "+w/-w"
+;; TODO: Confirmation options: y/n prompt
+;; TODO: Password options
+;; TODO: Prompt options
+;; TODO: Consider adding the option category as part of the zsh-completions generation
+;; TODO: Add `conflicting' options, e.g. option `--foo' is in conflict with `--bar'
+;; TODO: Add case-insensitive choice/enum options
+
 ;; Copyright (c) 2021 Marin Atanasov Nikolov <dnaeon@gmail.com>
 ;; All rights reserved.
 ;;
@@ -1004,6 +1018,7 @@ _~~A() {
        (format nil "~A [options] [arguments ...]" (command-full-name command))))))
 
 (defmethod print-usage ((command command) stream &key (wrap-at 70))
+  (initialize-command command)
   (format stream "NAME:~%")
   (format stream "  ~A - ~A~2%" (command-full-name command) (command-description command))
 
@@ -1080,6 +1095,9 @@ _~~A() {
 (defmethod print-documentation ((kind (eql :markdown)) (top-level command) stream &key (wrap-at 80))
   "Prints the documentation for the given TOP-LEVEL command in Markdown format"
   (with-command-tree (node top-level)
+    ;; Initialize command, so that options get propagated
+    (initialize-command node)
+
     ;; Command name
     (format stream "# ~A~2%" (command-full-name node))
 
@@ -1187,6 +1205,7 @@ _~~A() {
   (format stream "# autoload -U compinit~&")
   (format stream "# compinit~2&")
   (dolist (node (reverse (command-tree top-level)))
+    (initialize-command node)
     (let* ((full-path (command-full-path node))
            (func-name (join-list full-path "_"))
            (opt-specs (mapcar (lambda (opt)
