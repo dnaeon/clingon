@@ -14,9 +14,10 @@ clingon-demo [global-options] [<command>] [command-options] [arguments ...]
 `clingon-demo` accepts the following options:
 
 ``` shell
-      --help     display usage information and exit
-      --version  display version and exit
-  -v, --verbose  how noisy we want to be [default: 0]
+      --help                    display usage information and exit
+      --persistent-opt <VALUE>  example persistent option
+      --version                 display version and exit
+  -v, --verbose                 how noisy we want to be [default: 0]
 
 ```
 
@@ -33,6 +34,7 @@ clingon-demo [global-options] [<command>] [command-options] [arguments ...]
   print-doc       print the documentation
   sleep           sleeps for the given period of time
   zsh-completion  generate the Zsh completion script
+  dot             generate tree representation in Dot format
 
 ```
 
@@ -59,9 +61,10 @@ clingon-demo [global-options] greet [options] [arguments ...]
 `clingon-demo greet` accepts the following options:
 
 ``` shell
-      --help          display usage information and exit
-      --version       display version and exit
-  -u, --user <VALUE>  Person to greet [default: stranger] [env: $USER]
+      --help                    display usage information and exit
+      --persistent-opt <VALUE>  example persistent option
+      --version                 display version and exit
+  -u, --user <VALUE>            Person to greet [default: stranger] [env: $USER]
 
 ```
 
@@ -88,10 +91,11 @@ clingon-demo [global-options] logging [<command>] [command-options] [arguments .
 `clingon-demo logging` accepts the following options:
 
 ``` shell
-      --help           display usage information and exit
-      --version        display version and exit
-  -l, --level <LEVEL>  level to configure [default: info] [env: $LOG_LEVEL] [choices: info,
-                       warn, error, debug]
+      --help                    display usage information and exit
+      --persistent-opt <VALUE>  example persistent option
+      --version                 display version and exit
+  -l, --level <LEVEL>           level to configure [default: info] [env: $LOG_LEVEL] [choices: info,
+                                warn, error, debug]
 
 ```
 
@@ -140,8 +144,9 @@ clingon-demo logging [global-options] enable [options] [arguments ...]
 `clingon-demo logging enable` accepts the following options:
 
 ``` shell
-      --help     display usage information and exit
-      --version  display version and exit
+      --help                    display usage information and exit
+      --persistent-opt <VALUE>  example persistent option
+      --version                 display version and exit
 
 ```
 
@@ -160,8 +165,9 @@ clingon-demo logging [global-options] disable [options] [arguments ...]
 `clingon-demo logging disable` accepts the following options:
 
 ``` shell
-      --help     display usage information and exit
-      --version  display version and exit
+      --help                    display usage information and exit
+      --persistent-opt <VALUE>  example persistent option
+      --version                 display version and exit
 
 ```
 
@@ -180,10 +186,11 @@ clingon-demo math -o <OPERATION> -i <INT> ...
 `clingon-demo math` accepts the following options:
 
 ``` shell
-      --help                 display usage information and exit
-      --version              display version and exit
-  -i, --int <ITEM>           integers to work on
-  -o, --operation <VARIANT>  operation to perform [choices: add, sub, mul, div]
+      --help                    display usage information and exit
+      --persistent-opt <VALUE>  example persistent option
+      --version                 display version and exit
+  -i, --int <ITEM>              integers to work on
+  -o, --operation <VARIANT>     operation to perform [choices: add, sub, mul, div]
 
 ```
 
@@ -216,8 +223,9 @@ clingon-demo echo [ARGUMENT ...]
 `clingon-demo echo` accepts the following options:
 
 ``` shell
-      --help     display usage information and exit
-      --version  display version and exit
+      --help                    display usage information and exit
+      --persistent-opt <VALUE>  example persistent option
+      --version                 display version and exit
 
 ```
 
@@ -244,9 +252,10 @@ clingon-demo engine -s <STATE>
 `clingon-demo engine` accepts the following options:
 
 ``` shell
-      --help           display usage information and exit
-      --version        display version and exit
-  -s, --state <STATE>  state of our engine
+      --help                    display usage information and exit
+      --persistent-opt <VALUE>  example persistent option
+      --version                 display version and exit
+  -s, --state <STATE>           state of our engine
 
 ```
 
@@ -279,8 +288,9 @@ clingon-demo print-doc
 `clingon-demo print-doc` accepts the following options:
 
 ``` shell
-      --help     display usage information and exit
-      --version  display version and exit
+      --help                    display usage information and exit
+      --persistent-opt <VALUE>  example persistent option
+      --version                 display version and exit
 
 ```
 
@@ -299,9 +309,10 @@ clingon-demo [global-options] sleep [options] [arguments ...]
 `clingon-demo sleep` accepts the following options:
 
 ``` shell
-      --help           display usage information and exit
-      --version        display version and exit
-  -s, --seconds <INT>  number of seconds to sleep [default: 60]
+      --help                    display usage information and exit
+      --persistent-opt <VALUE>  example persistent option
+      --version                 display version and exit
+  -s, --seconds <INT>           number of seconds to sleep [default: 60]
 
 ```
 
@@ -328,8 +339,30 @@ clingon-demo zsh-completion
 `clingon-demo zsh-completion` accepts the following options:
 
 ``` shell
-      --help     display usage information and exit
-      --version  display version and exit
+      --help                    display usage information and exit
+      --persistent-opt <VALUE>  example persistent option
+      --version                 display version and exit
+
+```
+
+# clingon-demo dot
+
+`clingon-demo dot` -- generate tree representation in Dot format
+
+## Usage
+
+``` shell
+clingon-demo dot 
+```
+
+## Options
+
+`clingon-demo dot` accepts the following options:
+
+``` shell
+      --help                    display usage information and exit
+      --persistent-opt <VALUE>  example persistent option
+      --version                 display version and exit
 
 ```
 
