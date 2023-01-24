@@ -49,6 +49,7 @@
    :option-value
    :option-is-set-p
    :option-hidden-p
+   :option-persistent-p
    :initialize-option
    :finalize-option
    :derive-option-value
@@ -179,6 +180,11 @@
     :initform nil
     :reader option-hidden-p
     :documentation "Whether or not this option will be hidden on the usage pages")
+   (persistent
+    :initarg :persistent
+    :initform nil
+    :reader option-persistent-p
+    :documentation "Whether or not this option is persistent across sub-commands")
    (value
     :initarg :value
     :initform nil

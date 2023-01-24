@@ -60,6 +60,7 @@
    :option-required-p
    :option-is-set-p
    :option-hidden-p
+   :option-persistent-p
    :option-key
    :option-value
    :option-parameter
@@ -124,6 +125,8 @@
    :print-sub-commands-info
    :command-usage-string
    :visible-options
+   :persistent-options
+   :inherited-options
    :apply-hooks
    :*default-help-flag*
    :*default-version-flag*
@@ -210,6 +213,12 @@ not found, or not set."))
 
 (defgeneric visible-options (command)
   (:documentation "Returns the list of visible options"))
+
+(defgeneric persistent-options (command)
+  (:documentation "Returns the list of persistent options for the command"))
+
+(defgeneric inherited-options (command)
+  (:documentation "Returns the list of options, which will be inherited by COMMAND"))
 
 (defgeneric print-options-usage (command stream &key)
   (:documentation "Prints the usage information about options to the
@@ -407,10 +416,23 @@ _~~A() {
 
 (defmethod initialize-command ((command command))
   "Initializes the command and the options associated with it."
+  ;; Re-initialize context and arguments
   (setf (command-context command) (make-hash-table :test #'equal))
   (setf (command-arguments command) nil)
+
+  ;; Inherit persistent options from parent commands
+  (loop :with inherited-opts = (inherited-options command)
+        :with curr-opts = (command-options command)
+        :with opts = (remove-if (lambda (item)
+                                  (member item curr-opts :test #'equalp))
+                                inherited-opts)
+        :for option :in opts :do
+          (push option (command-options command)))
+
+  ;; Initialize options
   (dolist (option (command-options command))
-    (initialize-option option)))
+    (initialize-option option))
+  t)
 
 (defmethod finalize-command ((command command))
   "Finalizes the command and derives the reduced set of option values"
@@ -891,6 +913,17 @@ _~~A() {
 (defmethod visible-options ((command command))
   "Returns the list of visible options for the given command"
   (remove-if #'option-hidden-p (command-options command)))
+
+(defmethod persistent-options ((command command))
+  "Returns the list of persistent options for the given command"
+  (remove-if-not #'option-persistent-p (command-options command)))
+
+(defmethod inherited-options ((command command))
+  "Returns the list of persistent options, which will be inherited by COMMAND"
+  (loop :with lineage = (rest (command-lineage command))
+        :for parent :in lineage
+        :appending (persistent-options parent) :into result
+        :finally (return (remove-duplicates result :test #'equalp))))
 
 (defun treat-as-argument (condition)
   "A handler which can be used to invoke the `treat-as-argument' restart"
