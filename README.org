@@ -846,6 +846,47 @@ generates the documentation for all sub-commands.
 You can also find the generated documentation for the =clingon-demo=
 app in the =docs/= directory of the =clingon= repo.
 
+** Generate tree representation of your commands in Dot
+
+Using =CLINGON:PRINT-DOCUMENTATION= you can also generate the tree
+representation of your commands in [[https://en.wikipedia.org/wiki/DOT_(graph_description_language)][Dot]] format.
+
+Make sure to check the =clingon.demo= system and the provided
+=clingon-demo= app, which provides an example command for generating
+the Dot representation.
+
+The example below shows the generation of the Dot representation for
+the =clingon-demo= command.
+
+#+begin_src shell
+  > clingon-demo dot
+  digraph G {
+    node [color=lightblue fillcolor=lightblue fontcolor=black shape=record style="filled, rounded"];
+    "clingon-demo" -> "greet";
+    "clingon-demo" -> "logging";
+    "logging" -> "enable";
+    "logging" -> "disable";
+    "clingon-demo" -> "math";
+    "clingon-demo" -> "echo";
+    "clingon-demo" -> "engine";
+    "clingon-demo" -> "print-doc";
+    "clingon-demo" -> "sleep";
+    "clingon-demo" -> "zsh-completion";
+    "clingon-demo" -> "dot";
+  }
+#+end_src
+
+We can generate the resulting graph using [[https://graphviz.org/][graphviz]].
+
+#+begin_src shell
+  > clingon-demo dot > clingon-demo.dot
+  > dot -Tpng clingon-demo.dot > clingon-demo-tree.png
+#+end_src
+
+This is what the resulting tree looks like.
+
+[[./images/clingon-demo-tree.png]]
+
 * Command Hooks
 
 =clingon= allows you to associate =pre= and =post= hooks with a
