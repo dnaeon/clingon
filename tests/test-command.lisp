@@ -409,7 +409,13 @@
    (clingon:make-option :string
                         :description "same option defined in all commands"
                         :long-name "same-opt"
-                        :key :same-opt)))
+                        :key :same-opt)
+   (clingon:make-option :string
+                        :description "example persistent option"
+                        :long-name "persistent-opt"
+                        :persistent t
+                        :key :persistent-opt)))
+
 
 (defun top-level/command ()
   "Our sample top-level command.
@@ -451,7 +457,7 @@
   (testing "test GETOPT* (most-specific command option is defined, but is not set)"
     (let* ((top-level (top-level/command))
            (c (clingon:parse-command-line top-level '("--same-opt=global-val" "display" "--same-opt=display-val" "status" "--real-time=false"))))
-      (ok (string="display-val" (clingon:getopt* c :same-opt))
+      (ok (string= "display-val" (clingon:getopt* c :same-opt))
           "matches first parent command for which the option is defined and is set")))
 
   (testing "top-level command with global flag"
@@ -518,4 +524,30 @@
       (ok (equal nil (clingon:opt-is-set-p c :progress)) "flag --progress is not set")
       (ok (equal t (clingon:opt-is-set-p c :real-time)) "flag --real-time is set")
       (ok (equal t (clingon:getopt c :real-time)) "flag --real-time value is t")
-      (ok (equal '("a" "b" "c") (clingon:command-arguments c)) "free arguments match"))))
+      (ok (equal '("a" "b" "c") (clingon:command-arguments c)) "free arguments match")))
+
+  (testing "test persistent option"
+    (let ((top-level (top-level/command)))
+      (let ((c (clingon:parse-command-line top-level '("--persistent-opt=foo"))))
+        (ok (string= "foo" (clingon:getopt c :persistent-opt))
+            "value matches for top-level command"))
+
+      (let ((c (clingon:parse-command-line top-level '("--persistent-opt=foo" "display" "--persistent-opt=bar"))))
+        (ok (string= "bar" (clingon:getopt c :persistent-opt))
+            "value matches for first sub-command"))
+
+      (let ((c (clingon:parse-command-line top-level '("--persistent-opt=foo" "display"))))
+        (ok (equal nil (clingon:getopt c :persistent-opt))
+            "value matches for first sub-command (option is not set)")
+        (ok (string= "foo" (clingon:getopt* c :persistent-opt))
+            "value matches for top-level (option is not set for sub-command)"))
+
+      (let ((c (clingon:parse-command-line top-level '("--persistent-opt=foo" "display" "--persistent-opt=bar" "status" "--real-time=false" "--persistent-opt=baz"))))
+        (ok (string= "baz" (clingon:getopt c :persistent-opt))
+            "value matches for last sub-command (option is set)"))
+
+      (let ((c (clingon:parse-command-line top-level '("--persistent-opt=foo" "display" "--persistent-opt=bar" "status" "--real-time=false"))))
+        (ok (equal nil (clingon:getopt c :persistent-opt))
+            "value matches for sub-command (option is not set)")
+        (ok (string= "bar" (clingon:getopt* c :persistent-opt))
+            "value matches for parent command")))))
