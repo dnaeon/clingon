@@ -25,6 +25,16 @@
 
 (in-package :clingon.demo)
 
+(defun dot/command ()
+  "Returns the command for the `dot' command"
+  (clingon:make-command
+   :name "dot"
+   :description "generate tree representation in Dot format"
+   :usage ""
+   :handler (lambda (cmd)
+              (let ((parent (clingon:command-parent cmd)))
+                (clingon:print-documentation :dot parent t)))))
+
 (defun top-level/options ()
   "Returns the options for the top-level command"
   (list
@@ -49,7 +59,8 @@
    (engine/command)
    (print-doc/command)
    (sleep/command)
-   (zsh-completion/command)))
+   (zsh-completion/command)
+   (dot/command)))
 
 (defun top-level/handler (cmd)
   "The handler for the top-level command. Will print the usage of the app"
@@ -74,4 +85,3 @@
   "The main entrypoint of our demo app"
   (let ((app (top-level/command)))
     (clingon:run app)))
-

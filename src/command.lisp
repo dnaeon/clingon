@@ -1205,3 +1205,14 @@ _~~A() {
                   (join-list sub-command-items (format nil " \\~&"))
                   (join-list sub-dispatch-items #\Newline))
           (format stream *zsh-compfunc-without-sub-commands* func-name (join-list opt-specs #\Newline))))))
+
+(defmethod print-documentation ((kind (eql :dot)) (top-level command) stream &key)
+  "Prints the tree representation for the given command in Dot format"
+  (format stream "digraph G {~%")
+  (format stream "  node [color=lightblue fillcolor=lightblue fontcolor=black shape=record style=\"filled, rounded\"];~%")
+  (loop :for node :in (command-tree top-level)
+        :for parent = (command-parent node)
+        :do
+           (when parent
+             (format stream "  \"~A\" -> \"~A\";~%" (command-name parent) (command-name node))))
+  (format stream "}~%"))
