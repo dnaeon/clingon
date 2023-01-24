@@ -31,7 +31,7 @@
   :name "clingon.demo"
   :long-name "clingon.demo"
   :description "Example demo of the Common Lisp clingon system"
-  :version "0.3.0"
+  :version "0.4.0"
   :author "Marin Atanasov Nikolov <dnaeon@gmail.com>"
   :maintainer "Marin Atanasov Nikolov <dnaeon@gmail.com>"
   :license "BSD 2-Clause"

@@ -31,7 +31,7 @@
   :name "clingon.intro"
   :long-name "clingon.intro"
   :description "An introduction to the clingon system"
-  :version "0.3.0"
+  :version "0.4.0"
   :author "John Doe <john.doe@example.org>"
   :license "BSD 2-Clause"
   :depends-on (:clingon)
