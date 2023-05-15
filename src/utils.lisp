@@ -77,8 +77,11 @@
 
 (defun exit (&optional (code 0))
   "Exit the program returning the given exit code to the operating system"
-  (declare (ignore code))
-  #-(or swank slynk) (uiop:quit code))
+  ;; Do not exit if we are running from SLY or SLIME
+  (unless (some (lambda (feat)
+                  (member feat *features*))
+                (list :slynk :swank))
+    (uiop:quit code)))
 
 (defun git-rev-parse (&key short (rev "HEAD") (path "."))
   "Returns the git revision with the given REV"
