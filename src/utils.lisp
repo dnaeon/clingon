@@ -76,8 +76,9 @@
           (format s "~A" item)))))
 
 (defun exit (&optional (code 0))
-  "Exit the program returning the given status code"
-  (uiop:quit code))
+  "Exit the program returning the given exit code to the operating system"
+  (declare (ignore code))
+  #-(or swank slynk) (uiop:quit code))
 
 (defun git-rev-parse (&key short (rev "HEAD") (path "."))
   "Returns the git revision with the given REV"
