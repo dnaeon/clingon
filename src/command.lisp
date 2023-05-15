@@ -59,7 +59,10 @@
    :missing-option-argument
    :missing-option-argument-item
    :missing-option-argument-command
-   :option-derive-error-p)
+   :option-derive-error-p
+   :base-error
+   :exit-error
+   :exit-error-code)
   (:import-from
    :clingon.options
    :option
@@ -96,6 +99,7 @@
    :parse-option
    :initialize-command
    :finalize-command
+   :handle-error
    :command
    :command-name
    :command-options
@@ -133,6 +137,7 @@
    :validate-top-level-command
    :print-usage
    :print-usage-and-exit
+   :print-version
    :print-version-and-exit
    :print-documentation
    :print-options-usage
@@ -147,6 +152,15 @@
    :*default-bash-completions-flag*
    :*default-options*))
 (in-package :clingon.command)
+
+(defgeneric handle-error (condition)
+  (:documentation "Handles the condition. This generic function will be called by
+clingon for conditions which sub-class the CLINGON:BASE-ERROR
+condition. The CLINGON:BASE-ERROR condition is the base class for app
+specific errors."))
+
+(defmethod handle-error ((error exit-error))
+  (exit (exit-error-code error)))
 
 (defgeneric find-option (kind object name)
   (:documentation "Returns the option of the given KIND and NAME, or NIL otherwise"))
