@@ -177,6 +177,9 @@ specific errors."))
 (defgeneric print-usage (command stream &key)
   (:documentation "Prints the usage information of the command"))
 
+(defgeneric print-version (command stream &key)
+  (:documentation "Prints the version information of the command"))
+
 (defgeneric print-documentation (kind command stream &key)
   (:documentation "Prints the documentation of the given top-level command"))
 
@@ -476,11 +479,11 @@ _~~A() {
               (finalize-option option))
         (setf (gethash (option-key option) context) (option-value option)))))
 
-  ;; Special cases for some options/flags
+  ;; Special cases for some default flags
   (cond
     ((getopt command :clingon.bash-completions.flag)
      (print-documentation :bash-completions command t)
-     (exit 0))
+     (error 'exit-error :code 0))
     ((getopt command :clingon.version.flag)
      ;; If this is a sub-command and we don't have a version string,
      ;; then try to find a version string from some of the parent
@@ -488,11 +491,11 @@ _~~A() {
      (let ((cmd-with-version (some (lambda (item)
                                      (and (command-version item) item))
                                    (command-lineage command))))
-       (if cmd-with-version
-           (print-version-and-exit cmd-with-version t) ;; Found a parent command with version
-           (exit 0))))                                 ;; Version is not set at all
+       (print-version cmd-with-version t)
+       (error 'exit-error :code 0)))
     ((getopt command :clingon.help.flag)
-     (print-usage-and-exit command t)))
+     (print-usage command t)
+     (error 'exit-error :code 64))) ;; EX_USAGE
 
   ;; Verify required options
   (let ((required-options (remove-if-not #'option-required-p (command-options command))))
@@ -789,6 +792,10 @@ _~~A() {
     (user-abort ()
       (format *error-output* "~&Received SIGINT, exiting.~&")
       (exit 130))
+    ;; App-specific errors
+    (base-error (condition)
+      (handle-error condition))
+    ;; Anything else
     (error (condition)
       (format *error-output* "~&~A~&" condition)
       (exit 1))))
@@ -1081,15 +1088,18 @@ _~~A() {
 
 (defmethod print-usage-and-exit ((command command) stream)
   (print-usage command stream)
-  (exit 64)) ;; EX_USAGE
+  (error 'exit-error :code 64)) ;; EX_USAGE
 
-(defmethod print-version-and-exit ((command command) stream)
+(defmethod print-version ((command command) stream &key)
   (when (command-version command)
     (format stream
             "~A version ~A~&"
             (command-full-name command)
-            (command-version command)))
-  (exit 0))
+            (command-version command))))
+
+(defmethod print-version-and-exit ((command command) stream)
+  (print-version command stream)
+  (error 'exit-error :code 0))
 
 (defmethod print-documentation ((kind (eql :bash-completions)) (command command) stream &key)
   "Prints the bash completions for the given command"
