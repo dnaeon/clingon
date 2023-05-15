@@ -488,10 +488,11 @@ _~~A() {
      ;; If this is a sub-command and we don't have a version string,
      ;; then try to find a version string from some of the parent
      ;; commands.
-     (let ((cmd-with-version (some (lambda (item)
-                                     (and (command-version item) item))
-                                   (command-lineage command))))
-       (print-version cmd-with-version t)
+     (let ((cmd (some (lambda (item)
+                        (and (command-version item) item))
+                      (command-lineage command))))
+       (when cmd
+         (print-version cmd t))
        (error 'exit-error :code 0)))
     ((getopt command :clingon.help.flag)
      (print-usage command t)
