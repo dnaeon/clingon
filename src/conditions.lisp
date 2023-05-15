@@ -51,7 +51,10 @@
    :missing-required-option-value-command
    :option-derive-error
    :option-derive-error-reason
-   :option-derive-error-p))
+   :option-derive-error-p
+   :base-error
+   :exit-error
+   :exit-error-code))
 (in-package :clingon.conditions)
 
 (define-condition option-derive-error (simple-error)
@@ -176,3 +179,15 @@
   (:report (lambda (condition stream)
              (format stream "Invalid option: ~A" (invalid-option-reason condition))))
   (:documentation "A condition which is signalled when an option is identified as invalid"))
+
+(define-condition base-error (simple-error)
+  ()
+  (:documentation "A base condition to be used for app specific errors"))
+
+(define-condition exit-error (base-error)
+  ((code
+    :initarg :code
+    :initform (error "Must specify exit code")
+    :reader exit-error-code
+    :documentation "The exit code to be returned to the operating system"))
+  (:documentation "A condition representing an error with associated exit code"))
