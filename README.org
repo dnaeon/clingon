@@ -985,6 +985,43 @@ If we have executed above command we would see the following output.
   foo post-hook has been invoked
 #+end_src
 
+* Custom Errors
+
+The =CLINGON:BASE-ERROR= condition may be used as the base for
+user-defined conditions.
+
+The =CLINGON:RUN= method will invoke =CLINGON:HANDLE-ERROR= for
+conditions which sub-class =CLINGON:BASE-ERROR=. The implementation of
+=CLINGON:HANDLE-ERROR= allows the user to customize the way errors are
+being reported and handled.
+
+The following example creates a new custom condition.
+
+#+begin_src lisp
+  (in-package :cl-user)
+  (defpackage :my.clingon.app
+    (:use :cl)
+    (:import-from :clingon)
+    (:export :my-app-error))
+  (in-package :my.clingon.app)
+
+  (define-condition my-app-error (clingon:base-error)
+    ((message
+      :initarg :message
+      :initform (error "Must specify message")
+      :reader my-app-error-message))
+    (:documentation "My custom app error condition"))
+
+  (defmethod clingon:handle-error ((err my-app-error))
+    (let ((message (my-app-error-message err)))
+      (format *error-output* "Oops, an error occurred: ~A~%" message)))
+#+end_src
+
+You can now use the =MY-APP-ERROR= condition anywhere in your command
+handlers and signal it. When this condition is signalled =clingon=
+will invoke the =CLINGON:HANDLE-ERROR= generic function for your
+condition.
+
 * Options
 
 The =clingon= system supports various kinds of options, each of which
