@@ -61,7 +61,7 @@
     :reader option-derive-error-reason
     :documentation "Reason for which deriving a value failed"))
   (:report (lambda (condition stream)
-	     (format stream "~A" (option-derive-error-reason condition))))
+             (format stream "~A" (option-derive-error-reason condition))))
   (:documentation "A condition which is signalled when deriving an option's value has failed"))
 
 (defun option-derive-error-p (value)
@@ -118,13 +118,13 @@
     :initform (error "Must specify duplicate items")
     :reader duplicate-command-items))
   (:report (lambda (condition stream)
-	     (let ((items (duplicate-command-items condition)))
-	       (format stream
-		       "Detected ~A duplicate command names/aliases.~2%~
+             (let ((items (duplicate-command-items condition)))
+               (format stream
+                       "Detected ~A duplicate command names/aliases.~2%~
                        The following commands have been identified as ~
                        providing duplicate names/aliases.~2%~
                        ~A~%"
-		       (length items) items))))
+                       (length items) items))))
    (:documentation "A condition which is signalled when a command provides duplicate sub-commands"))
 
 (define-condition unknown-option (error)
@@ -155,7 +155,7 @@
     :initform (error "Must specify command")
     :reader missing-option-argument-command))
   (:report (lambda (condition stream)
-	     (declare (ignore condition))
+             (declare (ignore condition))
              (format stream "Missing argument for option")))
   (:documentation "A condition which is signalled when an option expects an argument, but none was provided"))
 
