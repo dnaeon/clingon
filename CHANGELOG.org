@@ -1,3 +1,31 @@
+* 2023-05-19
+
+Version =0.5.0= has been tagged.
+
+New conditions added:
+
+- =CLINGON:BASE-ERROR=
+- =CLINGON:EXIT-ERROR= (sub-class of =CLINGON:BASE-ERROR=)
+
+New generic functions added:
+
+- =CLINGON:HANDLE-ERROR=
+
+The =CLINGON:BASE-ERROR= condition can be used as the base for new
+user-defined conditions, which can be signalled by command handlers.
+
+Whenever a =CLINGON:BASE-ERROR= condition is signalled, the
+=CLINGON:RUN= method will invoke =CLINGON:HANDLE-ERROR=, which allows
+developers to provide custom logic for reporting and handling of app
+specific errors.
+
+Make sure to check the =Custom Errors= section from the documentation
+for some examples on how to create user-defined conditions.
+
+The utility function =CLINGON:EXIT= will not exit if the REPL is
+connected via SLY or SLIME, which allows for better interactive
+testing of the final application.
+
 * 2023-01-24
 
 =clingon= version =0.4.0= has been tagged.
