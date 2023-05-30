@@ -482,7 +482,7 @@ _~~A() {
        (error 'exit-error :code 0)))
     ((getopt command :clingon.help.flag)
      (print-usage command t)
-     (error 'exit-error :code 64))) ;; EX_USAGE
+     (error 'exit-error :code 0)))
 
   ;; Verify required options
   (let ((required-options (remove-if-not #'option-required-p (command-options command))))
