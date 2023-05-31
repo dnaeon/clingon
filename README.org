@@ -1022,6 +1022,37 @@ handlers and signal it. When this condition is signalled =clingon=
 will invoke the =CLINGON:HANDLE-ERROR= generic function for your
 condition.
 
+* Customizing the parsing logic
+
+The default implementation of =CLINGON:RUN= provides error handling
+for the most common user-related errors, such as handling of missing
+arguments, invalid options/flags, catching of =SIGINT= signals, etc.
+
+Internally =CLINGON:RUN= relies on =CLINGON:PARSE-COMMAND-LINE= for
+the actual parsing. In order to provide custom logic during parsing,
+users may provide a different implementation of either =CLINGON:RUN=
+and/or =CLINGON:PARSE-COMMAND-LINE= by subclassing the
+=CLINGON:COMMAND= class.
+
+An alternative approach, which doesn't need a subclass of
+=CLINGON:COMMAND= is to provide =AROUND= methods for =CLINGON:RUN=.
+
+For instance, the following code will treat unknown options as free
+arguments, while still using the default implementation of
+=CLINGON:RUN=.
+
+#+begin_src lisp
+  (defmethod clingon:parse-command-line :around ((command clingon:command) arguments)
+    "Treats unknown options as free arguments"
+    (handler-bind ((clingon:unknown-option
+                     (lambda (c)
+                       (clingon:treat-as-argument c))))
+      (call-next-method)))
+#+end_src
+
+See [[https://github.com/dnaeon/clingon/issues/11][this issue]] for more examples and additional discussion on this
+topic.
+
 * Options
 
 The =clingon= system supports various kinds of options, each of which
