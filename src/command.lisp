@@ -1,17 +1,3 @@
-;; TODO: add PRINT-DOCUMENTATION for :DOT to represent the command tree
-;; TODO: Specialize this method on keyword, string (for long options)
-;; and character (for short options) to allow for more flexibility
-;; TODO: Add getopt method which can get the option by long or short option name
-;; TODO: Add this one
-;; (defmethod getopt-or-lose ())
-;; TODO: Alternating options, e.g. `chmod +x` and `chmod -x`, option: "+w/-w"
-;; TODO: Confirmation options: y/n prompt
-;; TODO: Password options
-;; TODO: Prompt options
-;; TODO: Consider adding the option category as part of the zsh-completions generation
-;; TODO: Add `conflicting' options, e.g. option `--foo' is in conflict with `--bar'
-;; TODO: Add case-insensitive choice/enum options
-
 ;; Copyright (c) 2021 Marin Atanasov Nikolov <dnaeon@gmail.com>
 ;; All rights reserved.
 ;;
