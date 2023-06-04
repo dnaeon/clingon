@@ -1028,7 +1028,7 @@ _~~A() {
 (defmethod print-usage ((command command) stream &key (wrap-at 70))
   (initialize-command command)
   (format stream "NAME:~%")
-  (format stream "  ~A - ~A~2%" (command-full-name command) (command-description command))
+  (format stream "  ~A~@[ - ~A~]~2%" (command-full-name command) (command-description command))
 
   (format stream "USAGE:~%")
   (format stream "  ~A~2%" (command-usage-string command))
