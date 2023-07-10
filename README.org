@@ -1821,7 +1821,7 @@ A few Docker images are available.
 Build and run the tests in a container.
 
 #+begin_src shell
-docker build -t clingon.test:latest -f Dockerfile.tests .
+docker build -t clingon.test:latest -f Dockerfile.sbcl .
 docker run --rm clingon.test:latest
 #+end_src
 
