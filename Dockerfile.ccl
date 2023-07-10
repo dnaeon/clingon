@@ -1,0 +1,14 @@
+FROM clfoundation/ccl:1.12
+
+ENV QUICKLISP_ADD_TO_INIT_FILE=true
+ENV QUICKLISP_DIST_VERSION=latest
+ENV LISP=ccl
+
+WORKDIR /app
+COPY . .
+
+RUN mkdir -p ~/.config/common-lisp/source-registry.conf.d && \
+    echo '(:tree "/app/")' >  ~/.config/common-lisp/source-registry.conf.d/workspace.conf && \
+    /usr/local/bin/install-quicklisp
+
+ENTRYPOINT ["./scripts/run-tests.sh"]

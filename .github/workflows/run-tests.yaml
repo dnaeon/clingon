@@ -1,8 +1,8 @@
-# .github/workflows/test.yaml
+# .github/workflows/run-tests.yaml
 name: test
 on: [ push, pull_request ]
 jobs:
-  test:
+  run-tests:
     strategy:
       fail-fast: false
       matrix:
