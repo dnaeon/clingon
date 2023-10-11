@@ -85,3 +85,8 @@
   "The main entrypoint of our demo app"
   (let ((app (top-level/command)))
     (clingon:run app)))
+
+(defun buildapp-main (argv)
+  "The main entrypoint for buildapp"
+  (let ((app (top-level/command)))
+    (clingon:run app (rest argv))))

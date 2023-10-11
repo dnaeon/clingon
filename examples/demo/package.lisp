@@ -28,5 +28,6 @@
   (:use :cl)
   (:import-from :clingon)
   (:export
-   :main))
+   :main
+   :buildapp-main))
 (in-package :clingon.demo)

@@ -720,6 +720,13 @@ sbcl --eval '(ql:quickload :clingon.intro)' \
 This will produce a new binary called =clingon-intro= in the directory
 of the =clingon.intro= system.
 
+This approach uses the [[https://asdf.common-lisp.dev/asdf/Predefined-operations-of-ASDF.html][ASDF program-op operation]] in combination with
+=:entry-point= and =:build-pathname= in order to produce the resulting
+binary.
+
+If you want to build your apps using [[https://www.xach.com/lisp/buildapp/][buildapp]], please check the
+/Buildapp/ section from this document.
+
 ** Testing it out on the command-line
 
 Time to check things up on the command-line.
@@ -1678,6 +1685,49 @@ You can also check out the =clingon-demo= app for a fully working CLI
 app with Zsh completions support.
 
 [[./images/clingon-zsh-completions.gif]]
+
+* Buildapp
+
+The demo =clingon= apps from this repo are usually built using [[https://asdf.common-lisp.dev/][ASDF]]
+with =:build-operation= set to =program-op= and the respective
+=:entry-point= and =:build-pathname= specified in the system
+definition. See the included =clingon.demo.asd= and
+=clingon.intro.asd= systems for examples.
+
+You can also use [[https://www.xach.com/lisp/buildapp/][buildapp]] for building the =clingon= apps.
+
+This command will build the =clingon-demo= CLI app using =buildapp=.
+
+#+begin_src shell
+  $ buildapp \
+    --output clingon-demo \
+    --asdf-tree ~/quicklisp/dists/quicklisp/software/ \
+    --load-system clingon.demo \
+    --entry main \
+    --eval '(defun main (argv) (let ((app (clingon.demo::top-level/command))) (clingon:run app (rest argv))))'
+#+end_src
+
+Another approach to building apps using =buildapp= is to create a
+=main= entrypoint in your application, similarly to the way you create
+one for use with ASDF and =:entry-point=. This function can be used as
+an entrypoint for [[https://www.xach.com/lisp/buildapp/][buildapp]] apps.
+
+#+begin_src lisp
+  (defun main (argv)
+    "The main entrypoint for buildapp apps"
+    (let ((app (top-level/command)))
+      (clingon:run app (rest argv))))
+#+end_src
+
+Then build your app with this command.
+
+#+begin_src shell
+  $ buildapp \
+    --output my-app-name \
+    --asdf-tree ~/quicklisp/dists/quicklisp/software/ \
+    --load-system my-system-name \
+    --entry my-system-name:main
+#+end_src
 
 * Ideas For Future Improvements
 
