@@ -13,8 +13,8 @@ function _clingon_app_completions() {
     _init_completion -s || return
 
     local _suggestions=$( "${words[@]:0:${cword}}" --bash-completions )
-    local _options=$( egrep '^-' <<<${_suggestions} )
-    local _sub_commands=$( egrep -v '^-' <<<${_suggestions} )
+    local _options=$( grep -E '^-' <<<${_suggestions} )
+    local _sub_commands=$( grep -v -E '^-' <<<${_suggestions} )
 
     if [[ "${cur}" == "-"* ]]; then
         # Options only
