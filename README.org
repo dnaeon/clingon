@@ -1647,8 +1647,17 @@ the newly developed option.
 In order to enable the Bash completions for your =clingon= app,
 follow these instructions.
 
+Depending on your OS you may need to install the =bash-completion=
+package. For example on Arch Linux you would install it like this.
+
 #+begin_src shell
-APP=app-name source extras/completions.bash
+  sudo pacman -S bash-completion
+#+end_src
+
+Then source the completions script.
+
+#+begin_src shell
+  APP=app-name source extras/completions.bash
 #+end_src
 
 Make sure to set =APP= to your correct application name.
