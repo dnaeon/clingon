@@ -410,16 +410,23 @@ Let's define the handler for our /top-level/ command.
 We are introducing a couple of new functions, which we haven't
 described before.
 
-We are using =CLINGON:COMMAND-ARGUMENTS=, which will give us the free
-arguments we've provided to our command, when we invoke it on the
-command-line.
+*** Positional ("free") arguments
+
+In ~top-level/handler~, we are using =CLINGON:COMMAND-ARGUMENTS=,
+which returns the positional, or "free" arguments: the arguments that
+remain after the options are parsed.  The remaining free arguments are
+available through ~CLINGON:COMMAND-ARGUMENTS~.  In this handler we
+bind ~args~ to the free arguments we've provided to our command, when
+we invoke it on the command-line.
+
+*** Option arguments
 
 We also use the =CLINGON:GETOPT= function to lookup the values
 associated with our options. Remember the =:KEY= initarg we've used in
 =CLINGON:MAKE-OPTION= when defining our options?
 
-And we will again update our =TOP-LEVEL/COMMAND= definition, this time
-with our handler included.
+We again update our =TOP-LEVEL/COMMAND= definition, this time
+with our handler included:
 
 #+begin_src lisp
 (defun top-level/command ()
