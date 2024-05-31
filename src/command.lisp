@@ -1222,12 +1222,16 @@ available at https://man.openbsd.org/mdoc.7"
     (with-command-tree (node top-level)
       (initialize-command node)
       (unless (eq node top-level)
-        (format stream ".Ss ~A~[~:; ~
-                                   (alias~:*~[es~;~:;es~]: ~
-                                    ~{~(~A~)~^, ~})~]~%"
+        (format stream ".Ss ~A~A~A~%"
                 (command-full-name node)
-                (length (command-aliases node))
-                (command-aliases node)))
+                (if (command-aliases node)
+                    (format NIL " (alias~:*~[es~;~:;es~]: ~{~(~A~)~^, ~})"
+                            (length (command-aliases node))
+                            (command-aliases node))
+                    "")
+                (if (command-usage node)
+                    (format NIL " ~A" (command-usage node))
+                    "")))
       (let* ((desc (if (command-long-description node)
                        (command-long-description node)
                        (command-description node))))
