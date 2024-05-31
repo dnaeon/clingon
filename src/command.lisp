@@ -1180,13 +1180,17 @@ available at https://man.openbsd.org/mdoc.7"
   ;; FIXME: scan through text and attempt to coerce links and stuff
   ;; into mdoc?
   (labels ((wrap-paragraph (par)
-             (split-sequence #\Newline (bobbin:wrap par wrap-at))))
-    (format stream ".Dd today~%~
+             (split-sequence #\Newline (bobbin:wrap par wrap-at)))
+           (timestamp ()
+             (let ((now (multiple-value-list (decode-universal-time (get-universal-time)))))
+               (format NIL "~A-~A-~A" (nth 5 now) (nth 4 now) (nth 3 now)))))
+    (format stream ".Dd ~A~%~
                   .Dt ~:@(~A~) 1~%~
                   .Os~%~
                   .Sh NAME~%~
                   .Nm ~:*~A~%~
                   .Nd ~A~%"
+            (timestamp)
             (command-full-name top-level)
             (command-description top-level))
 
