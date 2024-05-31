@@ -1171,6 +1171,105 @@ _~~A() {
           (format stream "~A~%" line)))
       (format stream "~%"))))
 
+(defmethod print-documentation ((kind (eql :mandoc)) (top-level command) stream &key (wrap-at 80))
+  "Generates section 1 man pages in the mdoc(7) format.  Documentation
+available at https://man.openbsd.org/mdoc.7"
+  ;; FIXME: were do license and version information go?
+  ;; FIXME: consider looking at package and asd system documentation
+  ;; for further information.
+  ;; FIXME: scan through text and attempt to coerce links and stuff
+  ;; into mdoc?
+  (labels ((wrap-paragraph (par)
+             (split-sequence #\Newline (bobbin:wrap par wrap-at))))
+    (format stream ".Dd today~%~
+                  .Dt ~:@(~A~) 1~%~
+                  .Os~%~
+                  .Sh NAME~%~
+                  .Nm ~:*~A~%~
+                  .Nd ~A~%"
+            (command-full-name top-level)
+            (command-description top-level))
+
+    (format stream ".Sh SYNOPSIS~%")
+    (with-command-tree (node top-level)
+      (initialize-command node)
+      (format stream ".Nm ~A~%" (command-full-name node))
+      (loop :for opt :in (command-options node)
+            :unless (option-hidden-p opt)
+              :do (format stream ".Op Fl~:[~:; ~:*~A,~]~
+                                 ~:[~:; -~:*~A~]~
+                                 ~:[~:; Ar ~:*~A~]~%"
+                          (option-short-name opt)
+                          (option-long-name opt)
+                          (option-parameter opt)))
+      ;; FIXME: Figure out a way to detect if a command takes
+      ;; positional arguments and print something like ".Op Ar
+      ;; [arguments...]"
+      )
+
+    ;; FIXME: show command aliases, show option environment variables,
+    ;; show option default values, group options by category, mark if
+    ;; an option is required
+    (format stream ".Sh DESCRIPTION~%")
+    (with-command-tree (node top-level)
+      (initialize-command node)
+      (unless (eq node top-level)
+        (format stream ".Ss ~A~%" (command-full-name node)))
+      (let* ((desc (if (command-long-description node)
+                       (command-long-description node)
+                       (command-description node))))
+        (format stream ".Pp~%")
+        (loop :for line :in (wrap-paragraph desc) :do (format stream "~A~%" line)))
+      (format stream ".Bl -tag -width Ds~%")
+      (loop :for opt :in (command-options node)
+            :unless (option-hidden-p opt)
+              :do (format stream ".It Fl~:[~:; ~:*~A,~]~
+                                     ~:[~:; -~:*~A~]~
+                                     ~:[~:; Ar ~:*~A~]~%~
+                                ~{~A~%~}"
+                         (option-short-name opt)
+                         (option-long-name opt)
+                         (option-parameter opt)
+                         (wrap-paragraph (option-description opt))))
+      (format stream ".El~%"))
+
+    ;; CONTEXT, IMPLEMENTATION NOTES, RETURN VALUES
+
+    ;; FIXME: show corresponding option (including parent subcommand,
+    ;; if present), default value, and mark if it's required.
+    (format stream ".Sh ENVIRONMENT~%")
+    (with-command-tree (node top-level)
+      (initialize-command node)
+      (let ((vars (loop :for opt :in (command-options node)
+                        :for desc = (wrap-paragraph (option-description opt))
+                        :for env  = (clingon.options:option-env-vars opt)
+                        :when env :collect (cons env desc))))
+        (when vars
+          (unless (eq node top-level)
+            (format stream ".Ss ~A~%" (command-full-name node)))
+          (format stream ".Bl -tag -width DS~%")
+          (loop :for (env . desc) :in vars
+                :do (format stream ".It ~{Ev ~A~^, ~}~%~{~A~%~}" env desc))
+          (format stream ".El~%"))))
+
+    ;; FILES, EXIST STATUS
+
+    (format stream ".Sh EXAMPLES~%")
+    (with-command-tree (node top-level)
+      (initialize-command node)
+      (when (and (not (eq node top-level)) (command-examples node))
+        (format stream ".Ss ~A~%" (command-full-name node)))
+      (loop :for (desc . code) :in (command-examples node)
+            :do (format stream ".Pp~%~{~A~%~}" (wrap-paragraph desc))
+                (format stream ".Bd -literal~%")
+                (format stream "~A" code)
+                (format stream ".Ed~%")))
+
+    ;; DIAGNOSTICS, ERRORS, SEE ALSO, STANDARDS, HISTORY
+    (format stream ".Sh AUTHORS~%~{.An ~A~%~}" (command-authors top-level))
+    ;; CAVEATS, BUGS, SECURITY CONSIDERATIONS
+    ))
+
 (defmethod zsh-sub-command-items ((command command))
   "Returns the sub-command items, which will be populated in the Zsh completion function"
   (unless (command-sub-commands command)
