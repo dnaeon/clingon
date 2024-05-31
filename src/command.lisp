@@ -1295,8 +1295,8 @@ available at https://man.openbsd.org/mdoc.7"
         (format stream ".Ss ~A~%" (command-full-name node)))
       (loop :for (desc . code) :in (command-examples node)
             :do (format stream ".Pp~%~{~A~%~}" (wrap-paragraph desc))
-                (format stream ".Bd -literal~%")
-                (format stream "~A" code)
+                (format stream ".Bd -literal -offset indent~%")
+                (format stream "~A~%" code)
                 (format stream ".Ed~%")))
 
     (format stream ".Sh AUTHORS~%~{.An ~A~%~}" (command-authors top-level))))
