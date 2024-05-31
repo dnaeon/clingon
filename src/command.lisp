@@ -1211,12 +1211,17 @@ available at https://man.openbsd.org/mdoc.7"
       ;; [arguments...]"
       )
 
-    ;; FIXME: show command aliases, group options by category
+    ;; FIXME: group options by category
     (format stream ".Sh DESCRIPTION~%")
     (with-command-tree (node top-level)
       (initialize-command node)
       (unless (eq node top-level)
-        (format stream ".Ss ~A~%" (command-full-name node)))
+        (format stream ".Ss ~A~[~:; ~
+                                   (alias~:*~[es~;~:;es~]: ~
+                                    ~{~(~A~)~^, ~})~]~%"
+                (command-full-name node)
+                (length (command-aliases node))
+                (command-aliases node)))
       (let* ((desc (if (command-long-description node)
                        (command-long-description node)
                        (command-description node))))
