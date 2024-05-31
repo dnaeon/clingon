@@ -1174,11 +1174,11 @@ _~~A() {
 (defmethod print-documentation ((kind (eql :mandoc)) (top-level command) stream &key (wrap-at 80))
   "Generates section 1 man pages in the mdoc(7) format.  Documentation
 available at https://man.openbsd.org/mdoc.7"
-  ;; FIXME: were do license and version information go?
-  ;; FIXME: consider looking at package and asd system documentation
-  ;; for further information.
-  ;; FIXME: scan through text and attempt to coerce links and stuff
-  ;; into mdoc?
+  ;; FIXME: Other man sections are "context, implementation notes,
+  ;; return values, files, exit status, diagnostics, errors, see also,
+  ;; standards, history, caveats, bugs, and security considerations";
+  ;; not sure how we'd go about generating them, but it would be good
+  ;; to do so.
   (labels ((wrap-paragraph (par)
              (split-sequence #\Newline (bobbin:wrap par wrap-at)))
            (timestamp ()
@@ -1211,7 +1211,9 @@ available at https://man.openbsd.org/mdoc.7"
       ;; [arguments...]"
       )
 
-    ;; FIXME: group options by category
+    ;; FIXME: It would be good to group options by category, but I'm
+    ;; not sure how to do it without inserting subsections at the same
+    ;; level as subcommand names, which isn't ideal
     (format stream ".Sh DESCRIPTION~%")
     (with-command-tree (node top-level)
       (initialize-command node)
@@ -1251,8 +1253,6 @@ available at https://man.openbsd.org/mdoc.7"
                          (wrap-paragraph (option-description opt))))
       (format stream ".El~%"))
 
-    ;; CONTEXT, IMPLEMENTATION NOTES, RETURN VALUES
-
     (format stream ".Sh ENVIRONMENT~%")
     (with-command-tree (node top-level)
       (initialize-command node)
@@ -1280,8 +1280,6 @@ available at https://man.openbsd.org/mdoc.7"
                             (wrap-paragraph (option-description opt))))
           (format stream ".El~%"))))
 
-    ;; FILES, EXIST STATUS
-
     (format stream ".Sh EXAMPLES~%")
     (with-command-tree (node top-level)
       (initialize-command node)
@@ -1293,10 +1291,7 @@ available at https://man.openbsd.org/mdoc.7"
                 (format stream "~A" code)
                 (format stream ".Ed~%")))
 
-    ;; DIAGNOSTICS, ERRORS, SEE ALSO, STANDARDS, HISTORY
-    (format stream ".Sh AUTHORS~%~{.An ~A~%~}" (command-authors top-level))
-    ;; CAVEATS, BUGS, SECURITY CONSIDERATIONS
-    ))
+    (format stream ".Sh AUTHORS~%~{.An ~A~%~}" (command-authors top-level))))
 
 (defmethod zsh-sub-command-items ((command command))
   "Returns the sub-command items, which will be populated in the Zsh completion function"
