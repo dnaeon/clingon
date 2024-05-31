@@ -1253,21 +1253,31 @@ available at https://man.openbsd.org/mdoc.7"
 
     ;; CONTEXT, IMPLEMENTATION NOTES, RETURN VALUES
 
-    ;; FIXME: show corresponding option (including parent subcommand,
-    ;; if present), default value, and mark if it's required.
     (format stream ".Sh ENVIRONMENT~%")
     (with-command-tree (node top-level)
       (initialize-command node)
       (let ((vars (loop :for opt :in (command-options node)
-                        :for desc = (wrap-paragraph (option-description opt))
-                        :for env  = (clingon.options:option-env-vars opt)
-                        :when env :collect (cons env desc))))
+                        :when (clingon.options:option-env-vars opt)
+                          :collect opt)))
         (when vars
           (unless (eq node top-level)
             (format stream ".Ss ~A~%" (command-full-name node)))
           (format stream ".Bl -tag -width DS~%")
-          (loop :for (env . desc) :in vars
-                :do (format stream ".It ~{Ev ~A~^, ~}~%~{~A~%~}" env desc))
+          (loop :for opt :in vars
+                :do (format stream ".It ~{Ev ~A~^, ~} ~
+                                        Fl~:[~:; ~:*~A,~]~
+                                          ~:[~:; -~:*~A~]~
+                                          ~:[~:; Ar ~:*~A~]~
+                                        ~:[~:; Dv (default: ~:*~A)~]~
+                                        ~:[~:; Sy REQUIRED ~]~%~
+                                    ~{~A~%~}"
+                            (clingon.options:option-env-vars opt)
+                            (option-short-name opt)
+                            (option-long-name opt)
+                            (option-parameter opt)
+                            (clingon.options:option-initial-value opt)
+                            (option-required-p opt)
+                            (wrap-paragraph (option-description opt))))
           (format stream ".El~%"))))
 
     ;; FILES, EXIST STATUS
