@@ -1211,9 +1211,7 @@ available at https://man.openbsd.org/mdoc.7"
       ;; [arguments...]"
       )
 
-    ;; FIXME: show command aliases, show option environment variables,
-    ;; show option default values, group options by category, mark if
-    ;; an option is required
+    ;; FIXME: show command aliases, group options by category
     (format stream ".Sh DESCRIPTION~%")
     (with-command-tree (node top-level)
       (initialize-command node)
@@ -1229,11 +1227,22 @@ available at https://man.openbsd.org/mdoc.7"
             :unless (option-hidden-p opt)
               :do (format stream ".It Fl~:[~:; ~:*~A,~]~
                                      ~:[~:; -~:*~A~]~
-                                     ~:[~:; Ar ~:*~A~]~%~
+                                     ~:[~:; Ar ~:*~A~]~
+                                     ~:[~:; Ev (env: ~:*~{~A~^, ~})~]~
+                                     ~:[~:; Dv (default: ~:*~A)~]~
+                                     ~:[~:; Sy REQUIRED ~]~%~
                                 ~{~A~%~}"
                          (option-short-name opt)
                          (option-long-name opt)
-                         (option-parameter opt)
+                         (if (eql (class-of opt)
+                                  (find-class 'clingon.options:option-enum))
+                             (format NIL "(options: ~{~A~^, ~})"
+                                     (loop :for kv :in (clingon.options:option-enum-items opt)
+                                           :collect (car kv)))
+                             (option-parameter opt))
+                         (clingon.options:option-env-vars opt)
+                         (clingon.options:option-initial-value opt)
+                         (option-required-p opt)
                          (wrap-paragraph (option-description opt))))
       (format stream ".El~%"))
 
