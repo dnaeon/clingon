@@ -1206,10 +1206,14 @@ available at https://man.openbsd.org/mdoc.7"
                           (option-short-name opt)
                           (option-long-name opt)
                           (option-parameter opt)))
-      ;; FIXME: Figure out a way to detect if a command takes
-      ;; positional arguments and print something like ".Op Ar
-      ;; [arguments...]"
-      )
+      ;; FIXME: As it stands there is not really any good way to
+      ;; display the command's arguments; the closest thing is
+      ;; `command-usage' with the huge downside that clingon wants you
+      ;; to specify arguments in there too, which clashes really badly
+      ;; with the rest of the synopsis.  Need to ask advice on how
+      ;; best to approach this.
+      (when (command-usage node)
+        (format stream ".Op Ar ~A~%" (command-usage node))))
 
     ;; FIXME: It would be good to group options by category, but I'm
     ;; not sure how to do it without inserting subsections at the same
