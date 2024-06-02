@@ -1057,7 +1057,7 @@ _~~A() {
         (dolist (line lines)
           (format stream "  ~A~%" line))
         (format stream "~%")
-        (dolist (line (split-sequence #\Newline *s*))
+        (dolist (line (split-sequence #\Newline code))
           (format T "    ~A~%" line))
         (format stream "~%"))))
 
