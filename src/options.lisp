@@ -325,6 +325,16 @@
     (write-string (call-next-method) s)
     (format s ":_files")))
 
+(defclass option-csv (option-string)
+  ()
+  (:documentation "An option which represents a comma-separated list"))
+
+(defmethod make-option ((kind (eql :csv)) &rest rest)
+  (apply #'make-instance 'option-csv rest))
+
+(defmethod finalize-option ((o option-csv) &key)
+  (setf (option-value o) (cl-ppcre:split "," (option-value o))))
+
 ;;;;
 ;;;; Boolean options
 ;;;;
