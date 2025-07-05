@@ -30,10 +30,13 @@
    :clingon.utils
    :join-list)
   (:import-from
-   :clingon.conditions
-   :invalid-option
-   :missing-required-option-value
-   :option-derive-error)
+    :parse-float
+    :parse-float)
+  (:import-from
+    :clingon.conditions
+    :invalid-option
+    :missing-required-option-value
+    :option-derive-error)
   (:export
    :*end-of-options-marker*
    :option
@@ -325,6 +328,16 @@
     (write-string (call-next-method) s)
     (format s ":_files")))
 
+(defclass option-csv (option-string)
+  ()
+  (:documentation "An option which represents a comma-separated list"))
+
+(defmethod make-option ((kind (eql :csv)) &rest rest)
+  (apply #'make-instance 'option-csv rest))
+
+(defmethod finalize-option ((o option-csv) &key)
+  (setf (option-value o) (cl-ppcre:split "," (option-value o))))
+
 ;;;;
 ;;;; Boolean options
 ;;;;
@@ -536,6 +549,76 @@
 
 (defmethod derive-option-value ((option option-list-integer) arg &key)
   (cons (parse-integer-or-lose arg :radix (option-integer-radix option))
+        (option-value option)))
+
+;;;;
+;;;; Float options
+;;;;
+
+(defun parse-float-or-lose (value &key (radix 10))
+  (when (floatp value)
+    (return-from parse-float-or-lose value))
+
+  (let ((int (parse-float value :radix radix :junk-allowed t)))
+    (unless int
+      (error 'option-derive-error :reason (format nil "Cannot parse ~A as float" value)))
+    int))
+
+(defclass option-float (option)
+  ((radix
+    :initarg :radix
+    :initform 10
+    :reader option-float-radix))
+  (:default-initargs
+   :parameter "INT")
+  (:documentation "An option class to represent an float"))
+
+(defmethod make-option ((kind (eql :float)) &rest rest)
+  (apply #'make-instance 'option-float rest))
+
+(defmethod initialize-option ((option option-float) &key)
+  "Initializes the float option. In case the option was
+  first initialized by other means, such as environment variables,
+  we make sure that the provided value is a valid float."
+  (call-next-method)
+
+  ;; Nothing to initialize further
+  (unless (option-value option)
+    (return-from initialize-option))
+
+  (let ((value (option-value option)))
+    (setf (option-value option)
+          (etypecase value
+            (float value)
+            (string (parse-float-or-lose value :radix (option-float-radix option)))))))
+
+(defmethod derive-option-value ((option option-float) arg &key)
+  (parse-float-or-lose arg :radix (option-float-radix option)))
+
+(defclass option-list-float (option-list)
+  ((radix
+    :initarg :radix
+    :initform 10
+    :reader option-float-radix))
+  (:documentation "An option which collects floats into a list"))
+
+(defmethod make-option ((kind (eql :list/float)) &rest rest)
+  (apply #'make-instance 'option-list-float rest))
+
+(defmethod initialize-option ((option option-list-float) &key)
+  (call-next-method)
+  (unless (option-value option)
+    (return-from initialize-option))
+
+  (setf (option-value option)
+        (mapcar (lambda (x)
+                  (etypecase x
+                    (float x)
+                    (string (parse-float-or-lose x :radix (option-float-radix option)))))
+                (option-value option))))
+
+(defmethod derive-option-value ((option option-list-float) arg &key)
+  (cons (parse-float-or-lose arg :radix (option-float-radix option))
         (option-value option)))
 
 ;;;;

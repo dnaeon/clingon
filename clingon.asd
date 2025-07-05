@@ -44,7 +44,8 @@
                :bobbin
                :cl-reexport
                :split-sequence
-               :with-user-abort)
+               :with-user-abort
+               :parse-float)
   :components ((:module "utils"
                 :pathname #P"src/"
                 :components ((:file "utils")))
