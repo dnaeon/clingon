@@ -1173,7 +1173,7 @@ _~~A() {
       (format stream "~%"))))
 
 (defmethod print-documentation ((kind (eql :org)) (top-level command) stream &key (wrap-at 80))
-  "Prints the documentation for the given TOP-LEVEL command in Markdown format"
+  "Prints the documentation for the given TOP-LEVEL command in Org Mode format"
   (with-command-tree (node top-level)
     ;; Initialize command, so that options get propagated
     (initialize-command node)
