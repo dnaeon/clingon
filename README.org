@@ -1081,6 +1081,7 @@ The supported option kinds include:
 
 - =counter=
 - =integer=
+- =float=
 - =string=
 - =boolean=
 - =boolean/true=
@@ -1090,6 +1091,7 @@ The supported option kinds include:
 - =enum=
 - =list=
 - =list/integer=
+- =list/float=
 - =filepath=
 - =list/filepath=
 - =switch=
@@ -1176,6 +1178,21 @@ argument.
  :long-name "int"
  :key :my-int
  :initial-value 42)
+#+end_src
+
+** Float Options
+
+Here's an example of creating an option, which expects a float
+argument.
+
+#+begin_src lisp
+(clingon:make-option
+ :float
+ :description "my float opt"
+ :short-name #\f
+ :long-name "float"
+ :key :my-float
+ :initial-value 4.2)
 #+end_src
 
 ** Choice Options
@@ -1285,6 +1302,18 @@ option, e.g.
  :short-name #\l
  :long-name "int"
  :key :integers)
+#+end_src
+
+A similar option exists for float values using the =:list/float=
+option, e.g.
+
+#+begin_src lisp
+(clingon:make-option
+ :list/float
+ :description "list of floats"
+ :short-name #\l
+ :long-name "float"
+ :key :floats)
 #+end_src
 
 ** Switch Options
@@ -1917,4 +1946,3 @@ This project is Open Source and licensed under the [[http://opensource.org/licen
 * Authors
 
 - Marin Atanasov Nikolov <dnaeon@gmail.com>
-
