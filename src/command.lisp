@@ -1179,7 +1179,7 @@ _~~A() {
     (initialize-command node)
 
     ;; Command name
-    (format stream "#+TITLE: ~A~2%" (command-full-name node))
+    (format stream "* ~A~2%" (command-full-name node))
 
     ;; Print description
     (cond
@@ -1194,12 +1194,12 @@ _~~A() {
       (t (format stream "=~A= -- ~A~2%" (command-full-name node) (command-description node))))
 
     ;; Usage info
-    (format stream "* Usage~2%")
+    (format stream "** Usage~2%")
     (format stream "#+begin_src shell~%~A~%#+end_src~2%" (command-usage-string node))
 
     ;; Options
     (when (command-options node)
-      (format stream "* Options~2%")
+      (format stream "** Options~2%")
       (format stream "=~A= accepts the following options:~2%" (command-full-name node))
       (format stream "#+begin_src shell~%")
       (print-options-usage node stream)
@@ -1207,7 +1207,7 @@ _~~A() {
 
     ;; Sub-commands
     (when (command-sub-commands node)
-      (format stream "* Sub Commands~2%")
+      (format stream "** Sub Commands~2%")
       (format stream "=~A= provides the following sub commands:~2%" (command-full-name node))
       (format stream "#+begin_src shell~%")
       (print-sub-commands-info node stream)
@@ -1215,7 +1215,7 @@ _~~A() {
 
     ;; Examples
     (when (command-examples node)
-      (format stream "* Examples~2%")
+      (format stream "** Examples~2%")
       (dolist (example (command-examples node))
         (let* ((description (car example))
                (code (cdr example))
@@ -1227,14 +1227,14 @@ _~~A() {
 
     ;; Authors
     (when (command-authors node)
-      (format stream "* Authors~2%")
+      (format stream "** Authors~2%")
       (dolist (author (command-authors node))
         (format stream "- ~A~%" author))
       (format stream "~%"))
 
     ;; License
     (when (command-license node)
-      (format stream "* License~2%")
+      (format stream "** License~2%")
       (let ((lines (split-sequence #\Newline (bobbin:wrap (command-license node) wrap-at))))
         (dolist (line lines)
           (format stream "~A~%" line)))
