@@ -1229,7 +1229,7 @@ _~~A() {
     (when (command-authors node)
       (format stream "* Authors~2%")
       (dolist (author (command-authors node))
-        (format stream "* ~A~%" author))
+        (format stream "- ~A~%" author))
       (format stream "~%"))
 
     ;; License
