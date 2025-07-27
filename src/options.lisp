@@ -319,6 +319,9 @@
 (defmethod make-option ((kind (eql :filepath)) &rest rest)
   (apply #'make-instance 'option-filepath rest))
 
+(defmethod derive-option-value ((option option-filepath) arg &key)
+  (pathname arg))
+
 (defmethod option-description-details ((kind (eql :zsh-option-spec)) (option option-filepath) &key)
   ;; Use the `_files' function for completing file paths
   (with-output-to-string (s)
