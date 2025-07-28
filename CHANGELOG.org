@@ -1,3 +1,17 @@
+* 2025-07-28
+
+Version =0.6.0= has been tagged.
+
+- Added support for generating documentation in =org= format. See [[https://github.com/dnaeon/clingon/pull/31][PR #31]]
+- Added support for generating documentation in =man= format. See [[https://github.com/dnaeon/clingon/pull/23][PR #23]]
+- =:filepath= option returns a proper =PATHNAME=. See [[https://github.com/dnaeon/clingon/commit/668b7ce5d0cb1170e3e1d9fe1b576feb792e5c56][this commit]].
+- Exit with =EX_OK= (0) instead of =EX_USAGE= (64) when =clingon.help.flag= is
+  set.
+- Document how to [[https://github.com/dnaeon/clingon?tab=readme-ov-file#customizing-the-parsing-logic][customize the parsing logic]].
+- Document how to use [[https://github.com/dnaeon/clingon?tab=readme-ov-file#buildapp][buildapp with clingon]].
+
+Thanks to [[https://github.com/bon][@bon]], [[https://github.com/halcyonseeker][@halcyonseeker]], [[https://github.com/rpgoldman][@rpgoldman]] and [[https://github.com/gpiero][@gpiero]]!
+
 * 2023-05-19
 
 Version =0.5.0= has been tagged.
