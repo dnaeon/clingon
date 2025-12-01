@@ -1,4 +1,4 @@
-FROM clfoundation/ecl:21.2.1
+FROM clfoundation/ecl:24.5.10
 
 ENV QUICKLISP_ADD_TO_INIT_FILE=true
 ENV QUICKLISP_DIST_VERSION=latest
