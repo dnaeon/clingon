@@ -1,4 +1,4 @@
-FROM clfoundation/sbcl:2.5.10
+FROM clfoundation/sbcl:2.6.1
 
 ENV QUICKLISP_ADD_TO_INIT_FILE=true
 WORKDIR /root/quicklisp/local-projects/clingon
