@@ -471,6 +471,9 @@
 (defmethod make-option ((kind (eql :list/filepath)) &rest rest)
   (apply #'make-instance 'option-list-filepath rest))
 
+(defmethod derive-option-value ((option option-list-filepath) arg &key)
+  (cons (pathname arg) (option-value option)))
+
 ;;;;
 ;;;; Integer options
 ;;;;
