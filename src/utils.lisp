@@ -48,7 +48,7 @@
         (visited nil))
     (loop :while to-visit
           :for node = (pop to-visit)
-          :for neighbors = (funcall neighbors-func node)
+          :for neighbors = (copy-list (funcall neighbors-func node))
           :for not-seen = (remove-if (lambda (x)
                                        (member x visited :test #'equal))
                                      neighbors)
