@@ -231,7 +231,30 @@
         (push node result))
       (setf result (nreverse result))
       (ok (equal '("top-level" "c1" "c2" "c3") (mapcar #'clingon:command-name result))
-          "walked nodes match"))))
+          "walked nodes match")))
+
+  (testing "walk does not mutate sub-commands (issue #45)"
+    ;; Regression test: walking a tree with siblings must not corrupt the
+    ;; sub-commands slot of any node.  Before the fix, nconc in the walk
+    ;; function destructively appended sibling nodes into a child's
+    ;; sub-commands list.
+    (let* ((e (clingon:make-command :name "e" :description "e command"))
+           (f (clingon:make-command :name "f" :description "f command"))
+           (g (clingon:make-command :name "g" :description "g command"))
+           (d (clingon:make-command :name "d" :description "d command"
+                                    :sub-commands (list e f g)))
+           (b (clingon:make-command :name "b" :description "b command"))
+           (c (clingon:make-command :name "c" :description "c command"))
+           (a (clingon:make-command :name "a" :description "a command"
+                                    :sub-commands (list d b c)))
+           (result nil))
+      (clingon:with-command-tree (node a)
+        (push node result))
+      (setf result (nreverse result))
+      (ok (equal '("a" "d" "e" "f" "g" "b" "c") (mapcar #'clingon:command-name result))
+          "walked nodes match")
+      (ok (equal '("e" "f" "g") (mapcar #'clingon:command-name (clingon:command-sub-commands d)))
+          "sub-commands of d are not mutated"))))
 
 (deftest hidden-options
   (testing "test for hidden options"
